@@ -24,7 +24,7 @@ hexo.extend.generator.register('urls', function(locals) {
             return b.updated - a.updated;
         });
 
-    var template = require('./node_modules/hexo-generator-random/lib/template');
+    var template = require(path.resolve(__dirname, '..', 'node_modules/hexo-generator-random/lib/template'));
     var html = template(config).render({
         config: config,
         posts: allPosts
