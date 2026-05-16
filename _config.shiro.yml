@@ -13,6 +13,8 @@ menu:
     url: /
   - name: 归档
     url: /archives
+  - name: 留言
+    url: /guestbook
   - name: 随机
     url: /random
 
