@@ -105,6 +105,19 @@ abbrlink:
 sitemap:
   rel: false
 
+symbols_count_time:
+  symbols: true
+  time: true
+  total_symbols: true
+  total_time: true
+  awl: 4
+  wpm: 300
+  suffix: "."
+
+random:
+  enable: true
+  source: posts
+
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:

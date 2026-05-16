@@ -17,6 +17,8 @@ menu:
     url: /categories
   - name: 标签
     url: /tags
+  - name: 随机
+    url: /random
 
 # Excerpt settings
 excerpt:
