@@ -45,16 +45,16 @@ back_to_top:
 
 # Comment systems
 comments:
-  enabled: false
+  enabled: true
   provider: giscus
   disqus:
     shortname: ""
   giscus:
     src: https://giscus.app/client.js
-    repo: ""
-    repo_id: ""
-    category: ""
-    category_id: ""
+    repo: 69gg/69gg.github.io
+    repo_id: R_kgDOSfCvAQ
+    category: Q&A
+    category_id: DIC_kwDOSfCvAc4C9LFy
     mapping: pathname
     strict: 0
     reactions_enabled: 1
@@ -62,7 +62,7 @@ comments:
     input_position: bottom
     lang: zh-CN
     theme: https://cdn.jsdelivr.net/npm/hexo-theme-shiro@1.3.2/source/css/giscus.css
-    lazy_loading: false
+    lazy_loading: true
 
 # Analytics
 analytics:
