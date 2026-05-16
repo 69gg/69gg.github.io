@@ -130,7 +130,7 @@ void playAudioForCard(String uid) {
 # 后续改进
 我还买了几个2.4GHz的射频模块，但是需要3.3V的电压。Arduino上的接口不够了，所以我还额外买了一个5V->3.3V的降压模块。这家发货真的快，1h之内就发了，所以我明天就得看是研究无线电了。
 
-# 额外菜单
+# 额外彩蛋
 那几个NFC贴纸还很多，我在手机上用一个叫`NFC Writer`的软件写了点东西进去，比较好玩的是写一点应用启动。包名推荐：
 - `com.netease.dwrg.mi`
 - `com.MiHoYo.ys.mi`
@@ -144,4 +144,4 @@ void playAudioForCard(String uid) {
 # 总结
 比赛的就这么多，看来比较简单，估计拿个安慰奖。不过我实在不想再耗费脑细胞了，所以就看Gemini的文字功底了，看看它写的介绍能达到什么高度。拿到降压模块我可能还会改进改进，会的话下回再说。
 
-  [1]: http://www.pylindex.top/img/typecho/arduino.jpg
+  [1]: https://image.fatcattech.cn/i/2026/05/16/sg6rk0.jpg
