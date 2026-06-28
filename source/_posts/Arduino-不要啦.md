@@ -1,5 +1,6 @@
 ---
 title: Arduino->不要啦！
+abbrlink: 23f12bf5
 date: 2025-07-16 10:06:00
 ---
 

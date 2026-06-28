@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "hexo generate",
+    "build": "node scripts/ensure-abbrlinks.js && node scripts/clean-public.js && hexo generate && node scripts/copy-root-assets.js",
     "clean": "hexo clean",
     "deploy": "hexo deploy",
     "server": "hexo server"
