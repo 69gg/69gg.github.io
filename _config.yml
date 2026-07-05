@@ -13,7 +13,8 @@ timezone: 'Asia/Shanghai'
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: https://blog.pylindex.top
+url: https://www.pylindex.top/blog
+root: /blog/
 permalink: posts/:abbrlink/
 permalink_defaults:
 pretty_urls:
@@ -22,7 +23,7 @@ pretty_urls:
 
 # Directory
 source_dir: source
-public_dir: public
+public_dir: public/blog
 tag_dir: tags
 archive_dir: archives
 category_dir: categories
@@ -118,9 +119,12 @@ random:
   enable: true
   source: posts
 
+urls:
+  path: random/index.html
+
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: git
   repo: https://github.com/69gg/69gg.github.io.git
-  branch: main
+  branch: gh-pages
