@@ -1,6 +1,7 @@
 # Site
 site:
   favicon: /favicon.svg
+  copyright_year: 2024
   seal: true
   seal_text: "白"
   rss:
