@@ -93,6 +93,7 @@ pagination_dir: page
 include:
 exclude:
 ignore:
+  - '**/source/CNAME'
 
 # Extensions
 ## Plugins: https://hexo.io/plugins/
