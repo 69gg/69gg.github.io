@@ -1,7 +1,7 @@
 # Site
 site:
   favicon: /favicon.svg
-  copyright_year: 2024
+  since: 2024
   seal: true
   seal_text: "白"
   rss:
@@ -31,6 +31,11 @@ toc:
   depth: 3
   min_headings: 3
 
+# MathJax TeX rendering (opt-in per post via front-matter mathjax: true)
+mathjax:
+  enabled: true
+  every_page: false
+
 # Dark mode
 dark_mode:
   default: system
@@ -38,6 +43,10 @@ dark_mode:
 
 # Reading progress bar
 progress_bar:
+  enabled: true
+
+# Word count & reading time
+word_count:
   enabled: true
 
 # Back to top button
@@ -62,7 +71,7 @@ comments:
     emit_metadata: 0
     input_position: bottom
     lang: zh-CN
-    theme: https://cdn.jsdelivr.net/npm/hexo-theme-shiro@1.3.2/source/css/giscus.css
+    theme: https://cdn.jsdelivr.net/npm/hexo-theme-shiro@1.6.1/source/css/giscus.min.css
     lazy_loading: true
 
 # Analytics
