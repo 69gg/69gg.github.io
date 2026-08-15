@@ -13,7 +13,8 @@
 - `scripts/build-info.js`：Hexo helper，给博客页脚输出构建时间和提交 hash。
 - `scripts/clean-public.js`：构建前清理旧的 `public/` 产物。
 - `scripts/copy-root-assets.js`：构建后把个人主页、`img.json` 和 `CNAME` 复制到 `public/` 根目录。
-- `tools/check-public.js`：校验 GitHub Pages artifact 必需的首页、博客首页和根 `CNAME`。
+- `scripts/build-sitemap.js`：构建后把 Hexo sitemap 提升到站点根，并补上个人主页。
+- `tools/check-public.js`：校验 GitHub Pages artifact 必需的首页、博客首页、根 `CNAME` 和全站 sitemap。
 
 GitHub Actions 会发布 `public/`。不要使用 `npm run deploy` 发布到 `main` 分支；当前仓库源码也在 `main`。
 
@@ -29,4 +30,5 @@ npm run check:public
 
 - `public/index.html`：个人主页。
 - `public/blog/`：Hexo 博客。
+- `public/sitemap.xml`：全站 sitemap，对应 `https://www.pylindex.top/sitemap.xml`。
 - `public/CNAME`：GitHub Pages 自定义域名配置。
