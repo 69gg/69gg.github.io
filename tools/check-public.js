@@ -52,6 +52,12 @@ if (fs.existsSync(nestedSitemapPath)) {
     failures.push('unexpected nested sitemap: blog/sitemap.xml');
 }
 
+const lastmodFor = (sitemap, loc) => {
+    const escaped = loc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const match = sitemap.match(new RegExp(`<loc>${escaped}</loc>\\s*<lastmod>([^<]+)</lastmod>`));
+    return match ? match[1] : null;
+};
+
 const sitemapPath = path.join(publicDir, 'sitemap.xml');
 if (fs.existsSync(sitemapPath)) {
     const sitemap = readText(sitemapPath);
@@ -60,6 +66,50 @@ if (fs.existsSync(sitemapPath)) {
     }
     if (!sitemap.includes('https://www.pylindex.top/blog')) {
         failures.push('public/sitemap.xml is missing blog URL');
+    }
+
+    const postsDir = path.join(rootDir, 'source', '_posts');
+    if (fs.existsSync(postsDir)) {
+        for (const fileName of fs.readdirSync(postsDir).sort()) {
+            if (!fileName.endsWith('.md')) {
+                continue;
+            }
+
+            const content = fs.readFileSync(path.join(postsDir, fileName), 'utf8');
+            const abbrlink = content.match(/^abbrlink:\s*(\S+)/m);
+            const date = content.match(/^date:\s*(\d{4}-\d{2}-\d{2})/m);
+            if (!abbrlink || !date) {
+                failures.push(`${fileName} is missing abbrlink or date`);
+                continue;
+            }
+
+            const loc = `https://www.pylindex.top/blog/posts/${abbrlink[1]}/`;
+            const lastmod = lastmodFor(sitemap, loc);
+            if (lastmod !== date[1]) {
+                failures.push(`${fileName}: expected lastmod ${date[1]}, got ${lastmod}`);
+            }
+        }
+    }
+
+    const blogDates = [...sitemap.matchAll(/<loc>https:\/\/www\.pylindex\.top\/blog\/posts\/[^<]+<\/loc>\s*<lastmod>([^<]+)<\/lastmod>/g)]
+        .map((match) => match[1])
+        .sort();
+    const latestPostLastmod = blogDates.at(-1) || null;
+    const blogLastmod = lastmodFor(sitemap, 'https://www.pylindex.top/blog');
+    if (latestPostLastmod && blogLastmod !== latestPostLastmod) {
+        failures.push(`blog index lastmod should be latest post date ${latestPostLastmod}, got ${blogLastmod}`);
+    }
+
+    if (!lastmodFor(sitemap, 'https://www.pylindex.top/')) {
+        failures.push('public/sitemap.xml is missing homepage lastmod');
+    }
+    if (!lastmodFor(sitemap, 'https://www.pylindex.top/blog/guestbook/index.html')) {
+        failures.push('public/sitemap.xml is missing guestbook lastmod');
+    }
+
+    const lastmods = [...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((match) => match[1]);
+    if (lastmods.length > 1 && new Set(lastmods).size === 1) {
+        failures.push('public/sitemap.xml lastmod values are all identical');
     }
 }
 

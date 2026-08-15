@@ -3,6 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const publicDir = path.resolve(__dirname, '..', 'public');
+const rootDir = path.resolve(__dirname, '..');
 
-fs.rmSync(publicDir, { force: true, recursive: true });
+for (const relativePath of ['public', 'db.json']) {
+    fs.rmSync(path.join(rootDir, relativePath), { force: true, recursive: true });
+}
