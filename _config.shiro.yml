@@ -31,10 +31,10 @@ toc:
   depth: 3
   min_headings: 3
 
-# MathJax TeX rendering (opt-in per post via front-matter mathjax: true)
+# MathJax TeX rendering (all post/page views; opt out with mathjax: false)
 mathjax:
   enabled: true
-  every_page: false
+  every_page: true
 
 # Dark mode
 dark_mode:
