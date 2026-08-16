@@ -10,6 +10,7 @@ const homepageDir = path.join(rootDir, 'homepage');
 const files = [
     [path.join(homepageDir, 'index.html'), path.join(publicDir, 'index.html')],
     [path.join(homepageDir, 'img.json'), path.join(publicDir, 'img.json')],
+    [path.join(homepageDir, 'tencent12920023829422040825.txt'), path.join(publicDir, 'tencent12920023829422040825.txt')],
     [path.join(rootDir, 'source', 'CNAME'), path.join(publicDir, 'CNAME')]
 ];
 

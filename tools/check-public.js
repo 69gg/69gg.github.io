@@ -10,7 +10,8 @@ const requiredFiles = [
     path.join('blog', 'index.html'),
     'CNAME',
     'sitemap.xml',
-    'robots.txt'
+    'robots.txt',
+    'tencent12920023829422040825.txt'
 ];
 
 const failures = [];
@@ -39,6 +40,18 @@ if (fs.existsSync(sourceCnamePath) && fs.existsSync(publicCnamePath)) {
 
     if (sourceCname !== publicCname) {
         failures.push('public/CNAME does not match source/CNAME');
+    }
+}
+
+const sourceTencentVerifyPath = path.join(rootDir, 'homepage', 'tencent12920023829422040825.txt');
+const publicTencentVerifyPath = path.join(publicDir, 'tencent12920023829422040825.txt');
+
+if (fs.existsSync(sourceTencentVerifyPath) && fs.existsSync(publicTencentVerifyPath)) {
+    const sourceTencentVerify = readText(sourceTencentVerifyPath);
+    const publicTencentVerify = readText(publicTencentVerifyPath);
+
+    if (sourceTencentVerify !== publicTencentVerify) {
+        failures.push('public/tencent12920023829422040825.txt does not match homepage source');
     }
 }
 
