@@ -1,0 +1,123 @@
+<!doctype html>
+{% from "_macro/ui.njk" import svg_filters, feature_var, feature_i18n with context %}
+{# Feature gates must be {% set %} in this parent template — Nunjucks include
+   scope does not leak child sets to the parent (v2.4+). Policy lives in
+   page_feature_gates() (scripts/lib/feature-gates.js). Templates read gates.*
+   directly (no long rebind list). #}
+{% set gates = page_feature_gates() %}
+<html lang="{{ escape_attr(gates.pageLang) }}" class="h-full scroll-smooth shiro-preloader-done">
+{% include "_partial/common/head.njk" %}
+
+<body class="folio-body{% if is_home() %} folio-home{% else %} folio-inner{% endif %}"{% if gates.needsLightgallery %} data-shiro-lightgallery="true"{% endif %}>
+    <a href="#main-content" class="shiro-skip-link">{{ escape_html(__('common.skip_to_content')) }}</a>
+    {% if gates.siteSealEnabled %}
+    {{ svg_filters() }}
+    {% endif %}
+
+    {% if gates.needsProgressBar %}
+    <div id="progressBar" class="progress-bar" aria-hidden="true"></div>
+    {% endif %}
+    {% if gates.needsBackToTop %}
+    <div id="backToTopSentinel" class="back-to-top-sentinel" aria-hidden="true"></div>
+    {% endif %}
+
+    <div class="folio-frame" aria-hidden="true">
+        <span class="folio-corner folio-corner-tl"></span><span class="folio-corner folio-corner-tr"></span>
+        <span class="folio-corner folio-corner-bl"></span><span class="folio-corner folio-corner-br"></span>
+        <span class="folio-frame-star folio-frame-star-top"></span><span class="folio-frame-star folio-frame-star-bottom"></span>
+        <span class="folio-frame-star folio-frame-star-left"></span><span class="folio-frame-star folio-frame-star-right"></span>
+    </div>
+    {% include "_partial/folio/surround.njk" %}
+    <div class="folio-shell">
+
+        <!-- Reading sheet -->
+        <div class="folio-sheet">
+            {% include "_partial/folio/foreground.njk" %}
+
+            {% include "_partial/common/header.njk" %}
+
+            <!-- Main Content -->
+            <main id="main-content" class="folio-main" tabindex="-1">
+                {% block content %}{% endblock %}
+            </main>
+
+            {% include "_partial/common/footer.njk" %}
+        </div>
+
+    </div>
+
+    {% if gates.needsBackToTop %}
+    <button id="backToTop" type="button" class="back-to-top" data-visible="false" aria-label="{{ escape_attr(__('common.back_to_top')) }}" hidden>
+        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+        </svg>
+    </button>
+    {% endif %}
+    {% if gates.searchEnabled %}
+    {# Default instance; no host id (Pagefind would copy it onto the internal dialog).
+       Expanded so pagefind-input can take search.placeholder. Bootstrap forces the
+       light-DOM dialog id to shiroSearchDialog (aria-controls) and syncs scroll-lock
+       chrome from pagefind-modal.isOpen while open. #}
+    <div class="shiro-search-components" data-pagefind-ignore>
+        <pagefind-config bundle-path="{{ attr_url(url_for('/pagefind/', { relative: false })) }}" base-url="{{ attr_url(url_for('/', { relative: false })) }}"{% if gates.searchConfig.force_language %}{% set force_lang = lang_attr(gates.searchConfig.force_language) %}{% if force_lang %} lang="{{ escape_attr(force_lang) }}"{% endif %}{% endif %}></pagefind-config>
+        <pagefind-modal reset-on-close>
+            <pagefind-modal-header>
+                <pagefind-input placeholder="{{ escape_attr(__('search.placeholder')) }}"></pagefind-input>
+            </pagefind-modal-header>
+            <pagefind-modal-body>
+                <pagefind-summary></pagefind-summary>
+                <pagefind-results></pagefind-results>
+            </pagefind-modal-body>
+            <pagefind-modal-footer>
+                <pagefind-keyboard-hints></pagefind-keyboard-hints>
+            </pagefind-modal-footer>
+        </pagefind-modal>
+    </div>
+    {% endif %}
+
+    <!-- Scripts -->
+    {# cspNonce is set only in head-theme (single source). #}
+    {% if gates.needsFeatureRuntime %}
+    <script{{ csp_nonce_attr(gates.shiroCspNonce) }}>
+        {% if gates.needsLightgallery or gates.needsClipboard %}
+        (window.__shiro = window.__shiro || {}).i18n = window.__shiro.i18n || {};
+        {% endif %}
+        {% if gates.searchEnabled %}
+        {{ feature_var('pagefindBase', url_for('/pagefind/', { relative: false })) }}
+        {{ feature_var('searchCss', versioned_url('css/search.min.css')) }}
+        {% endif %}
+        {% if gates.needsLightgallery %}
+        {{ feature_i18n('gallery', {
+            view_image: __('gallery.view_image'),
+            visit_source: __('gallery.visit_source')
+        }) }}
+        {{ feature_var('lightgallery', {
+            css: gates.lightgalleryCssUrl,
+            js: gates.lightgalleryJsUrl,
+            themeCss: versioned_url('css/lightgallery.min.css'),
+            cssIntegrity: gates.lightgalleryCssIntegrity or '',
+            jsIntegrity: gates.lightgalleryJsIntegrity or '',
+            script: versioned_url('js/lightgallery.min.js')
+        }) }}
+        {% endif %}
+        {% if gates.needsClipboard %}
+        {{ feature_i18n('clipboard', {
+            copied: __('clipboard.copied'),
+            copy: __('clipboard.copy'),
+            failed: __('clipboard.failed')
+        }) }}
+        {{ feature_var('clipboardScript', versioned_url('js/clipboard.min.js')) }}
+        {% endif %}
+    </script>
+    {% endif %}
+    {% for script_path in gates.footScripts %}
+    <script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} src="{{ attr_url(versioned_url(script_path)) }}"></script>
+    {% endfor %}
+    {% if gates.needsComments %}
+    {% include "_partial/comments/foot.njk" %}
+    {% endif %}
+
+    {% include "_partial/analytics/google.njk" %}
+    <script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} src="{{ attr_url(versioned_url('js/folio.js')) }}"></script>
+</body>
+</html>

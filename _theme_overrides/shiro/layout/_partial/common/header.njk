@@ -1,0 +1,45 @@
+{% from "_macro/ui.njk" import icon_rss, icon_search, icon_chevron_down, icon_theme_system, icon_theme_light, icon_theme_dark, menu_link with context %}
+<header class="folio-header" data-pagefind-ignore>
+    <a class="folio-brand" href="{{ href_for('/') }}" aria-label="{{ escape_attr(config.title + ' 首页') }}">
+        <svg class="brand-flower" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+            <path d="M20 33V18M20 26C8 26 8 18 8 18s10-1 12 8Zm0-5c11 0 12-8 12-8s-10 0-12 8Z" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M20 18C10 17 11 8 14 9c3 0 5 4 6 9Zm0 0c-5-8-2-14 1-13s4 8-1 13Zm0 0c1-10 8-13 9-9s-4 8-9 9Z" fill="currentColor" opacity=".7"/>
+        </svg>
+        <span>{{ escape_html(config.title) }}</span>
+    </a>
+
+    <nav class="folio-desktop-nav" aria-label="{{ escape_attr(__('nav.menu')) }}">
+        {% for item in gates.menuItems %}
+        {{ menu_link(item, "folio-nav-link") }}
+        {% endfor %}
+    </nav>
+
+    <div class="folio-actions">
+        {% if gates.searchEnabled %}
+        <button id="searchToggle" type="button" class="folio-icon-button" aria-haspopup="dialog" aria-expanded="false" aria-label="{{ escape_attr(__('search.trigger')) }}" disabled>
+            {{ icon_search() }}
+        </button>
+        {% endif %}
+        {% if gates.darkModeToggle %}
+        <button id="themeToggle" type="button" class="folio-icon-button" aria-label="{{ escape_attr(__('theme.' + gates.darkModeDefault)) }}" data-label-system="{{ escape_attr(__('theme.system')) }}" data-label-light="{{ escape_attr(__('theme.light')) }}" data-label-dark="{{ escape_attr(__('theme.dark')) }}" disabled>
+            {{ icon_theme_system() }}{{ icon_theme_light() }}{{ icon_theme_dark() }}
+        </button>
+        {% endif %}
+        {% if gates.menuItems.length %}
+        <button id="menuBtn" type="button" class="folio-icon-button folio-menu-button" aria-expanded="false" aria-controls="mobileMenu" aria-label="{{ escape_attr(__('nav.menu')) }}" disabled>
+            {{ icon_chevron_down(id="menuChevron") }}
+        </button>
+        {% endif %}
+    </div>
+
+    {% if gates.menuItems.length %}
+    <nav id="mobileMenu" class="menu-panel folio-mobile-nav" data-open="false" aria-label="移动导航">
+        {% for item in gates.menuItems %}{{ menu_link(item, "folio-nav-link") }}{% endfor %}
+    </nav>
+    <script{{ csp_nonce_attr(gates.shiroCspNonce) }} data-cfasync="false">
+        if (document.documentElement.classList.contains('js')) {
+            document.getElementById('mobileMenu').inert = true;
+        }
+    </script>
+    {% endif %}
+</header>

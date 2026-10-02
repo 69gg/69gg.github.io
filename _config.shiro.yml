@@ -83,3 +83,8 @@ analytics:
 # Search
 search:
   enabled: true
+
+# Blog presentation. Content, links and page counts continue to come from Hexo.
+folio:
+  note: 风过留痕，字里相逢。
+  fonts_url: https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@1,500&family=Cormorant+Garamond:wght@400&family=Jost:wght@500&family=LXGW+WenKai+TC:wght@400&family=Noto+Serif+SC:wght@400;500&display=swap

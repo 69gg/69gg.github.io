@@ -1,0 +1,16 @@
+{% from "_macro/ui.njk" import meta with context %}
+<article class="folio-entry">
+    <div class="folio-entry-date" aria-hidden="true">
+        <span>{{ date(post.date, 'MMM') }}</span>
+        <span class="folio-day">{{ date(post.date, 'DD') }}</span>
+        <span>{{ date(post.date, 'YYYY') }}</span>
+    </div>
+    <div class="folio-entry-content">
+        <header>
+            <h2><a href="{{ href_for(post.path) }}">{{ escape_html(post.title) }}</a></h2>
+            {{ meta(post, false, "folio-entry-meta") }}
+        </header>
+        <div class="prose-shiro folio-excerpt">{{ excerpt.content | safe }}</div>
+        <a class="folio-read-link" href="{{ href_for(post.path) }}" aria-label="{{ escape_attr(__('index.read_more') + ': ' + post.title) }}">阅读全文 <span aria-hidden="true">⟶</span></a>
+    </div>
+</article>

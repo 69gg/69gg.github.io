@@ -1,0 +1,13 @@
+{# Paper stays still; transparent flower cutouts and petals move independently. #}
+<div class="folio-surround" aria-hidden="true">
+    <div class="folio-pattern"></div>
+    {% for layer in range(1, 4) %}
+    <div class="folio-flowers folio-flowers-{{ layer }}"></div>
+    {% endfor %}
+</div>
+<div class="folio-garden" aria-hidden="true">
+    {% for row in range(0, 10) %}
+    <span class="folio-petal folio-petal-left" style="--petal-row: {{ row }}; --petal-delay: {{ -4 - row * 3 }}s;"></span>
+    <span class="folio-petal folio-petal-right" style="--petal-row: {{ row }}; --petal-delay: {{ -13 - row * 5 }}s;"></span>
+    {% endfor %}
+</div>

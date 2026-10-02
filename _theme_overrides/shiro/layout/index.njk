@@ -1,0 +1,17 @@
+{% extends "_layout.njk" %}
+
+{% block content %}
+    {% include "_partial/folio/hero.njk" %}
+    <section id="journal" class="folio-journal" aria-label="文章列表">
+        {% if page.posts and page.posts.length > 0 %}
+        <div class="folio-posts">
+            {% for card in post_card_view_models(page.posts) %}
+                {% set post = card.post %}
+                {% set excerpt = card.excerpt %}
+                {% include "_partial/components/post-card.njk" %}
+            {% endfor %}
+        </div>
+        {% else %}{% include "_partial/common/empty.njk" %}{% endif %}
+        {% include "_partial/common/pagination.njk" %}
+    </section>
+{% endblock %}

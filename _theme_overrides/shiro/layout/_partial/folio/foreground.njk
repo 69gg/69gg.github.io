@@ -1,0 +1,6 @@
+{# A few translucent petals pass above the reading sheet without catching input. #}
+<div class="folio-foreground" aria-hidden="true">
+    {% for row in range(0, 6) %}
+    <span class="folio-petal" style="--petal-row: {{ row }}; --petal-delay: {{ -7 - row * 5 }}s;"></span>
+    {% endfor %}
+</div>

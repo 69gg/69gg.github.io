@@ -31,7 +31,11 @@ hexo.extend.generator.register('urls', function(locals) {
     var template = require(path.resolve(__dirname, '..', 'node_modules/hexo-generator-random/lib/template'));
     var html = template(config).render({
         config: config,
-        posts: allPosts
+        // Stay on the current origin so local previews and deployments use the
+        // same random-reading behavior. Preserve the configured blog root.
+        posts: allPosts.map(function(post) {
+            return { permalink: new URL(post.permalink).pathname };
+        })
     });
 
     return {
