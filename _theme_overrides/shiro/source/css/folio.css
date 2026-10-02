@@ -14,6 +14,10 @@
     --folio-corner-size: 106px;
     --folio-frame-line: #f3eee0;
     --folio-paper: #faf8f2;
+    --folio-paper-grain-opacity: .08;
+    --folio-paper-grain-blend: multiply;
+    --folio-paper-edge: #96826d13;
+    --folio-paper-sheen: #ffffff70;
     --folio-ink: #42485a;
     --folio-muted: #6a7184;
     --folio-accent: #6b7697;
@@ -54,6 +58,10 @@
 html[data-theme='dark'] {
     --folio-lavender: #303542;
     --folio-paper: #252a36;
+    --folio-paper-grain-opacity: .065;
+    --folio-paper-grain-blend: screen;
+    --folio-paper-edge: #0508143d;
+    --folio-paper-sheen: #e4deca06;
     --folio-ink: #dfe3ef;
     --folio-muted: #adb5c9;
     --folio-accent: #b8c4e3;
@@ -143,8 +151,28 @@ body.folio-body {
 .folio-garden .folio-petal:nth-child(4n+3) { left: 7%; width: 28px; height: 21px; --petal-x: -18px; --petal-period: 30s; }
 .folio-garden .folio-petal:nth-child(4n+4) { right: 7%; width: 30px; height: 22px; --petal-x: 20px; --petal-period: 26s; }
 .folio-shell { position: relative; z-index: 2; width: min(1140px, calc(100% - 200px)); margin: 88px auto 48px; }
-.folio-sheet { position: relative; background: var(--folio-paper); border: 1px solid #eee7ed55; border-radius: 22px; box-shadow: 0 5px 50px #29203612; }
-.folio-sheet::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .09; background: url('../images/grain.svg'); border-radius: inherit; }
+.folio-sheet {
+    position: relative;
+    isolation: isolate;
+    background:
+        linear-gradient(110deg, var(--folio-paper-sheen), transparent 60%),
+        linear-gradient(90deg, var(--folio-paper-edge), transparent 28px, transparent calc(100% - 28px), var(--folio-paper-edge)),
+        var(--folio-paper);
+    border: 1px solid #eee7ed55;
+    border-radius: 22px;
+    box-shadow: 0 5px 50px #29203612, inset 0 0 0 1px #ffffff08;
+}
+.folio-sheet::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: var(--folio-paper-grain-opacity);
+    mix-blend-mode: var(--folio-paper-grain-blend);
+    background: url('../images/grain.svg') repeat;
+    border-radius: inherit;
+}
 .folio-foreground { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; border-radius: inherit; opacity: .55; }
 .folio-foreground .folio-petal {
     --petal-x: 46px;

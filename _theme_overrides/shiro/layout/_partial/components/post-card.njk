@@ -10,7 +10,13 @@
             <h2><a href="{{ href_for(post.path) }}">{{ escape_html(post.title) }}</a></h2>
             {{ meta(post, false, "folio-entry-meta") }}
         </header>
-        <div class="prose-shiro folio-excerpt">{{ excerpt.content | safe }}</div>
+        <div class="prose-shiro folio-excerpt">
+            {%- if post.summary is string and (post.summary | trim) -%}
+                <p>{{ escape_html(post.summary | trim) }}</p>
+            {%- else -%}
+                {{ excerpt.content | safe }}
+            {%- endif -%}
+        </div>
         <a class="folio-read-link" href="{{ href_for(post.path) }}" aria-label="{{ escape_attr(__('index.read_more') + ': ' + post.title) }}">阅读全文 <span aria-hidden="true">⟶</span></a>
     </div>
 </article>

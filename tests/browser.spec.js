@@ -171,7 +171,14 @@ test('flowers move independently of still paper, pause out of view and react to 
     const initial = await layers.evaluateAll((elements) => elements.map((element) => getComputedStyle(element).transform));
     // Observe the real browser timeline, not merely the declared keyframe name.
     await expect.poll(() => layers.evaluateAll((elements, before) => elements.every((element, index) => getComputedStyle(element).transform !== before[index]), initial)).toBe(true);
-    expect(await pattern.boundingBox()).toEqual(paperBefore);
+    const paperAfter = await pattern.evaluate((element) => {
+        const { x, y, width, height } = element.getBoundingClientRect();
+        return { x, y, width, height, bodyHeight: document.body.getBoundingClientRect().height };
+    });
+    // Late content layout may change the document height. The wallpaper must
+    // stay anchored while continuing to cover the actual, current document.
+    expect({ x: paperAfter.x, y: paperAfter.y, width: paperAfter.width }).toEqual({ x: paperBefore.x, y: paperBefore.y, width: paperBefore.width });
+    expect(paperAfter.height).toBeCloseTo(paperAfter.bodyHeight);
     await expect(pattern).toHaveCSS('transform', 'none');
 
     // Flower groups have their own timelines, instead of moving one flat sheet.
