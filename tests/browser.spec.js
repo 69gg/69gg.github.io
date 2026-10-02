@@ -133,6 +133,18 @@ for (const width of [320, 390, 768, 1024, 1440]) {
             await page.goto(route);
             await expect(page.locator('#main-content')).toBeVisible();
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+            const footerPlacement = await page.locator('.folio-footer').evaluate((footer) => {
+                const text = document.createRange();
+                text.selectNodeContents(footer.querySelector('.folio-colophon p'));
+                const copyright = text.getBoundingClientRect();
+                const build = footer.querySelector('.folio-build').getBoundingClientRect();
+                return {
+                    centerOffset: copyright.x + copyright.width / 2 - (build.x + build.width / 2),
+                    gap: build.top - copyright.bottom
+                };
+            });
+            expect(Math.abs(footerPlacement.centerOffset)).toBeLessThan(1);
+            expect(footerPlacement.gap).toBeGreaterThan(0);
             if (route === blog) {
                 const title = await page.locator('#folio-title').boundingBox();
                 const archive = await page.locator('.folio-hero .folio-text-link').boundingBox();

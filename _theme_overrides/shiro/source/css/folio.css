@@ -244,7 +244,7 @@ html:not(.js) .folio-actions { display: none; }
 .folio-footer-links a { display: inline-flex; align-items: center; gap: 5px; }
 .folio-footer-links svg { width: 12px; height: 12px; }
 .folio-footer a:hover { color: var(--folio-accent); }
-.folio-colophon { display: flex; justify-content: space-between; gap: 10px; padding-top: 19px; border-top: 1px solid var(--folio-rule); font-size: 12px; color: var(--folio-muted); }
+.folio-colophon { display: flex; justify-content: center; gap: 10px; padding-top: 19px; border-top: 1px solid var(--folio-rule); font-size: 12px; color: var(--folio-muted); }
 .folio-build { font-family: var(--folio-ui); font-size: 9px; color: var(--folio-muted); opacity: .8; margin-top: 14px; letter-spacing: .025em; }
 .folio-body .back-to-top { background: var(--folio-paper); color: var(--folio-accent); border: 1px solid var(--folio-rule); box-shadow: 0 2px 16px #29203610; }
 .folio-body .progress-bar { background: var(--folio-accent); }
