@@ -289,8 +289,14 @@
         motionFrame = requestAnimationFrame(step);
     }
 
+    function bringPaperForward(branch) {
+        for (let current = branch; current; current = current.parentElement.closest('.board-branch')) {
+            current.style.zIndex = ++topLayer;
+        }
+    }
+
     function revealPaper(paper) {
-        paper.closest('#noticeboard-notes > .board-branch').style.zIndex = ++topLayer;
+        bringPaperForward(paper.closest('.board-branch'));
         const rect = paper.getBoundingClientRect();
         if (rect.left >= 20 && rect.right <= innerWidth - 20 && rect.top >= 90 && rect.bottom <= innerHeight - 90) return;
         moveCamera({ x: camera.x + (viewport.clientWidth - rect.width) / 2 - rect.left, y: camera.y + Math.max(100, (viewport.clientHeight - rect.height) / 2) - rect.top });
@@ -488,7 +494,10 @@
     function nextPosition(color = 'cream', size = noteSize) {
         let slot = 0;
         let x, y;
-        const occupied = [...notesRoot.children].map((branch) => ({ x: branch.offsetLeft, y: branch.offsetTop, width: branch.offsetWidth, height: branch.offsetHeight }));
+        const occupied = [...notesRoot.querySelectorAll('.board-note')].map((paper) => {
+            const rect = paper.getBoundingClientRect();
+            return { x: rect.left - camera.x, y: rect.top - camera.y, width: rect.width, height: rect.height };
+        });
         const origin = { x: (viewport.clientWidth - size.width) / 2 - camera.x, y: Math.max(110, (viewport.clientHeight - size.height) / 2) - camera.y };
         do {
             x = origin.x + [0, size.width + 35, -size.width - 35][slot % 3];
@@ -519,6 +528,8 @@
         article.dataset.id = comment.id;
         article.innerHTML = '<span class="board-note-pin" aria-hidden="true"></span><div class="board-note-message noticeboard-markdown"></div><footer class="board-note-footer"></footer>';
         branch.append(article);
+        article.addEventListener('pointerdown', () => bringPaperForward(branch));
+        article.addEventListener('focusin', () => bringPaperForward(branch));
         positionNote(branch, paperPosition(note, comment));
         renderMarkdown(article.querySelector('.board-note-message'), comment.body);
         renderMetadata(article.querySelector(':scope > footer'), comment);
@@ -564,6 +575,11 @@
             }
             papers.append(branches.get(reply.id));
         }
+        branch.querySelectorAll('.board-note-replies').forEach((papers) => {
+            [...papers.children].forEach((paper, index) => {
+                paper.style.setProperty('--reply-anchor', `${(index + 1) / (papers.childElementCount + 1) * 100}%`);
+            });
+        });
         return branch;
     }
 
@@ -577,6 +593,8 @@
         const updated = renderNote(note);
         if (paper) {
             updated.style.zIndex = paper.style.zIndex;
+            const layers = new Map([...paper.querySelectorAll('.board-branch')].map((branch) => [branch.dataset.id, branch.style.zIndex]));
+            updated.querySelectorAll('.board-branch').forEach((branch) => { branch.style.zIndex = layers.get(branch.dataset.id) || ''; });
             updated.querySelectorAll('.board-note').forEach((element) => { element.style.animation = 'none'; });
             paper.replaceWith(updated);
         } else notesRoot.append(updated);
@@ -629,8 +647,7 @@
             handle.setPointerCapture(event.pointerId);
             const position = paperPosition(note, comment);
             drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: position.x, top: position.y, original: { ...position } };
-            branch.closest('#noticeboard-notes > .board-branch').style.zIndex = ++topLayer;
-            branch.style.zIndex = topLayer;
+            bringPaperForward(branch);
             article.classList.add('is-dragging');
         });
         handle.addEventListener('pointermove', (event) => {
@@ -662,8 +679,7 @@
             const position = paperPosition(note, comment);
             keyOriginal ||= { ...position };
             const step = event.shiftKey ? 30 : 10;
-            branch.closest('#noticeboard-notes > .board-branch').style.zIndex = ++topLayer;
-            branch.style.zIndex = topLayer;
+            bringPaperForward(branch);
             setPosition(position.x + direction[0] * step, position.y + direction[1] * step);
             clearTimeout(keyTimer);
             keyTimer = setTimeout(() => {

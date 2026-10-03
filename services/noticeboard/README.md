@@ -100,7 +100,7 @@ GitHub App 用户登录与 PKCE 参数见 [GitHub 官方文档](https://docs.git
 - 纸条与回复保留 GitHub 的 `createdAt`、`updatedAt` 和作者，前端将完整创建时间以及有修改时的修改时间放在同一行。页面迁到根目录后继续使用同一条 Discussion，不改变已有评论 ID 或作者。
 - Discussion 回复是纸条下面的楼层回复，保持真实 GitHub 作者身份。用户在网站上的写入、修改通过自己的 GitHub App 用户 Token 完成。
 - 嵌套回复仍写为所属纸条的原生 Discussion 回复，末尾通过 `<!-- null-board-reply:{"parentId":"被回复的评论 Node ID","position":{"v":2,"x":0,"y":0,"color":"cream","width":320,"height":440,"rotation":0}} -->` 记录站内父级和独立纸面设置。直接回复主纸条时 `parentId` 为 `null`；回复的 `x`、`y` 是相对于其附着位置的像素偏移，颜色、宽高、倾斜复用主纸条的数据格式与校验。`POST /api/replies/:id/replies` 从 GitHub 查询被回复评论及所属纸条，再为当前用户创建回复；客户端不能通过正文参数改绑其他纸条。读取返回去掉元数据的 Markdown、`parentId` 和 `position`，缺少这些字段的旧回复返回 `null`，由前端采用默认纸面设置。修改正文或纸面设置时保留原父级。
-- 前端将每条回复显示为附在目标下方的独立纸条，回复的回复继续附在其目标下方；同级回复依次排列，不使用内部滚动列表。主纸条与回复共用颜色、HEX、宽高与倾斜编辑面板，长内容超过所选高度时延长纸张。作者可拖动回复调整相对位置，目标移动时其下各层回复跟随。原父级被删除或隐藏时，其余内容仍保留并附在主纸条下，提示原回复已移除。GitHub 原生页面仍展示纸条下的回复，站内展示额外的嵌套关系。
+- 前端将每条回复显示为钉在目标下沿的独立纸条，回复的回复继续钉在其目标上；同级回复在同一下沿向左右展开并允许叠放，不使用内部滚动列表。点击纸面或键盘聚焦可将对应分支带到前景，刷新内容或表情时保留叠放顺序；这些显示层级只存在于当前页面，不改写 GitHub 数据。主纸条与回复共用颜色、HEX、宽高与倾斜编辑面板，长内容超过所选高度时延长纸张。作者可拖动回复调整相对位置，目标移动时其下各层回复跟随。原父级被删除或隐藏时，其余内容仍保留并附在主纸条下，提示原回复已移除。GitHub 原生页面仍展示纸条下的回复，站内展示额外的嵌套关系。
 - 留言与回复的表情使用 GitHub 原生 Reactions，支持 `THUMBS_UP`、`THUMBS_DOWN`、`LAUGH`、`HOORAY`、`CONFUSED`、`HEART`、`ROCKET`、`EYES`。读取返回各表情的 `content`、`count` 和 `viewerHasReacted`；登录访客可对任何人的内容添加或取消自己的表情，不需要内容所有权。写入使用该访客的用户 Token，不使用 App 代替访客点表情。计数读取 `reactionGroups.reactors.totalCount`，新增与取消复用 GitHub 的 [Reactions GraphQL 接口](https://docs.github.com/en/graphql/reference/reactions)。
 - 移动、修改和删除纸条，以及修改回复的正文、颜色、尺寸、倾斜和相对位置时，接口向 GitHub 查询 `viewerDidAuthor`，仅接受作者的操作；同时确认评论属于配置的仓库和留言板 Discussion。
 - 删除回复时允许回复作者操作；也允许该顶层纸条的作者操作。纸条作者删除别人回复时，接口先通过用户 Token 确认顶层评论归属，再使用 App 安装 Token 执行删除。App 的权限只覆盖选中的存储仓库，不赋予访客仓库管理权限。

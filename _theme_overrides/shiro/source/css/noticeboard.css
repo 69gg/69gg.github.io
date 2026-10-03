@@ -45,8 +45,8 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 :is(.board-note, .noticeboard-color, .noticeboard-dialog)[data-color='lilac'] { --note-paper: #e6dcef; --note-ink: #5b4e6b; --note-pin: #8b7899; }
 .board-branch { position: relative; width: var(--note-width, var(--board-note-width)); pointer-events: none; }
 #noticeboard-notes > .board-branch { position: absolute; left: var(--note-x); top: var(--note-y); }
-.board-note-replies { display: flex; flex-direction: column; align-items: flex-start; gap: 32px; width: 100%; margin: -18px 0 0 16px; }
-.board-note-replies > .board-branch { margin-left: calc((100% - var(--note-width)) / 2 + var(--note-x)); margin-top: var(--note-y); }
+.board-note-replies { display: grid; grid-template-columns: 100%; align-items: start; width: 100%; margin-top: -18px; }
+.board-note-replies > .board-branch { grid-area: 1 / 1; justify-self: start; margin-left: calc(var(--reply-anchor, 50%) - var(--note-width) / 2 + var(--note-x)); margin-top: var(--note-y); }
 .board-note { position: relative; display: flex; flex-direction: column; box-sizing: border-box; width: 100%; min-height: var(--note-height, var(--board-note-height)); padding: 38px 24px 20px; background: linear-gradient(175deg, #fff5, transparent 40%, #816a4320), var(--note-paper); color: var(--note-ink); box-shadow: 1px 4px 4px #3b281e30, 3px 12px 18px #3b281e1f, inset 0 1px 0 #fff8; transform: rotate(var(--note-turn)); transform-origin: 50% 18px; transition: transform var(--folio-motion-panel) var(--folio-ease), box-shadow var(--folio-motion-panel); animation: board-note-arrive 540ms var(--folio-ease) backwards; pointer-events: auto; cursor: default; }
 .board-note::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: url('../images/paper-handmade.webp') 0 0 / 120px repeat; mix-blend-mode: multiply; opacity: .58; }
 .board-note::after { content: ''; position: absolute; right: 3px; bottom: -2px; left: 8px; height: 8px; z-index: -1; background: #35272124; filter: blur(4px); transform: rotate(-2deg); }
