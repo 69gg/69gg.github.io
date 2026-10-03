@@ -5,6 +5,12 @@
     {% include "_partial/common/head-prefetch.njk" %}
     {# FOUC theme script before blocking stylesheets (first-paint contract). #}
     {% include "_partial/common/head-theme.njk" %}
+    {# Register before the incoming document's first rendering opportunity. #}
+    <script{{ csp_nonce_attr(gates.shiroCspNonce) }} data-cfasync="false">
+        window.addEventListener('pagereveal', (event) => {
+            if (event.viewTransition) document.documentElement.setAttribute('data-folio-navigation', '');
+        });
+    </script>
     {% include "_partial/common/head-mathjax.njk" %}
     {% include "_partial/common/head-seo.njk" %}
     {% include "_partial/common/head-styles.njk" %}

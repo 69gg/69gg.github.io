@@ -35,8 +35,10 @@
     </div>
 
     {% if menuItems.length %}
-    <nav id="mobileMenu" class="menu-panel folio-mobile-nav" data-open="false" aria-label="移动导航">
-        {% for item in menuItems %}{{ menu_link(item, "folio-nav-link") }}{% endfor %}
+    <nav id="mobileMenu" class="folio-mobile-nav" data-open="false" aria-label="移动导航">
+        <div class="folio-mobile-nav-content">
+            {% for item in menuItems %}{{ menu_link(item, "folio-nav-link") }}{% endfor %}
+        </div>
     </nav>
     <script{{ csp_nonce_attr(gates.shiroCspNonce) }} data-cfasync="false">
         if (document.documentElement.classList.contains('js')) {

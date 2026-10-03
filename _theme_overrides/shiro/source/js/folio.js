@@ -16,17 +16,26 @@
     syncVisibility();
 
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (motion.matches || !('IntersectionObserver' in window)) return;
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (!entry.isIntersecting) return;
-            entry.target.classList.add('is-visible');
-            observer.unobserve(entry.target);
-        });
-    }, { threshold: 0.08 });
-
     // Content stays readable even if JavaScript or IntersectionObserver fails.
-    document.querySelectorAll('.folio-entry').forEach((entry) => observer.observe(entry));
-    motion.addEventListener('change', () => observer.disconnect(), { once: true });
+    const targets = document.querySelectorAll('.folio-entry, .folio-footer, .folio-inner article.group, .folio-inner .section-heading, .folio-inner .prose-shiro > :is(h2, h3, blockquote, figure, img)');
+    targets.forEach((target) => target.setAttribute('data-folio-reveal', ''));
+    let observer;
+    const syncMotion = () => {
+        observer?.disconnect();
+        if (motion.matches || !('IntersectionObserver' in window)) return;
+        observer = new IntersectionObserver((entries) => {
+            let order = 0;
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.style.setProperty('--folio-reveal-order', Math.min(order++, 3));
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+            });
+        }, { threshold: 0.08 });
+        targets.forEach((target) => {
+            if (!target.classList.contains('is-visible')) observer.observe(target);
+        });
+    };
+    motion.addEventListener('change', syncMotion);
+    syncMotion();
 })();

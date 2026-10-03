@@ -109,6 +109,7 @@ test('all typography renders from bundled fonts with external requests blocked',
     await session.detach();
     const technical = posts.find((post) => post.source.includes('```'));
     await page.goto(postURL(technical));
+    await expect(page.locator('figure.highlight .code .line').first()).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
     const articleSession = await page.context().newCDPSession(page);
     await articleSession.send('DOM.enable');
@@ -355,6 +356,155 @@ test('reading hierarchy and contrast hold in both themes with local fonts', asyn
         }
         expect(paperByTheme.light - paperByTheme.dark).toBeGreaterThan(.5);
     }
+});
+
+test('scroll reveals move smoothly once and retain readable fallback content', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto(blog);
+    await page.evaluate(() => document.fonts.ready);
+    const entry = page.locator('.folio-entry').last();
+    await expect(entry).not.toHaveClass(/is-visible/);
+    await entry.scrollIntoViewIfNeeded();
+    await expect(entry).toHaveClass(/is-visible/);
+    const frames = await entry.evaluate(async (element) => {
+        const frames = [];
+        for (let frame = 0; frame < 8; frame++) {
+            await new Promise(requestAnimationFrame);
+            const style = getComputedStyle(element);
+            frames.push({ opacity: Number(style.opacity), y: new DOMMatrix(style.transform).m42 });
+        }
+        return frames;
+    });
+    expect(frames.at(-1).opacity).toBeGreaterThan(frames[0].opacity);
+    expect(frames.at(-1).y).toBeLessThan(frames[0].y);
+    await expect.poll(() => entry.evaluate((element) => element.getAnimations().length)).toBe(0);
+    await page.locator('#folio-title').scrollIntoViewIfNeeded();
+    await entry.scrollIntoViewIfNeeded();
+    expect(await entry.evaluate((element) => element.getAnimations().length)).toBe(0);
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    expect(await page.locator('.folio-header, #folio-title, [data-folio-reveal]').evaluateAll((elements) => elements.every((element) => element.getAnimations().length === 0))).toBe(true);
+    await page.addInitScript(() => { delete window.IntersectionObserver; });
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto(blog);
+    await expect(page.locator('.folio-entry').first()).toBeVisible();
+    await expect(page.locator('.folio-entry').first()).toHaveCSS('opacity', '1');
+});
+
+test('mobile menu animates real height while maintaining focus and inert state', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto(blog);
+    const menu = page.locator('#mobileMenu');
+    const sampleHeight = async (action) => {
+        // Start on the browser's transition event so protocol round trips do
+        // not consume the short animation before the first frame is sampled.
+        await menu.evaluate((element) => {
+            window.folioMenuFrames = new Promise((resolve) => {
+                const sample = async (event) => {
+                    if (event.target !== element || event.propertyName !== 'grid-template-rows') return;
+                    element.removeEventListener('transitionrun', sample);
+                    const heights = [element.getBoundingClientRect().height];
+                    for (let frame = 0; frame < 8; frame++) {
+                        await new Promise(requestAnimationFrame);
+                        heights.push(element.getBoundingClientRect().height);
+                    }
+                    resolve(heights);
+                };
+                element.addEventListener('transitionrun', sample);
+            });
+        });
+        await action();
+        return page.evaluate(() => window.folioMenuFrames);
+    };
+    const opening = await sampleHeight(() => page.locator('#menuBtn').click());
+    expect(opening.at(-1)).toBeGreaterThan(opening[0]);
+    await expect(menu.locator('a').first()).toBeFocused();
+    expect(await menu.evaluate((element) => element.inert)).toBe(false);
+    await expect.poll(() => menu.evaluate((element) => element.getAnimations({ subtree: true }).length)).toBe(0);
+    const closing = await sampleHeight(() => page.keyboard.press('Escape'));
+    expect(await menu.evaluate((element) => element.inert)).toBe(true);
+    expect(closing.at(-1)).toBeLessThan(closing[0]);
+    await expect(menu).not.toBeVisible();
+    await expect(page.locator('#menuBtn')).toBeFocused();
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.locator('#menuBtn').click();
+    await expect(menu).toBeVisible();
+    expect(await menu.evaluate((element) => element.getAnimations({ subtree: true }).length)).toBe(0);
+});
+
+test('page navigation opts into native cross-fades with a readable entrance fallback', async ({ page, baseURL }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.addInitScript(() => {
+        window.addEventListener('pageswap', (event) => {
+            sessionStorage.setItem('folioNavigationSource', String(!!event.viewTransition));
+        });
+        window.addEventListener('pagereveal', (event) => {
+            window.folioNavigationMotion = { seen: true, hasTransition: !!event.viewTransition };
+            if (!event.viewTransition) return;
+            event.viewTransition.ready.then(() => {
+                const style = getComputedStyle(document.documentElement, '::view-transition-new(root)');
+                Object.assign(window.folioNavigationMotion, { active: document.documentElement.matches(':active-view-transition'), duration: parseFloat(style.animationDuration), finished: false });
+                event.viewTransition.finished.then(() => { window.folioNavigationMotion.finished = true; });
+            }).catch((error) => { window.folioNavigationMotion.error = String(error); });
+        });
+    });
+    await page.goto(blog);
+    test.skip(!await page.evaluate(() => 'onpagereveal' in window), 'Browser does not support cross-document view transitions');
+    await page.bringToFront();
+    await page.evaluate(async () => {
+        await document.fonts.ready;
+        // Cross-document snapshots require a painted, active source document.
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
+    });
+    await page.locator('.folio-hero').getByRole('link', { name: /^全部文章/ }).click();
+    await expect(page).toHaveURL(`${baseURL}${blog}archives/`);
+    await expect.poll(() => page.evaluate(() => window.folioNavigationMotion?.seen)).toBe(true);
+    expect(await page.evaluate(() => sessionStorage.getItem('folioNavigationSource'))).toBe('true');
+    // A user agent may skip the incoming snapshot; navigation must remain
+    // smooth and readable through the ordinary CSS entrance in that case.
+    if (await page.evaluate(() => window.folioNavigationMotion.hasTransition)) {
+        await expect.poll(() => page.evaluate(() => window.folioNavigationMotion)).toMatchObject({ active: true });
+        expect(await page.evaluate(() => window.folioNavigationMotion.duration)).toBeGreaterThan(0);
+        await expect.poll(() => page.evaluate(() => window.folioNavigationMotion.finished)).toBe(true);
+        await expect(page.locator('html')).toHaveAttribute('data-folio-navigation', '');
+        await expect(page.locator('.folio-main')).toHaveCSS('animation-name', 'none');
+    } else {
+        await expect(page.locator('.folio-main')).toHaveCSS('animation-name', 'folio-fade-in');
+    }
+    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.locator('.folio-main')).toHaveCSS('opacity', '1');
+});
+
+test('theme transitions use the native cross-fade and stop for reduced motion', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto(blog);
+    test.skip(!await page.evaluate(() => !!document.startViewTransition), 'Browser does not support view transitions');
+    await page.evaluate(async () => {
+        await document.fonts.ready;
+        await Promise.all(document.getAnimations().filter((animation) => !['folio-blossom-x', 'folio-blossom-y', 'folio-petal'].includes(animation.animationName)).map((animation) => animation.finished));
+        const original = document.startViewTransition.bind(document);
+        document.startViewTransition = (...args) => {
+            const transition = original(...args);
+            window.folioThemeMotion = {};
+            transition.ready.then(() => {
+                const style = getComputedStyle(document.documentElement, '::view-transition-new(root)');
+                Object.assign(window.folioThemeMotion, { active: document.documentElement.matches(':active-view-transition'), duration: parseFloat(style.animationDuration) });
+            }).catch((error) => { window.folioThemeMotion.error = String(error); });
+            transition.finished.then(() => { window.folioThemeMotion.finished = true; });
+            return transition;
+        };
+    });
+    await page.locator('#themeToggle').click();
+    await expect.poll(() => page.evaluate(() => window.folioThemeMotion?.active)).toBe(true);
+    expect(await page.evaluate(() => window.folioThemeMotion.duration)).toBeGreaterThan(0);
+    await expect.poll(() => page.evaluate(() => window.folioThemeMotion?.finished)).toBe(true);
+    expect(await page.locator('.folio-header, #folio-title').evaluateAll((elements) => elements.every((element) => element.getAnimations().length === 0))).toBe(true);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.evaluate(() => { delete window.folioThemeMotion; });
+    await page.locator('#themeToggle').click();
+    expect(await page.evaluate(() => window.folioThemeMotion)).toBeUndefined();
 });
 
 test('reduced motion stops all floral motion and content works without JavaScript', async ({ page, browser, baseURL }) => {
