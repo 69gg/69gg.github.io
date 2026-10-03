@@ -18,15 +18,15 @@
     --folio-corner-size: 102px;
     --folio-frame-line: #fffaf0;
     --folio-paper: #f6f5f1;
-    --folio-paper-grain-opacity: .85;
+    --folio-paper-grain-opacity: .5;
     --folio-paper-grain-blend: multiply;
     --folio-paper-grain-filter: none;
     --folio-pattern-opacity: 1;
     --folio-flower-opacity: 1;
     --folio-surround-filter: none;
-    --folio-paper-highlight: #ffffff40;
-    --folio-paper-edge-light: #ffffffb0;
-    --folio-paper-edge-shade: #64728c18;
+    --folio-paper-highlight: #ffffff60;
+    --folio-paper-edge-light: #ffffffca;
+    --folio-paper-edge-shade: #64728c25;
     --folio-paper-contact: #45516661;
     --folio-paper-shadow: #29273938;
     --folio-masthead-ink: #30394e;
@@ -39,11 +39,11 @@
     --folio-content-width: 1040px;
     --folio-gutter: 40px;
     --folio-ease: cubic-bezier(.22, 1, .36, 1);
-    --folio-motion-fast: 220ms;
-    --folio-motion-panel: 420ms;
-    --folio-motion-reveal: 760ms;
-    --folio-motion-stagger: 65ms;
-    --folio-motion-page: 480ms;
+    --folio-motion-fast: 180ms;
+    --folio-motion-panel: 320ms;
+    --folio-motion-reveal: 640ms;
+    --folio-motion-stagger: 45ms;
+    --folio-motion-page: 360ms;
     --folio-serif: 'Noto Serif SC', 'Noto Serif CJK SC', 'Folio Noto Serif SC', serif;
     --folio-ui: 'Noto Sans SC', 'Noto Sans CJK SC', 'Folio Noto Sans SC', sans-serif;
     --folio-brand-font: 'Great Vibes', 'Folio Great Vibes', var(--folio-serif);
@@ -80,13 +80,13 @@
 }
 html[data-theme='dark'] {
     --folio-paper: #34435a;
-    --folio-paper-grain-opacity: .8;
+    --folio-paper-grain-opacity: .4;
     --folio-paper-grain-blend: screen;
     --folio-paper-grain-filter: invert(1);
     --folio-surround-filter: brightness(.75) saturate(.92);
-    --folio-paper-highlight: #dae3ed0d;
-    --folio-paper-edge-light: #d1ddeb35;
-    --folio-paper-edge-shade: #1c26374d;
+    --folio-paper-highlight: #e7e4db12;
+    --folio-paper-edge-light: #dce6f34d;
+    --folio-paper-edge-shade: #15233b66;
     --folio-paper-contact: #101e3e99;
     --folio-paper-shadow: #08132c66;
     --folio-masthead-ink: #f4f0e7;
@@ -221,7 +221,7 @@ html[data-folio-navigation] .folio-body { transition: none; }
     isolation: isolate;
     pointer-events: none;
     /* Filtering only this empty decoration preserves fixed TOC positioning. */
-    filter: drop-shadow(0 2px .7px var(--folio-paper-contact)) drop-shadow(3px 10px 14px var(--folio-paper-shadow));
+    filter: drop-shadow(1px 3px 1px var(--folio-paper-contact)) drop-shadow(4px 14px 18px var(--folio-paper-shadow));
 }
 .folio-paper-surface::before, .folio-paper-surface::after {
     content: '';
@@ -236,10 +236,11 @@ html[data-folio-navigation] .folio-body { transition: none; }
 }
 .folio-paper-surface::before {
     background:
-        linear-gradient(90deg, var(--folio-paper-edge-shade), transparent 18px, transparent calc(100% - 22px), var(--folio-paper-edge-shade)),
-        radial-gradient(ellipse at 20% 0, var(--folio-paper-highlight), transparent 75%),
+        linear-gradient(90deg, var(--folio-paper-highlight), transparent 24px, transparent calc(100% - 28px), var(--folio-paper-edge-shade)),
+        linear-gradient(0deg, var(--folio-paper-edge-shade), transparent 16px),
+        radial-gradient(ellipse at 0 0, var(--folio-paper-highlight), transparent 70%),
         var(--folio-paper);
-    box-shadow: inset 0 1px 0 var(--folio-paper-edge-light), inset 0 -1px 0 var(--folio-paper-edge-shade);
+    box-shadow: inset 1px 1px 0 var(--folio-paper-edge-light), inset -1px -1px 0 var(--folio-paper-edge-shade);
 }
 .folio-paper-surface::after {
     /* Handmade Paper by Le Marquis, CC BY-SA 3.0. See images/PAPER-LICENSE.md. */
@@ -296,11 +297,12 @@ html:not(.js) .folio-actions { display: none; }
 .folio-count { font-family: var(--folio-date-font); font-size: 18px; font-variant-numeric: tabular-nums; color: var(--folio-accent); }
 .folio-entry { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 32px; padding: 40px 0 36px; border-bottom: 1px solid var(--folio-rule); }
 [data-folio-reveal].is-visible { animation: folio-entry-arrive var(--folio-motion-reveal) var(--folio-ease) calc(var(--folio-reveal-order, 0) * var(--folio-motion-stagger)) backwards; }
+.folio-article .prose-shiro > [data-folio-reveal].is-visible, .folio-footer[data-folio-reveal].is-visible { animation-name: folio-fade-in; }
 .folio-entry-date { align-self: start; padding-top: 5px; color: var(--folio-muted); font-family: var(--folio-date-font); font-size: 12px; line-height: 1.3; letter-spacing: .08em; }
 .folio-calendar { display: flex; flex-direction: column; align-items: flex-start; }
 .folio-entry-date .folio-day { font-size: 44px; font-weight: 400; line-height: 1; letter-spacing: -.04em; color: var(--folio-accent); margin: 4px 0; }
 .folio-entry h2 { margin: 0; font-family: var(--folio-heading-font); font-size: 26px; line-height: 1.55; font-weight: 500; letter-spacing: .025em; text-wrap: pretty; }
-.folio-entry h2 a { display: inline-block; text-decoration-color: transparent; text-decoration-thickness: 1px; text-underline-offset: .3em; transition: color var(--folio-motion-fast), text-decoration-color var(--folio-motion-panel), transform var(--folio-motion-panel) var(--folio-ease); }
+.folio-entry h2 a { display: inline-block; text-decoration-color: transparent; text-decoration-thickness: 1px; text-underline-offset: .3em; transition: color var(--folio-motion-fast), text-decoration-color var(--folio-motion-panel); }
 .folio-entry h2 a:hover { text-decoration-line: underline; text-decoration-color: var(--folio-rule); }
 .folio-entry h2 a:hover { color: var(--folio-accent); }
 .folio-post-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-family: var(--folio-ui); font-size: 12px; line-height: 1.8; color: var(--folio-muted); }
@@ -413,7 +415,6 @@ html[data-folio-navigation] :is(.folio-header, .folio-hero h1, .folio-hero .foli
 :is(.folio-nav-link, .folio-text-link, .folio-footer-links a, .pagination a, .post-nav-link) { transition: color var(--folio-motion-fast), transform var(--folio-motion-panel) var(--folio-ease); }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
     .folio-icon-button:hover, .folio-footer-links a:hover, .pagination a:hover { transform: translateY(-2px); }
-    .folio-entry h2 a:hover, .post-nav-link:hover { transform: translateX(3px); }
 }
 @media (prefers-reduced-motion: no-preference) {
     /* Native navigation and Shiro's existing theme toggle share a cross-fade.
@@ -427,8 +428,8 @@ html[data-folio-navigation] :is(.folio-header, .folio-hero h1, .folio-hero .foli
     html[data-folio-loading]::view-transition-old(root),
     html[data-folio-loading]::view-transition-new(root) { animation-play-state: paused; }
 }
-@keyframes folio-arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes folio-entry-arrive { from { opacity: .35; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes folio-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes folio-entry-arrive { from { opacity: .5; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes folio-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes folio-fade-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes folio-blossom-x {
