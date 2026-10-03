@@ -18,17 +18,17 @@
     --folio-corner-size: 102px;
     --folio-frame-line: #fffaf0;
     --folio-paper: #f6f5f1;
-    --folio-paper-grain-opacity: .5;
+    --folio-paper-grain-opacity: .7;
     --folio-paper-grain-blend: multiply;
-    --folio-paper-grain-filter: none;
+    --folio-paper-grain-filter: contrast(1.12);
     --folio-pattern-opacity: 1;
     --folio-flower-opacity: 1;
     --folio-surround-filter: none;
     --folio-paper-highlight: #ffffff60;
-    --folio-paper-edge-light: #ffffffca;
-    --folio-paper-edge-shade: #64728c25;
-    --folio-paper-contact: #45516661;
-    --folio-paper-shadow: #29273938;
+    --folio-paper-edge-light: #ffffffed;
+    --folio-paper-edge-shade: #64728c33;
+    --folio-paper-contact: #4551667a;
+    --folio-paper-shadow: #29273945;
     --folio-masthead-ink: #30394e;
     --folio-ink: #3c465c;
     --folio-muted: #545d6e;
@@ -80,13 +80,13 @@
 }
 html[data-theme='dark'] {
     --folio-paper: #34435a;
-    --folio-paper-grain-opacity: .4;
+    --folio-paper-grain-opacity: .58;
     --folio-paper-grain-blend: screen;
-    --folio-paper-grain-filter: invert(1);
+    --folio-paper-grain-filter: invert(1) contrast(1.12);
     --folio-surround-filter: brightness(.75) saturate(.92);
     --folio-paper-highlight: #e7e4db12;
-    --folio-paper-edge-light: #dce6f34d;
-    --folio-paper-edge-shade: #15233b66;
+    --folio-paper-edge-light: #dce6f366;
+    --folio-paper-edge-shade: #15233b7a;
     --folio-paper-contact: #101e3e99;
     --folio-paper-shadow: #08132c66;
     --folio-masthead-ink: #f4f0e7;
@@ -221,7 +221,7 @@ html[data-folio-navigation] .folio-body { transition: none; }
     isolation: isolate;
     pointer-events: none;
     /* Filtering only this empty decoration preserves fixed TOC positioning. */
-    filter: drop-shadow(1px 3px 1px var(--folio-paper-contact)) drop-shadow(4px 14px 18px var(--folio-paper-shadow));
+    filter: drop-shadow(1px 4px 1px var(--folio-paper-contact)) drop-shadow(4px 14px 18px var(--folio-paper-shadow));
 }
 .folio-paper-surface::before, .folio-paper-surface::after {
     content: '';
@@ -240,11 +240,11 @@ html[data-folio-navigation] .folio-body { transition: none; }
         linear-gradient(0deg, var(--folio-paper-edge-shade), transparent 16px),
         radial-gradient(ellipse at 0 0, var(--folio-paper-highlight), transparent 70%),
         var(--folio-paper);
-    box-shadow: inset 1px 1px 0 var(--folio-paper-edge-light), inset -1px -1px 0 var(--folio-paper-edge-shade);
+    box-shadow: inset 1px 1px 0 var(--folio-paper-edge-light), inset -2px -2px 0 var(--folio-paper-edge-shade);
 }
 .folio-paper-surface::after {
     /* Handmade Paper by Le Marquis, CC BY-SA 3.0. See images/PAPER-LICENSE.md. */
-    background: url('../images/paper-handmade.webp') 0 0 / 150px 150px repeat;
+    background: url('../images/paper-handmade.webp') 0 0 / 120px 120px repeat;
     opacity: var(--folio-paper-grain-opacity);
     mix-blend-mode: var(--folio-paper-grain-blend);
     filter: var(--folio-paper-grain-filter);
@@ -308,7 +308,7 @@ html:not(.js) .folio-actions { display: none; }
 .folio-post-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-family: var(--folio-ui); font-size: 12px; line-height: 1.8; color: var(--folio-muted); }
 .folio-entry-meta { margin-top: 12px; }
 .folio-meta-group { display: inline-flex; align-items: center; gap: 6px; }
-.folio-meta-category { color: var(--folio-accent); font-weight: 500; }
+.folio-meta-category, .folio-meta-details [role='list'] { color: var(--folio-accent); font-size: 14px; font-weight: 500; }
 .folio-post-meta svg { width: 12px; height: 12px; color: inherit; opacity: .75; }
 .folio-post-meta .folio-tags, .folio-post-meta .folio-meta-details { display: contents; font: inherit; }
 .folio-post-meta .tag-pill { gap: 3px; padding: 0; border: 0; border-bottom: 1px solid transparent; border-radius: 0; background: transparent; font: inherit; color: var(--folio-muted); }
@@ -373,7 +373,7 @@ html:not(.js) .folio-actions { display: none; }
 .folio-directory .category-block-head { gap: 10px; }
 .folio-directory .category-block--has-posts .category-block-head { margin-bottom: 14px; padding-block: 0 12px; }
 .folio-directory .category-node-icon { color: var(--folio-accent); width: 14px; height: 14px; }
-.folio-directory .category-block--has-posts .category-node-name { color: var(--folio-ink); font-family: var(--folio-heading-font); font-size: 23px; font-weight: 500; }
+.folio-directory .category-block--has-posts .category-node-name { color: var(--folio-ink); font-family: var(--folio-heading-font); font-size: 27px; font-weight: 500; }
 .folio-directory .category-node-count { color: var(--folio-accent); font-family: var(--folio-date-font); font-size: 26px; }
 .folio-directory .category-more-row { justify-content: flex-start; margin-top: 16px; }
 .folio-directory .category-more-row .btn-ink { padding: 6px 0; border: 0; background: transparent; color: var(--folio-accent); font-family: var(--folio-ui); font-size: 12px; }
@@ -496,6 +496,7 @@ html[data-folio-navigation] :is(.folio-header, .folio-hero h1, .folio-hero .foli
     .folio-entry-date .folio-day { font-size: 34px; }
     .folio-entry h2 { font-size: 22px; line-height: 1.6; }
     .folio-post-meta { font-size: 11px; gap: 5px 10px; }
+    .folio-meta-category, .folio-meta-details [role='list'] { font-size: 13px; }
     .folio-entry-meta { margin-top: 10px; }
     .folio-meta-category svg, .folio-meta-reading svg { display: none; }
     .folio-excerpt.prose-shiro { font-size: 14px; -webkit-line-clamp: 3; margin-top: 13px; }
@@ -518,7 +519,7 @@ html[data-folio-navigation] :is(.folio-header, .folio-hero h1, .folio-hero .foli
     .folio-directory-row { grid-template-columns: 78px minmax(0, 1fr); gap: 12px; padding-block: 14px; }
     .folio-directory-date { font-size: 15px; }
     .folio-directory-post-title { font-size: 16px; }
-    .folio-directory .category-block--has-posts .category-node-name { font-size: 21px; }
+    .folio-directory .category-block--has-posts .category-node-name { font-size: 24px; }
     .folio-tag-index { column-gap: 20px; }
     .folio-tag-index .tag-pill { min-height: 48px; font-size: 12px; }
     .folio-tag-index .tag-pill > span { font-size: 20px; }
