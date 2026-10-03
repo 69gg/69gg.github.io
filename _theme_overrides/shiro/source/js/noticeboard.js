@@ -18,6 +18,8 @@
     const paperPreview = editor.querySelector('.noticeboard-preview-paper');
     const noteStyle = getComputedStyle(document.querySelector('.noticeboard'));
     const noteSize = { width: parseFloat(noteStyle.getPropertyValue('--board-note-width')), height: parseFloat(noteStyle.getPropertyValue('--board-note-height')) };
+    const newNoteSize = { width: parseFloat(noteStyle.getPropertyValue('--board-new-note-width')), height: parseFloat(noteStyle.getPropertyValue('--board-new-note-height')) };
+    const replyScale = parseFloat(noteStyle.getPropertyValue('--board-reply-scale'));
     const submit = document.getElementById('noticeboard-submit');
     const removeDialog = document.getElementById('noticeboard-delete');
     const status = document.getElementById('noticeboard-status');
@@ -491,7 +493,7 @@
         document.getElementById('noticeboard-count').textContent = `${notes.length} 张纸条`;
     }
 
-    function nextPosition(color = 'cream', size = noteSize) {
+    function nextPosition(color = 'cream', size = newNoteSize) {
         let slot = 0;
         let x, y;
         const occupied = [...notesRoot.querySelectorAll('.board-note')].map((paper) => {
@@ -517,6 +519,14 @@
         if (comment === note) return note.position;
         const parent = note.replies?.find((item) => item.id === comment.parentId) || note;
         return { v: 2, x: 0, y: 0, color: parent.position?.color || note.position.color, ...noteSize, rotation: 0, ...comment.position };
+    }
+
+    function replySize(position) {
+        return Object.fromEntries(geometryInputs.filter((input) => input.name !== 'rotation').map((input) => {
+            const step = Number(input.step);
+            const size = position[input.name] ?? noteSize[input.name];
+            return [input.name, Math.max(Number(input.min), Math.round(size * replyScale / step) * step)];
+        }));
     }
 
     function renderPaper(note, comment = note) {
@@ -630,12 +640,36 @@
         }
     }
 
+    function constrainReplyPin(article, branch, position, left, top) {
+        const parent = branch.parentElement.closest('.board-branch');
+        if (!parent) return { x: left, y: top };
+        const paper = parent.querySelector(':scope > .board-note');
+        paper.style.animation = 'none';
+        const style = getComputedStyle(paper);
+        const width = parseFloat(style.width);
+        const height = parseFloat(style.height);
+        const bounds = paper.getBoundingClientRect();
+        const matrix = new DOMMatrix(style.transform);
+        // 用纸面四角还原坐标，避免把旋转后的外接矩形当成可移动范围。
+        matrix.e = bounds.left - Math.min(0, matrix.a * width, matrix.c * height, matrix.a * width + matrix.c * height);
+        matrix.f = bounds.top - Math.min(0, matrix.b * width, matrix.d * height, matrix.b * width + matrix.d * height);
+        const pin = article.querySelector('.board-note-pin').getBoundingClientRect();
+        const proposed = new DOMPoint(pin.left + pin.width / 2 + left - position.x, pin.top + pin.height / 2 + top - position.y);
+        const local = matrix.inverse().transformPoint(proposed);
+        const inset = Math.max(pin.width, pin.height) / 2;
+        local.x = Math.max(inset, Math.min(width - inset, local.x));
+        local.y = Math.max(inset, Math.min(height - inset, local.y));
+        const constrained = matrix.transformPoint(local);
+        return { x: left + constrained.x - proposed.x, y: top + constrained.y - proposed.y };
+    }
+
     function bindMovement(handle, article, branch, note, comment) {
         let drag;
         let keyOriginal;
         let keyTimer;
         const setPosition = (left, top) => {
-            comment.position = { ...paperPosition(note, comment), v: 2, x: left, y: top };
+            const position = paperPosition(note, comment);
+            comment.position = { ...position, v: 2, ...constrainReplyPin(article, branch, position, left, top) };
             positionNote(branch, comment.position);
         };
         handle.addEventListener('pointerdown', (event) => {
@@ -646,9 +680,13 @@
             handle.focus({ preventScroll: true });
             handle.setPointerCapture(event.pointerId);
             const position = paperPosition(note, comment);
-            drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: position.x, top: position.y, original: { ...position } };
+            const original = { ...position };
             bringPaperForward(branch);
+            article.style.animation = 'none';
             article.classList.add('is-dragging');
+            setPosition(position.x, position.y);
+            const start = paperPosition(note, comment);
+            drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: start.x, top: start.y, original };
         });
         handle.addEventListener('pointermove', (event) => {
             if (!drag || event.pointerId !== drag.pointerId) return;
@@ -680,6 +718,7 @@
             keyOriginal ||= { ...position };
             const step = event.shiftKey ? 30 : 10;
             bringPaperForward(branch);
+            article.style.animation = 'none';
             setPosition(position.x + direction[0] * step, position.y + direction[1] * step);
             clearTimeout(keyTimer);
             keyTimer = setTimeout(() => {
@@ -711,14 +750,15 @@
         form.reset();
         bodyInput.value = comment?.body || '';
         bodyInput.placeholder = target ? '写下你的回复…' : '今天有什么想说的？';
-        const position = comment ? paperPosition(note, comment) : target ? paperPosition(note, target) : { ...noteSize, color: colorChoice.value };
+        const position = comment ? paperPosition(note, comment) : target ? paperPosition(note, target) : { ...newNoteSize, color: colorChoice.value };
+        const size = target ? replySize(position) : position;
         const color = position.color;
         colorChoice.value = color.startsWith('#') ? 'custom' : color;
         hexInput.value = color.startsWith('#') ? color : defaultPaperColor;
         paintPaper(customSwatch, normalizeHex(hexInput.value));
         syncEditorPaper();
         geometryInputs.forEach((input) => {
-            const saved = input.name === 'rotation' && !comment ? undefined : position[input.name];
+            const saved = input.name === 'rotation' && !comment ? undefined : size[input.name];
             input.value = saved ?? (input.name === 'rotation' ? Math.round(Math.random() * 6 - 3) : noteSize[input.name]);
         });
         const isReply = Boolean(target || (comment && comment !== note));
