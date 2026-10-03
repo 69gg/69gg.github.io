@@ -8,20 +8,24 @@
 {% set show_article_meta = article_show_meta if article_show_meta is defined else true %}
 {% set article_extra_html = article_extra if article_extra is defined else "" %}
 
-<article class="py-2">
-    <header class="text-center mb-8">
+<article class="folio-article">
+    <header class="folio-article-header">
         {# data-pagefind-body keeps the title searchable; data-pagefind-meta sets the result title. #}
-        <h1 class="page-title mb-4" data-pagefind-body data-pagefind-meta="title">
+        <h1 class="page-title" data-pagefind-body data-pagefind-meta="title">
             {{ escape_html(page.title) }}
         </h1>
-        {% if show_article_meta %}
-        {{ meta(page, true, "mb-4") }}
-        {% endif %}
-        {% if page.tags and page.tags.length > 0 %}
-        <div class="folio-tags folio-article-tags">
-            {% for tag in page.tags.toArray() %}
-            {{ render_tag(tag, false) }}
-            {% endfor %}
+        {% if show_article_meta or (page.tags and page.tags.length > 0) %}
+        <div class="folio-post-meta folio-article-meta">
+            {% if show_article_meta %}
+            {{ meta(page, true, "folio-meta-details") }}
+            {% endif %}
+            {% if page.tags and page.tags.length > 0 %}
+            <div class="folio-tags">
+                {% for tag in page.tags.toArray() %}
+                {{ render_tag(tag, false) }}
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
         {% endif %}
     </header>
