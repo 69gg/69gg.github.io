@@ -355,7 +355,13 @@ html:not(.js) .folio-actions { display: none; }
 .folio-article .prose-shiro > table th { background: var(--folio-wash); font-weight: 500; }
 .folio-article .prose-shiro > table :is(th, td) { padding: 10px 14px; }
 .folio-article .prose-shiro figcaption { margin-top: 12px; font-family: var(--folio-ui); font-size: 12px; line-height: 1.8; text-align: center; }
-.folio-article > .section-divider { margin-top: 44px; padding-top: 24px; font-family: var(--folio-ui); font-size: 13px; line-height: 1.8; }
+.folio-article > .folio-post-navigation { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 44px; padding-block: 28px; border-block: 1px solid var(--folio-rule); font-family: var(--folio-heading-font); font-size: 19px; line-height: 1.8; }
+.folio-post-navigation .post-nav-link { max-width: none; min-height: 44px; gap: 12px; color: var(--folio-ink); }
+.folio-post-navigation .post-nav-link[rel='next'] { justify-content: flex-end; text-align: right; }
+.folio-post-navigation .post-nav-link:hover { color: var(--folio-accent); }
+.folio-post-navigation .post-nav-title { -webkit-line-clamp: 2; text-decoration-color: var(--folio-rule); text-underline-offset: .25em; }
+.folio-post-navigation .post-nav-link > span[aria-hidden] { flex-shrink: 0; font-family: var(--folio-ui); font-size: 20px; }
+.folio-post-navigation + .giscus { margin-top: 0; padding-top: 32px; border-top: 0; }
 .folio-directory { max-width: 42rem; margin-inline: auto; }
 .folio-directory-header { margin-bottom: 36px; padding-bottom: 26px; border-bottom: 1px solid var(--folio-rule); }
 .folio-directory-header .section-title { margin: 0; line-height: 1.55; }
@@ -514,6 +520,8 @@ html[data-folio-navigation] :is(.folio-header, .folio-hero h1, .folio-hero .foli
     .folio-article .prose-shiro { --shiro-code-bleed: 0rem; }
     .folio-article .prose-shiro h2 { font-size: 22px; }
     .folio-article .prose-shiro h3 { font-size: 19px; }
+    .folio-article > .folio-post-navigation { gap: 16px; padding-block: 22px; font-size: 17px; }
+    .folio-post-navigation .post-nav-link { gap: 8px; }
     .folio-directory-header { margin-bottom: 28px; padding-bottom: 22px; }
     .folio-archive { gap: 32px; }
     .folio-archive-year { grid-template-columns: minmax(0, 1fr); gap: 20px; }
