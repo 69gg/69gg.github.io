@@ -36,6 +36,12 @@ function patchTheme(rootDir = path.resolve(__dirname, '..')) {
         }
         fs.cpSync(overrides, path.join(target, directory), { recursive: true });
     }
+    const vendor = path.join(target, 'source', 'js', 'vendor');
+    fs.mkdirSync(vendor, { recursive: true });
+    // Reuse the Markdown dependencies already installed by hexo-renderer-marked.
+    for (const modulePath of ['marked/marked.min.js', 'dompurify/purify.min.js']) {
+        fs.copyFileSync(require.resolve(modulePath, { paths: [rootDir] }), path.join(vendor, path.basename(modulePath)));
+    }
     const fonts = path.join(source, 'source', 'css', 'fonts.css');
     if (fs.existsSync(fonts)) {
         fs.writeFileSync(path.join(target, 'source', 'css', 'fonts-core.css'), coreFontCSS(fs.readFileSync(fonts, 'utf8')));

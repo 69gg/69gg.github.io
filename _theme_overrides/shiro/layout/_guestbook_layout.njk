@@ -8,6 +8,8 @@
     {% if gates.darkModeToggle %}
     <script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} src="{{ attr_url(versioned_url('js/theme-toggle.min.js')) }}"></script>
     {% endif %}
+    <script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} src="{{ attr_url(versioned_url('js/vendor/marked.min.js')) }}"></script>
+    <script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} src="{{ attr_url(versioned_url('js/vendor/purify.min.js')) }}"></script>
     <script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} src="{{ attr_url(versioned_url('js/noticeboard.js')) }}"></script>
 </body>
 </html>

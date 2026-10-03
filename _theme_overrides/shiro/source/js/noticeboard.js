@@ -8,6 +8,10 @@
     const notesRoot = document.getElementById('noticeboard-notes');
     const editor = document.getElementById('noticeboard-editor');
     const form = document.getElementById('noticeboard-form');
+    const colorChoice = form.elements.color;
+    const hexInput = document.getElementById('noticeboard-color-hex');
+    const customSwatch = document.getElementById('noticeboard-custom-color');
+    const defaultPaperColor = getComputedStyle(form.querySelector('.noticeboard-color')).getPropertyValue('--note-paper').trim();
     const bodyInput = document.getElementById('noticeboard-body');
     const submit = document.getElementById('noticeboard-submit');
     const removeDialog = document.getElementById('noticeboard-delete');
@@ -260,8 +264,10 @@
         author.className = 'board-note-author';
         author.textContent = comment.author?.name ? `${comment.author.name} · @${comment.author.login}` : `@${comment.author?.login || '路过的人'}`;
         container.append(author);
+        const timestamps = document.createElement('div');
+        timestamps.className = 'board-note-timestamps';
         const stamp = (label, value) => {
-            const row = document.createElement('div');
+            const row = document.createElement('span');
             row.className = 'board-note-date';
             const caption = document.createElement('span');
             caption.textContent = label;
@@ -270,10 +276,45 @@
             time.textContent = dateFormat.format(new Date(value));
             time.title = value;
             row.append(caption, time);
-            container.append(row);
+            timestamps.append(row);
         };
         stamp('创建', comment.createdAt);
         if (comment.updatedAt && new Date(comment.updatedAt) > new Date(comment.createdAt)) stamp('修改', comment.updatedAt);
+        container.append(timestamps);
+    }
+
+    function renderMarkdown(container, body) {
+        container.innerHTML = window.DOMPurify.sanitize(window.marked.parse(body, { gfm: true, breaks: true }), { USE_PROFILES: { html: true } });
+    }
+
+    function normalizeHex(value) {
+        const hex = value.replace(/^#/, '');
+        return `#${hex.length === 3 ? hex.replace(/./g, '$&$&') : hex}`.toUpperCase();
+    }
+
+    function paintPaper(element, color) {
+        element.dataset.color = color;
+        ['--note-paper', '--note-ink', '--note-pin'].forEach((property) => element.style.removeProperty(property));
+        if (!color.startsWith('#')) return;
+        const channels = color.slice(1).match(/../g).map((hex) => {
+            const channel = parseInt(hex, 16) / 255;
+            return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
+        });
+        const luminance = channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
+        element.style.setProperty('--note-paper', color);
+        element.style.setProperty('--note-ink', `var(--note-${luminance > .179 ? 'dark' : 'light'}-ink)`);
+        element.style.setProperty('--note-pin', 'var(--note-ink)');
+    }
+
+    function selectedPaperColor() {
+        return colorChoice.value === 'custom' ? normalizeHex(hexInput.value) : colorChoice.value;
+    }
+
+    function syncEditorPaper() {
+        hexInput.disabled = colorChoice.value !== 'custom';
+        if (!hexInput.disabled && !hexInput.checkValidity()) return;
+        paintPaper(editor, selectedPaperColor());
+        if (!hexInput.disabled) paintPaper(customSwatch, selectedPaperColor());
     }
 
     function action(label, onClick, className = '') {
@@ -287,7 +328,8 @@
 
     function confirmRemove(note, reply = null) {
         removing = { note, reply };
-        document.getElementById('noticeboard-delete-title').textContent = reply ? '删除这条回复？' : '取下这张纸条？';
+        paintPaper(removeDialog, note.position.color);
+        document.getElementById('noticeboard-delete-title').textContent = reply ? '移除这条回复？' : '移除这张纸条？';
         document.getElementById('noticeboard-delete-description').textContent = reply ? '这条回复会从纸条和留言记录中删除。' : '纸条及其下面的回复都会删除。';
         removeDialog.showModal();
     }
@@ -303,7 +345,7 @@
         element.style.setProperty('--note-x', `${position.x}px`);
         element.style.setProperty('--note-y', `${position.y}px`);
         element.style.setProperty('--note-turn', `${position.rotation}deg`);
-        element.dataset.color = position.color;
+        paintPaper(element, position.color);
     }
 
     function updateCount() {
@@ -326,10 +368,10 @@
         const article = document.createElement('article');
         article.className = 'board-note';
         article.dataset.id = note.id;
-        article.innerHTML = '<span class="board-note-pin" aria-hidden="true"></span><p class="board-note-message"></p><footer class="board-note-footer"></footer>';
+        article.innerHTML = '<span class="board-note-pin" aria-hidden="true"></span><div class="board-note-message noticeboard-markdown"></div><footer class="board-note-footer"></footer>';
         positionNote(article, note.position);
-        article.querySelector('.board-note-message').textContent = note.body;
-        renderMetadata(article.querySelector('footer'), note);
+        renderMarkdown(article.querySelector('.board-note-message'), note.body);
+        renderMetadata(article.querySelector(':scope > footer'), note);
         if (owns(note)) {
             article.querySelector('.board-note-pin').remove();
             const handle = document.createElement('button');
@@ -343,17 +385,18 @@
         }
         const actions = document.createElement('div');
         actions.className = 'board-note-actions';
-        if (owns(note)) actions.append(action('改一改', () => openEditor(note)), action('取下来', () => confirmRemove(note)));
+        if (owns(note)) actions.append(action('修改', () => openEditor(note)), action('移除', () => confirmRemove(note)));
         const replies = note.replies || [];
-        actions.append(action(replies.length ? `回复 · ${replies.length}` : '回一句', () => openThread(note), 'board-note-reply'));
+        actions.append(action(replies.length ? `回复 · ${replies.length}` : '回复', () => openThread(note), 'board-note-reply'));
         article.append(actions);
         if (replies.length) {
             const preview = document.createElement('ul');
             preview.className = 'board-note-reply-preview';
             replies.slice(-2).forEach((reply) => {
                 const item = document.createElement('li');
-                const message = document.createElement('p');
-                message.textContent = reply.body;
+                const message = document.createElement('div');
+                message.className = 'board-note-reply-text noticeboard-markdown';
+                renderMarkdown(message, reply.body);
                 const metadata = document.createElement('div');
                 metadata.className = 'board-note-footer';
                 renderMetadata(metadata, reply);
@@ -385,22 +428,22 @@
     function resetReplyEditor() {
         editingReply = null;
         replyInput.value = '';
-        replySubmit.textContent = '回一句';
+        replySubmit.textContent = '回复';
         replyCancel.hidden = true;
         replyStatus.textContent = '';
     }
 
     function renderReplies() {
         renderMetadata(document.getElementById('noticeboard-thread-author'), activeNote);
-        document.getElementById('noticeboard-thread-body').textContent = activeNote.body;
+        renderMarkdown(document.getElementById('noticeboard-thread-body'), activeNote.body);
         const list = document.getElementById('noticeboard-replies');
         const replies = activeNote.replies || [];
         list.replaceChildren(...replies.map((reply, index) => {
             const item = document.createElement('li');
-            item.innerHTML = '<header class="noticeboard-reply-heading"><div class="board-note-footer"></div><small></small></header><p class="noticeboard-reply-message"></p><div class="noticeboard-reply-actions"></div>';
+            item.innerHTML = '<header class="noticeboard-reply-heading"><div class="board-note-footer"></div><small></small></header><div class="noticeboard-reply-message noticeboard-markdown"></div><div class="noticeboard-reply-actions"></div>';
             renderMetadata(item.querySelector('header div'), reply);
             item.querySelector('small').textContent = `${index + 1} 楼`;
-            item.querySelector('p').textContent = reply.body;
+            renderMarkdown(item.querySelector('.noticeboard-reply-message'), reply.body);
             const actions = item.querySelector('.noticeboard-reply-actions');
             if (owns(reply)) actions.append(action('修改', () => {
                 editingReply = reply;
@@ -409,7 +452,7 @@
                 replyCancel.hidden = false;
                 replyInput.focus();
             }));
-            if (owns(reply) || owns(activeNote)) actions.append(action('删除', () => confirmRemove(activeNote, reply)));
+            if (owns(reply) || owns(activeNote)) actions.append(action('移除', () => confirmRemove(activeNote, reply)));
             return item;
         }));
         document.getElementById('noticeboard-thread-empty').hidden = replies.length > 0;
@@ -419,6 +462,7 @@
 
     function openThread(note) {
         activeNote = note;
+        paintPaper(thread, note.position.color);
         resetReplyEditor();
         renderReplies();
         thread.showModal();
@@ -439,7 +483,7 @@
         article.classList.add('is-saving');
         try {
             await saveNote(note, { position: note.position });
-            renderMetadata(article.querySelector('footer'), note);
+            renderMetadata(article.querySelector(':scope > footer'), note);
             say('位置已保存。');
         } catch (error) {
             note.position = original;
@@ -526,19 +570,31 @@
         editing = note;
         form.reset();
         bodyInput.value = note?.body || '';
-        form.elements.color.value = note?.position.color || 'cream';
-        document.getElementById('noticeboard-editor-title').textContent = note ? '改改这张纸条' : '写张纸条';
+        const color = note?.position.color || colorChoice.value;
+        colorChoice.value = color.startsWith('#') ? 'custom' : color;
+        hexInput.value = color.startsWith('#') ? color : defaultPaperColor;
+        paintPaper(customSwatch, normalizeHex(hexInput.value));
+        syncEditorPaper();
+        document.getElementById('noticeboard-editor-title').textContent = note ? '修改纸条' : '写张纸条';
         submit.textContent = note ? '保存纸条' : '贴上去';
         document.getElementById('noticeboard-form-status').textContent = '';
         editor.showModal();
         bodyInput.focus();
     }
 
+    form.addEventListener('change', (event) => {
+        if (event.target.name === 'color') syncEditorPaper();
+    });
+    hexInput.addEventListener('input', syncEditorPaper);
+    hexInput.addEventListener('blur', () => {
+        if (hexInput.checkValidity()) hexInput.value = normalizeHex(hexInput.value);
+    });
+
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const body = bodyInput.value.trim();
         if (!body) return;
-        const position = editing ? { ...editing.position, color: form.elements.color.value } : nextPosition(form.elements.color.value);
+        const position = editing ? { ...editing.position, color: selectedPaperColor() } : nextPosition(selectedPaperColor());
         submit.disabled = true;
         const formStatus = document.getElementById('noticeboard-form-status');
         formStatus.textContent = '正在把纸条贴好…';
@@ -583,7 +639,7 @@
             }
             if (localPreview) persistPreview();
             removeDialog.close();
-            say(reply ? '回复已删除。' : '纸条已取下。');
+            say(reply ? '回复已移除。' : '纸条已移除。');
         } catch (error) { removeDialog.close(); say(error.message); }
         finally { button.disabled = false; }
     });

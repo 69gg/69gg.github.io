@@ -65,8 +65,9 @@ GitHub App 的 Callback URL 必须与最终接口地址完全对应。然后构�
 
 ## 数据与权限
 
-- 顶层 Discussion 评论是一张纸条，正文末尾的隐藏 HTML 注释保存 `v`、`x`、`y`、`color`、`rotation`。当前 `v: 2` 使用画布的像素坐标 `x`、`y`，允许负坐标，没有原木框的边界限制。旧 `v: 1` 的水平比例坐标仍可读取，前端按原 880px 布告栏换算显示，只有编辑或移动该纸条时才保存为新坐标。无元数据的旧留言按默认位置显示。
-- 纸条与回复保留 GitHub 的 `createdAt`、`updatedAt` 和作者，前端显示完整创建时间以及有修改时的修改时间。页面迁到根目录后继续使用同一条 Discussion，不改变已有评论 ID 或作者。
+- 顶层 Discussion 评论是一张纸条，正文末尾的隐藏 HTML 注释保存 `v`、`x`、`y`、`color`、`rotation`。`color` 接受 `cream`、`rose`、`sage`、`blue`、`lilac` 五种预设，以及六位 `#RRGGBB` 自定义颜色；三位 HEX 由前端展开后提交。当前 `v: 2` 使用画布的像素坐标 `x`、`y`，允许负坐标，没有原木框的边界限制。旧 `v: 1` 的水平比例坐标仍可读取，前端按原 880px 布告栏换算显示，只有编辑或移动该纸条时才保存为新坐标。无元数据的旧留言按默认位置显示。
+- 纸条和回复的 `body` 保持原始 Markdown，GitHub Discussions 继续原生显示。接口不改写 Markdown；本站前端复用本地 Marked 解析，并通过 DOMPurify 的 HTML profile 渲染到纸面。
+- 纸条与回复保留 GitHub 的 `createdAt`、`updatedAt` 和作者，前端将完整创建时间以及有修改时的修改时间放在同一行。页面迁到根目录后继续使用同一条 Discussion，不改变已有评论 ID 或作者。
 - Discussion 回复是纸条下面的楼层回复，保持真实 GitHub 作者身份。用户在网站上的写入、修改通过自己的 GitHub App 用户 Token 完成。
 - 移动、修改和删除纸条，以及修改回复时，接口向 GitHub 查询 `viewerDidAuthor`，仅接受作者的操作；同时确认评论属于配置的仓库和留言板 Discussion。
 - 删除回复时允许回复作者操作；也允许该顶层纸条的作者操作。纸条作者删除别人回复时，接口先通过用户 Token 确认顶层评论归属，再使用 App 安装 Token 执行删除。App 的权限只覆盖选中的存储仓库，不赋予访客仓库管理权限。
