@@ -2,15 +2,43 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content="Hexo {{ escape_attr(hexo.version) }}" />
-    {% include "_partial/common/head-prefetch.njk" %}
+    {% include "_partial/folio/preloads.njk" %}
     {# FOUC theme script before blocking stylesheets (first-paint contract). #}
     {% include "_partial/common/head-theme.njk" %}
     {# Register before the incoming document's first rendering opportunity. #}
     <script{{ csp_nonce_attr(gates.shiroCspNonce) }} data-cfasync="false">
+        (() => {
+            const html = document.documentElement;
+            html.setAttribute('data-folio-loading', '');
+            const shiro = window.__shiro;
+            let timer;
+            shiro.folioReady = new Promise((resolve) => {
+                shiro.revealFolio = () => {
+                    clearTimeout(timer);
+                    html.removeAttribute('data-folio-loading');
+                    resolve();
+                };
+            });
+            // Never leave reading hidden if a request or the loader fails.
+            const timeout = {{ js_value(config.theme_config.folio.preload_timeout | default(6000)) | safe }};
+            timer = setTimeout(shiro.revealFolio, timeout);
+            // Consume preloads before styles request the same resources.
+            const images = [...document.querySelectorAll('link[data-folio-preload][as="image"]')].map((link) => {
+                const image = new Image();
+                if (link.crossOrigin) image.crossOrigin = link.crossOrigin;
+                image.fetchPriority = link.fetchPriority;
+                image.src = link.href;
+                return image;
+            });
+            shiro.folioImagesReady = Promise.allSettled(images.map((image) => image.decode()));
+        })();
         window.addEventListener('pagereveal', (event) => {
             if (event.viewTransition) document.documentElement.setAttribute('data-folio-navigation', '');
         });
     </script>
+    {# Run before optional deferred engines such as MathJax. #}
+    <script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} data-cfasync="false" src="{{ attr_url(versioned_url('js/folio-preload.js')) }}"></script>
+    {% include "_partial/common/head-prefetch.njk" %}
     {% include "_partial/common/head-mathjax.njk" %}
     {% include "_partial/common/head-seo.njk" %}
     {% include "_partial/common/head-styles.njk" %}

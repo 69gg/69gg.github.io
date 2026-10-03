@@ -105,7 +105,7 @@ html[data-theme='dark'] {
     --color-scrollbar-track: #273950;
     --color-scrollbar-thumb: #8797b1;
 }
-html { scroll-padding-top: 32px; }
+html { scroll-padding-top: 32px; background: var(--folio-paper); }
 body.folio-body {
     position: relative;
     display: flow-root;
@@ -115,8 +115,17 @@ body.folio-body {
     color: var(--folio-ink);
     font-family: var(--folio-serif);
     background: var(--folio-paper);
+    opacity: 1;
+    transition: opacity var(--folio-motion-fast) var(--folio-ease);
     -webkit-font-smoothing: antialiased;
 }
+/* Assemble one complete first scene rather than exposing late background
+   images behind text that is already visible. No-JS pages stay readable. */
+html[data-folio-loading] .folio-body { opacity: 0; transition: none; }
+/* Upstream sets visible explicitly on direct children of the body. */
+html[data-folio-loading] .folio-body, html[data-folio-loading] .folio-body * { visibility: hidden !important; }
+html[data-folio-loading] :is(.folio-header, .folio-hero h1, .folio-hero .folio-text-link, .folio-paper-surface, .folio-inner .folio-main, .folio-flowers, .folio-petal, [data-folio-reveal]) { animation-play-state: paused; }
+html[data-folio-navigation] .folio-body { transition: none; }
 .folio-body ::selection { background: var(--folio-rule); color: var(--folio-ink); }
 .folio-body :focus-visible { outline: 2px solid var(--folio-accent); outline-offset: 5px; }
 .folio-frame { position: absolute; inset: var(--folio-frame-inset); z-index: 1; pointer-events: none; }
@@ -360,6 +369,10 @@ html[data-folio-navigation] :is(.folio-header, .folio-hero h1, .folio-hero .foli
     ::view-transition-group(root) { animation-duration: var(--folio-motion-page); animation-timing-function: var(--folio-ease); }
     ::view-transition-old(root) { animation: folio-fade-out var(--folio-motion-page) var(--folio-ease) both; }
     ::view-transition-new(root) { animation: folio-fade-in var(--folio-motion-page) var(--folio-ease) both; }
+    /* Keep the previous page visible until the incoming scene can be painted. */
+    html[data-folio-loading]::view-transition-group(root),
+    html[data-folio-loading]::view-transition-old(root),
+    html[data-folio-loading]::view-transition-new(root) { animation-play-state: paused; }
 }
 @keyframes folio-arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes folio-entry-arrive { from { opacity: .35; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }

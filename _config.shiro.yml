@@ -81,3 +81,7 @@ analytics:
 # Search
 search:
   enabled: true
+
+# Maximum first-scene preparation time; failures must not block reading.
+folio:
+  preload_timeout: 6000

@@ -1,0 +1,4 @@
+{# Match the URLs used by CSS, including the CORS mode for fonts and masks. #}
+{% for asset in folio_preloads() %}
+<link rel="preload" href="{{ attr_url(url_for(asset.path)) }}" as="{{ asset.as }}" type="{{ asset.type }}" fetchpriority="{{ asset.priority }}"{% if asset.crossorigin %} crossorigin="anonymous"{% endif %} data-folio-preload>
+{% endfor %}

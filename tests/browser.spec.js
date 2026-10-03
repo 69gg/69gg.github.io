@@ -1,6 +1,7 @@
 'use strict';
 
 const { test, expect } = require('@playwright/test');
+const { preloadAssets } = require('../scripts/folio-preloads');
 const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
@@ -9,6 +10,10 @@ const rootDir = path.resolve(__dirname, '..');
 const config = yaml.load(fs.readFileSync(path.join(rootDir, '_config.yml'), 'utf8'));
 const theme = yaml.load(fs.readFileSync(path.join(rootDir, '_config.shiro.yml'), 'utf8'));
 const blog = config.root;
+const visualAssets = preloadAssets(
+    fs.readFileSync(path.join(rootDir, '_theme_overrides/shiro/source/css/folio.css'), 'utf8'),
+    fs.readFileSync(path.join(rootDir, '_theme_overrides/shiro/source/css/fonts.css'), 'utf8')
+);
 const posts = fs.readdirSync(path.join(rootDir, 'source', '_posts')).filter((name) => name.endsWith('.md')).map((name) => {
     const source = fs.readFileSync(path.join(rootDir, 'source', '_posts', name), 'utf8');
     return { source, ...yaml.load(source.match(/^---\n([\s\S]*?)\n---/)[1]) };
@@ -356,6 +361,119 @@ test('reading hierarchy and contrast hold in both themes with local fonts', asyn
         }
         expect(paperByTheme.light - paperByTheme.dark).toBeGreaterThan(.5);
     }
+});
+
+test('cold scene preloads before CSS and waits for decoded images and visible fonts', async ({ page }) => {
+    const wallpaper = visualAssets.find((asset) => asset.priority === 'high');
+    const titleFont = visualAssets.find((asset) => asset.as === 'font' && asset.path.includes('greatvibes'));
+    let releaseCSS, releaseImages, releaseFonts;
+    const cssGate = new Promise((resolve) => { releaseCSS = resolve; });
+    const imageGate = new Promise((resolve) => { releaseImages = resolve; });
+    const fontGate = new Promise((resolve) => { releaseFonts = resolve; });
+    const requests = new Map();
+    page.on('request', (request) => {
+        const pathname = new URL(request.url()).pathname;
+        requests.set(pathname, (requests.get(pathname) || 0) + 1);
+    });
+    await page.addInitScript(() => {
+        window.folioDecodedImages = [];
+        const decode = HTMLImageElement.prototype.decode;
+        HTMLImageElement.prototype.decode = function (...args) {
+            return decode.apply(this, args).then(() => { window.folioDecodedImages.push(this.src); });
+        };
+    });
+    await page.route('**/*', async (route) => {
+        const pathname = new URL(route.request().url()).pathname;
+        if (pathname.endsWith('/css/folio.css')) await cssGate;
+        if (pathname === `${blog}${wallpaper.path}`) await imageGate;
+        if (pathname === `${blog}${titleFont.path}`) await fontGate;
+        await route.fallback();
+    });
+    try {
+        await page.goto(blog, { waitUntil: 'commit' });
+        await expect.poll(() => requests.has(`${blog}${wallpaper.path}`) && requests.has(`${blog}${titleFont.path}`)).toBe(true);
+        await expect(page.locator('html')).toHaveAttribute('data-folio-loading', '');
+        releaseCSS();
+        await page.waitForLoadState('domcontentloaded');
+        await expect(page.locator('body')).toHaveCSS('visibility', 'hidden');
+        releaseImages();
+        await expect.poll(() => page.evaluate(() => window.folioDecodedImages.length)).toBe(visualAssets.filter((asset) => asset.as === 'image').length);
+        // The background is already decoded; an unresolved title font must
+        // still prevent a flash of fallback typography before the reveal.
+        await expect(page.locator('html')).toHaveAttribute('data-folio-loading', '');
+        await expect(page.locator('#folio-title')).not.toBeVisible();
+        releaseFonts();
+        await expect(page.locator('html')).not.toHaveAttribute('data-folio-loading');
+        await expect(page.locator('#folio-title')).toBeVisible();
+        await expect(page.locator('body')).toHaveCSS('opacity', '1');
+        expect(await page.evaluate((title) => document.fonts.check('400 16px "Great Vibes"', title), config.title)).toBe(true);
+        for (const asset of visualAssets) expect(requests.get(`${blog}${asset.path}`), asset.path).toBe(1);
+    } finally {
+        releaseCSS(); releaseImages(); releaseFonts();
+    }
+});
+
+test('incoming navigation retains the old view while its background is delayed', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    let hold = false, release;
+    const gate = new Promise((resolve) => { release = resolve; });
+    const wallpaper = visualAssets.find((asset) => asset.priority === 'high');
+    await page.route(`**/${wallpaper.path}`, async (route) => {
+        if (hold) await gate;
+        await route.fallback();
+    });
+    await page.addInitScript(() => {
+        window.addEventListener('pagereveal', (event) => {
+            window.folioLoadTransition = { native: !!event.viewTransition };
+            event.viewTransition?.ready.then(() => { window.folioLoadTransition.active = true; }).catch(() => {});
+            event.viewTransition?.finished.then(() => { window.folioLoadTransition.finished = true; });
+        });
+    });
+    try {
+        await page.goto(blog);
+        await expect(page.locator('html')).not.toHaveAttribute('data-folio-loading');
+        hold = true;
+        await page.locator('.folio-hero').getByRole('link', { name: /^全部文章/ }).click();
+        await expect(page.locator('html')).toHaveAttribute('data-folio-loading', '');
+        await expect.poll(() => page.evaluate(() => window.folioLoadTransition)).toBeTruthy();
+        if (await page.evaluate(() => window.folioLoadTransition.native)) {
+            await expect.poll(() => page.evaluate(() => window.folioLoadTransition.active)).toBe(true);
+            const frames = await page.evaluate(async () => {
+                const frames = [];
+                for (let frame = 0; frame < 36; frame++) {
+                    await new Promise(requestAnimationFrame);
+                    const old = getComputedStyle(document.documentElement, '::view-transition-old(root)');
+                    const incoming = getComputedStyle(document.documentElement, '::view-transition-new(root)');
+                    frames.push({ old: Number(old.opacity), incoming: Number(incoming.opacity), state: incoming.animationPlayState });
+                }
+                return frames;
+            });
+            expect(frames.every((frame) => frame.old === 1 && frame.incoming === 0 && frame.state === 'paused')).toBe(true);
+            expect(await page.evaluate(() => window.folioLoadTransition.finished)).not.toBe(true);
+        } else {
+            await expect(page.locator('body')).toHaveCSS('visibility', 'hidden');
+        }
+        release();
+        await expect(page.locator('html')).not.toHaveAttribute('data-folio-loading');
+        await expect(page.locator('h1')).toContainText('归档');
+        await expect(page.locator('body')).toHaveCSS('opacity', '1');
+        if (await page.evaluate(() => window.folioLoadTransition.native)) {
+            await expect.poll(() => page.evaluate(() => window.folioLoadTransition.finished)).toBe(true);
+        }
+    } finally { release(); }
+});
+
+test('failed visual assets and a failed loader never leave reading hidden', async ({ page }) => {
+    await page.route('**/images/*.webp', (route) => route.abort());
+    await page.route('**/fonts/greatvibes/*.woff2', (route) => route.abort());
+    await page.goto(blog);
+    await expect(page.locator('html')).not.toHaveAttribute('data-folio-loading');
+    await expect(page.locator('#folio-title')).toBeVisible();
+    await page.route('**/js/folio-preload.js?*', (route) => route.abort());
+    await page.goto(blog);
+    await expect(page.locator('html')).toHaveAttribute('data-folio-loading', '');
+    await expect(page.locator('html')).not.toHaveAttribute('data-folio-loading', { timeout: theme.folio.preload_timeout + 1000 });
+    await expect(page.locator('.folio-entry').first()).toBeVisible();
 });
 
 test('scroll reveals move smoothly once and retain readable fallback content', async ({ page }) => {

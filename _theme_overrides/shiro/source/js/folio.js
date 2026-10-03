@@ -37,5 +37,6 @@
         });
     };
     motion.addEventListener('change', syncMotion);
-    syncMotion();
+    // Start entrances only after the first scene's images and fonts are ready.
+    Promise.resolve(window.__shiro?.folioReady).then(syncMotion);
 })();
