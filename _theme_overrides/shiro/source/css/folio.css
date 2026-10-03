@@ -307,6 +307,12 @@ html:not(.js) .folio-actions { display: none; }
 .folio-meta-group { display: inline-flex; align-items: center; gap: 6px; }
 .folio-meta-group + .folio-meta-group::before { content: '·'; margin-right: 4px; }
 .folio-entry-meta svg { width: 11px; height: 11px; opacity: .8; }
+.folio-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 10px; font-family: var(--folio-ui); font-size: 12px; }
+.folio-entry .folio-tags { font-size: 11px; }
+.folio-tags .tag-pill { padding: 2px 8px; font-size: inherit; line-height: 1.7; color: var(--folio-muted); border-color: var(--folio-rule); background: transparent; }
+.folio-tags .tag-pill svg { width: 1em; height: 1em; margin-right: 5px; color: inherit; }
+.folio-tags .tag-pill:hover { color: var(--folio-accent); border-color: var(--folio-accent); }
+.folio-article-tags { justify-content: center; margin-top: 0; }
 .folio-excerpt.prose-shiro { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; max-height: 6em; max-width: 46em; width: 100%; font-family: var(--folio-excerpt-font); font-size: 16px; font-style: italic; line-height: 2; text-align: left; color: var(--folio-muted); margin: 17px 0 0; }
 .folio-excerpt.prose-shiro :is(p, blockquote, h1, h2, h3, h4, ul, ol) { font: inherit; color: inherit; margin: 0; padding: 0; border: 0; background: none; box-shadow: none; }
 .folio-excerpt.prose-shiro :is(blockquote, p)::before, .folio-excerpt.prose-shiro :is(blockquote, p)::after { content: none; }

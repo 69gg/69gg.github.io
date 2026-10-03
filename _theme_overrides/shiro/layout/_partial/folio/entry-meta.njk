@@ -1,5 +1,5 @@
 {# The calendar already supplies the date. Reuse Shiro's category/count helpers. #}
-{% from "_macro/ui.njk" import icon_folder, icon_book with context %}
+{% from "_macro/ui.njk" import icon_folder, icon_book, render_tag with context %}
 {% set wc = word_count_meta(post, {
     timeSuffix: __('word_count.time_minutes'),
     countLabel: __('word_count.count'),
@@ -23,5 +23,12 @@
         {% if wc.time != null %}<span aria-label="{{ escape_attr(__('word_count.time') + ': ' + wc.time) }}">{{ escape_html(wc.time) }}</span>{% endif %}
     </span>
     {% endif %}
+</div>
+{% endif %}
+{% if post.tags and post.tags.length > 0 %}
+<div class="folio-tags">
+    {% for tag in post.tags.toArray() %}
+    {{ render_tag(tag, false) }}
+    {% endfor %}
 </div>
 {% endif %}
