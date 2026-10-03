@@ -10,6 +10,8 @@ const { values } = parseArgs({
 
 createServer({
     root: path.resolve(__dirname, '..', 'public'),
+    // The giscus iframe reads the locally hosted comment theme across origins.
+    cors: true,
     // Revalidate documents; reuse unchanged artwork, styles, scripts and fonts.
     cache: (pathname) => /\.(?:html?|json|xml)$/.test(pathname) ? 'no-cache' : 3600
 }).listen(Number(values.port), '127.0.0.1', () => {

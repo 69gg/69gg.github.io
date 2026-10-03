@@ -1,0 +1,23 @@
+{# Keep Shiro's comment runtime and lazy loading; supply the local folio theme. #}
+{% from "_macro/ui.njk" import feature_var with context %}
+{% set state = gates.shiroComments %}
+{% if state.shouldRender %}
+{% include "_partial/comments/bootstrap.njk" %}
+<script{{ csp_nonce_attr(gates.shiroCspNonce) }}>
+    {{ feature_var('commentsConfig', gates.commentsClientConfig) }}
+    {% if state.giscusReady %}
+    window.__shiro.commentsConfig.giscus.theme = new URL({{ js_value(versioned_url(gates.commentsClientConfig.giscus.theme)) | safe }}, window.location.href).href;
+    {% if page.layout == 'guestbook' %}
+    window.__shiro.commentsConfig.giscus.input_position = 'top';
+    window.__shiro.commentsConfig.giscus.lazy_loading = false;
+    {% endif %}
+    {% endif %}
+</script>
+{% if state.disqusReady %}
+{% include "_partial/comments/disqus.njk" %}
+<script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} src="{{ attr_url(versioned_url('js/comments-disqus.min.js')) }}"></script>
+{% elif state.giscusReady %}
+{% include "_partial/comments/giscus.njk" %}
+<script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} src="{{ attr_url(versioned_url('js/comments-giscus.min.js')) }}"></script>
+{% endif %}
+{% endif %}

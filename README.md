@@ -78,6 +78,14 @@ npm run preview
 - 随机入口与 `/random/` 回退页共用 `scripts/patch-random.js` 筛选出的文章集合。启用 JavaScript 时，导航链接直接选择文章地址并沿用浏览器原生跳转，避免先打开空白的随机中转页；新标签页和键盘激活仍可使用普通链接。禁用 JavaScript 时保留原随机入口地址。
 - 不要直接编辑 `node_modules`。升级 Shiro 后，检查被覆盖模板与上游兼容性，重新构建并执行测试。日常构建无需原始参考图片、Python 或字体服务。
 
+## 留言板与评论
+
+个人主页的“留言板”进入 `/blog/guestbook/`。`source/guestbook/index.md` 使用独立的 `guestbook.njk` 布局：延续花纹背景和阅读纸，只保留标题、一句邀请和留言区，不显示文章日期与目录；编辑器位于留言列表上方。
+
+留言板和文章评论继续使用 `_config.shiro.yml` 中的 Giscus 仓库、Q&A 分类和 `pathname` 映射。留言板沿用原路径对应的 [GitHub Discussion](https://github.com/69gg/69gg.github.io/discussions/6)，已有留言无需迁移。仓库已开启公开 Discussions，并已有 Giscus 创建的讨论；此配置不需要站长向前端提供 Token，访客通过 GitHub 登录后发言，留言存储在仓库的 Discussions 中。
+
+评论主题为本站的 `css/giscus-folio.css`，复用 Shiro 完整的 Giscus 基础样式，覆盖为柔白纸／蓝灰纸对应的文字、输入区、边线与墨蓝按钮色。iframe 的 `color-scheme` 继续由 Shiro 随网站明暗模式同步，主题内的媒体查询随之切换。主题 URL 通过现有 `versioned_url` helper 和当前页面来源生成，不写死生产域名；本地预览允许 CORS，以便 Giscus iframe 读取本站样式。颜色维护时同步参考 `folio.css` 的纸面配色。Giscus 自定义主题方式见 [官方文档](https://github.com/giscus/giscus/blob/main/ADVANCED-USAGE.md#data-theme)。
+
 ## 本地字体
 
 资源位于 `_theme_overrides/shiro/source/fonts/`。五套字体均附上游 `OFL.txt`，`manifest.json` 记录每个分片的原始 URL 和 SHA-256。字体使用 Google Fonts 官方提供的版本，常规构建直接复制已保存文件，不向字体服务发起请求。浏览器先使用本机字体，缺失时按需下载这些本站回退文件；本机没有任何对应字体时仍能完整显示。

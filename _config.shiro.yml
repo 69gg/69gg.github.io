@@ -73,7 +73,7 @@ comments:
     emit_metadata: 0
     input_position: bottom
     lang: zh-CN
-    theme: https://cdn.jsdelivr.net/npm/hexo-theme-shiro@1.6.1/source/css/giscus.min.css
+    theme: css/giscus-folio.css
     lazy_loading: true
 
 # Analytics

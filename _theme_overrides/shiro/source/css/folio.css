@@ -395,9 +395,11 @@ html:not(.js) .folio-actions { display: none; }
 .folio-build { font-family: var(--folio-ui); font-size: 9px; color: var(--folio-muted); opacity: .8; margin-top: 10px; letter-spacing: .025em; }
 .folio-body .back-to-top { background: var(--folio-paper); color: var(--folio-accent); border: 1px solid var(--folio-rule); box-shadow: 0 2px 16px #29203610; }
 .folio-body .progress-bar { background: var(--folio-accent); }
-.folio-guestbook { text-align: center; padding: 38px 0 50px; }
-.folio-guestbook-mark { font-size: 42px; line-height: 1; color: var(--folio-accent); }
-.folio-guestbook p { letter-spacing: .1em; color: var(--folio-muted); }
+.folio-guestbook .folio-article-header { margin-bottom: 28px; }
+.folio-guestbook-intro.prose-shiro { margin-top: 18px; color: var(--folio-muted); font-size: 17px; line-height: 1.9; }
+.folio-guestbook-intro.prose-shiro p { margin: 0; }
+.folio-guestbook .giscus { margin-top: 0; padding-top: 0; border-top: 0; min-height: 320px; }
+.folio-article .giscus { border-color: var(--folio-rule); }
 html[data-theme='dark'] .folio-frame { opacity: .72; }
 html[data-theme='dark'] .folio-garden { opacity: .6; }
 html[data-theme='dark'] .folio-body .progress-bar { background: var(--folio-masthead-ink); }
@@ -526,7 +528,7 @@ html[data-folio-navigation] :is(.folio-header, .folio-hero h1, .folio-hero .foli
     .folio-footer { padding-bottom: 22px; }
     .folio-colophon { flex-direction: column; gap: 6px; font-size: 11px; }
     .folio-build { font-size: 8px; line-height: 1.7; }
-    .folio-guestbook { padding: 24px 0 32px; }
+    .folio-guestbook-intro.prose-shiro { font-size: 15px; }
 }
 @media (max-width: 374px) {
     :root { --folio-gutter: 14px; }
