@@ -32,10 +32,16 @@
     let ticket = sessionStorage.getItem(`${storageKey}:session`) || '';
     const dateFormat = new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit' });
 
-    const returned = new URLSearchParams(location.hash.slice(1)).get('noticeboard-session');
+    const returnedParams = new URLSearchParams(location.hash.slice(1));
+    const returned = returnedParams.get('noticeboard-session');
     if (returned) {
         ticket = returned;
         sessionStorage.setItem(`${storageKey}:session`, ticket);
+        history.replaceState(null, '', location.pathname + location.search);
+    }
+    const loginError = returnedParams.get('noticeboard-error');
+    if (loginError) {
+        status.textContent = loginError;
         history.replaceState(null, '', location.pathname + location.search);
     }
 

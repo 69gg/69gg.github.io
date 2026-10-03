@@ -86,6 +86,8 @@ npm run preview
 
 留言板沿用原路径对应的 [GitHub Discussion](https://github.com/69gg/69gg.github.io/discussions/6)。纸条对应顶层评论，回复对应 Discussion 回复，纸条位置与颜色随评论保存。自定义登录和读写通过轻量接口与 GitHub App 完成，接口地址配置在 `_config.shiro.yml` 的 `guestbook.api_url`。这需要单独配置 GitHub App，无法直接使用 Giscus 的登录会话。在未配置接口的 localhost 本地预览中，使用“预览访客”身份和浏览器本地存储审阅纸条、移动与回复交互；这些预览留言不会上传 GitHub。线上接口未配置时仅显示布告栏，暂不开放张贴。
 
+接口源码在 `services/noticeboard/worker.js`，部署与授权步骤见 [布告栏接口说明](services/noticeboard/README.md)。App 仅申请存储仓库的 Discussions 读写权限；纸条归属在接口内由 GitHub 确认，纸条主人删除别人回复时由 App 代为执行。匿名读取得到的安装 Token 为只读，客户端不接收 GitHub Token 明文。接口配置、密钥和静态页面分别维护，本站构建不会自动部署 Worker。
+
 文章评论继续使用 `_config.shiro.yml` 中的 Giscus 仓库、Q&A 分类和 `pathname` 映射。
 
 评论主题为本站的 `css/giscus-folio.css`，复用 Shiro 完整的 Giscus 基础样式，覆盖为柔白纸／蓝灰纸对应的文字、输入区、边线与墨蓝按钮色。iframe 的 `color-scheme` 继续由 Shiro 随网站明暗模式同步，主题内的媒体查询随之切换。主题 URL 通过现有 `versioned_url` helper 和当前页面来源生成，不写死生产域名；本地预览允许 CORS，以便 Giscus iframe 读取本站样式。颜色维护时同步参考 `folio.css` 的纸面配色。Giscus 自定义主题方式见 [官方文档](https://github.com/giscus/giscus/blob/main/ADVANCED-USAGE.md#data-theme)。

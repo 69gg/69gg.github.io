@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "null-noticeboard",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-03",
+  "vars": {
+    "GITHUB_REPOSITORY": "69gg/69gg.github.io",
+    "DISCUSSION_NUMBER": "6",
+    "ALLOWED_ORIGINS": "https://www.pylindex.top,https://69gg.github.io,http://127.0.0.1:4173,http://localhost:4173",
+    "GITHUB_APP_ID": "",
+    "GITHUB_CLIENT_ID": ""
+  }
+}
