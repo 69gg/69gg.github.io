@@ -2,8 +2,10 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 const colors = new Set(['cream', 'rose', 'sage', 'blue', 'lilac']);
 const metadataPattern = /\n*<!-- null-board:(\{[^\n]*\}) -->\s*$/;
+const reactionFields = 'content viewerHasReacted reactors { totalCount }';
 const commentFields = `id body createdAt updatedAt deletedAt isMinimized
-    author { login ... on User { name } }`;
+    author { login ... on User { name } }
+    reactionGroups { ${reactionFields} }`;
 const pageFields = 'pageInfo { hasNextPage endCursor }';
 const installationTokens = new Map();
 
@@ -119,7 +121,11 @@ function readNote(comment, index = 0) {
 }
 
 function readComment(comment) {
-    return { id: comment.id, body: comment.body, author: comment.author, createdAt: comment.createdAt, updatedAt: comment.updatedAt };
+    return { id: comment.id, body: comment.body, author: comment.author, createdAt: comment.createdAt, updatedAt: comment.updatedAt, reactions: readReactions(comment.reactionGroups) };
+}
+
+function readReactions(groups = []) {
+    return groups.map((group) => ({ content: group.content, count: group.reactors.totalCount, viewerHasReacted: group.viewerHasReacted }));
 }
 
 function writeNote(body, position) {
@@ -276,17 +282,26 @@ async function route(request, url, env) {
         const comment = await addComment(session.accessToken, data.repository.discussion.id, writeNote(checkBody(input.body), position));
         return Response.json({ ...readNote(comment), replies: [] }, { status: 201 });
     }
-    const path = url.pathname.match(/^\/api\/(notes|replies)\/([^/]+)(\/replies)?$/);
+    const path = url.pathname.match(/^\/api\/(notes|replies)\/([^/]+)(?:\/(replies|reactions))?$/);
     if (!path) throw new HttpError(404, '没有这个留言接口。');
     if (!['POST', 'PATCH', 'DELETE'].includes(request.method)) throw new HttpError(405, '不支持这个留言操作。');
-    const [, kind, encodedId, replyPath] = path;
+    const [, kind, encodedId, operation] = path;
     const comment = await getComment(session.accessToken, decodeURIComponent(encodedId), env);
     if (Boolean(comment.replyTo) !== (kind === 'replies')) throw new HttpError(404, '纸条与回复的地址不匹配。');
-    if (replyPath && kind === 'notes' && request.method === 'POST') {
+    if (operation === 'reactions' && ['POST', 'DELETE'].includes(request.method)) {
+        const input = await request.json();
+        const mutation = request.method === 'POST' ? 'addReaction' : 'removeReaction';
+        const inputType = request.method === 'POST' ? 'AddReactionInput' : 'RemoveReactionInput';
+        const data = await graphql(session.accessToken, `mutation($input: ${inputType}!) {
+            ${mutation}(input: $input) { reactionGroups { ${reactionFields} } }
+        }`, { input: { subjectId: comment.id, content: input.content } });
+        return Response.json({ reactions: readReactions(data[mutation].reactionGroups) });
+    }
+    if (operation === 'replies' && kind === 'notes' && request.method === 'POST') {
         const input = await request.json();
         return Response.json(readComment(await addComment(session.accessToken, comment.discussion.id, checkBody(input.body), comment.id)), { status: 201 });
     }
-    if (replyPath) throw new HttpError(405, '不支持这个留言操作。');
+    if (operation) throw new HttpError(405, '不支持这个留言操作。');
     if (request.method === 'PATCH') {
         requireAuthor(comment);
         const input = await request.json();

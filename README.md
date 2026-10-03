@@ -98,6 +98,8 @@ npm run preview
 
 每张纸条下面显示最近两条回复，点击“回复”查看完整的楼层回复并发言，不再显示“纸条下的闲聊”标题。操作名称统一为“修改”“移除”“回复”。回复者可以修改、移除自己的回复；纸条主人也可以移除自己纸条下面的回复。移除纸条会同时删除它下面的回复。
 
+留言、纸面上的回复预览和完整回复列表都支持 Giscus 式表情回应。已使用的表情显示人数，当前用户已点的表情突出显示；展开笑脸按钮可选择 GitHub 原生的赞、不赞同、开心、庆祝、疑惑、喜欢、加油、关注八种表情，再点已选表情即可取消。登录用户可对任何人的留言或回复回应，不限作者本人；匿名访客点击表情后进入现有 GitHub 登录流程。表情直接使用 GitHub 的 `addReaction` / `removeReaction`，不写进留言正文，也不更新纸条的修改时间。菜单复用一个浏览器 Popover，在当前纸面或回复弹窗内打开，通过顶层显示避免被滚动区域裁切；菜单配色随纸条。本地预览的表情只保存在当前浏览器。
+
 留言板沿用原路径对应的 [GitHub Discussion](https://github.com/69gg/69gg.github.io/discussions/6)。纸条对应顶层评论，回复对应 Discussion 回复，纸条位置与颜色随评论保存。自定义登录和读写通过轻量接口与 GitHub App 完成，接口地址配置在 `_config.shiro.yml` 的 `guestbook.api_url`。这需要单独配置 GitHub App，无法直接使用 Giscus 的登录会话。在未配置接口的 localhost 本地预览中，使用“预览访客”身份和浏览器本地存储审阅纸条、移动与回复交互；这些预览留言不会上传 GitHub。线上接口未配置时仅显示布告栏，暂不开放张贴。
 
 构建时 `scripts/copy-root-assets.js` 将 Hexo 生成的留言板移到 `public/guestbook/`，共享静态资源继续从 `/blog/` 加载；canonical、社交元信息、首页入口与站点地图使用根目录路径，留言板不纳入博客搜索索引。页面的 `root_path` 为 `/guestbook/`。本地审阅使用 `npm run build` 后的 `npm run preview`。

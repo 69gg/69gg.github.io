@@ -69,7 +69,7 @@
 
 <dialog class="noticeboard-dialog noticeboard-thread" id="noticeboard-thread" aria-label="纸条回复" data-pagefind-ignore>
     <div class="noticeboard-dialog-heading"><div id="noticeboard-thread-author" class="board-note-footer"></div><button type="button" class="noticeboard-close" data-close="noticeboard-thread" aria-label="关闭">×</button></div>
-    <div class="noticeboard-thread-note"><div id="noticeboard-thread-body" class="noticeboard-markdown"></div></div>
+    <div class="noticeboard-thread-note"><div id="noticeboard-thread-body" class="noticeboard-markdown"></div><div id="noticeboard-thread-reactions"></div></div>
     <ol class="noticeboard-replies" id="noticeboard-replies"></ol>
     <p class="noticeboard-thread-empty" id="noticeboard-thread-empty">还没有回复，来打个招呼吧。</p>
     <form id="noticeboard-reply-form">
@@ -81,4 +81,5 @@
     <button type="button" class="noticeboard-submit" id="noticeboard-reply-login">登录 GitHub 后回复</button>
     <p class="noticeboard-form-status" id="noticeboard-reply-status" role="status" aria-live="polite"></p>
 </dialog>
+<div class="noticeboard-dialog noticeboard-reaction-picker" id="noticeboard-reaction-picker" popover="auto" role="group" aria-label="选择表情回应" data-pagefind-ignore></div>
 {% endblock %}

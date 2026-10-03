@@ -67,6 +67,19 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .board-note-reply-preview li { margin-top: 12px; }
 .board-note-reply-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0 0 5px; }
 .board-note-reply-preview .board-note-footer { font-size: 10px; gap: 2px; }
+.noticeboard-reactions { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 10px; font-family: var(--folio-ui); font-size: 11px; }
+.noticeboard-reaction { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 27px; padding: 3px 8px; border: 1px solid var(--note-rule); border-radius: 12px; background: color-mix(in srgb, var(--note-paper) 96%, var(--note-ink)); color: inherit; font-size: inherit; line-height: 1; cursor: pointer; transition: background-color 160ms ease, transform 160ms ease; }
+.noticeboard-reaction:hover { background: var(--note-rule); transform: translateY(-1px); }
+.noticeboard-reaction[aria-pressed='true'] { border-color: var(--note-ink); background: color-mix(in srgb, var(--note-paper) 85%, var(--note-ink)); }
+.noticeboard-reaction:disabled { opacity: .55; cursor: wait; }
+.noticeboard-reaction-add { width: 29px; padding: 3px; border-color: transparent; background: none; }
+.noticeboard-reaction-add svg { width: 20px; height: 20px; }
+.noticeboard-dialog.noticeboard-reaction-picker { inset: auto; margin: 0; width: max-content; height: auto; max-height: none; padding: 8px; overflow: visible; }
+.noticeboard-reaction-picker:popover-open { display: grid; grid-template-columns: repeat(4, 38px); gap: 4px; animation: board-dialog-arrive 160ms var(--folio-ease); }
+.noticeboard-dialog.noticeboard-reaction-picker::backdrop { background: transparent; backdrop-filter: none; }
+.noticeboard-reaction-picker button { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid transparent; border-radius: 4px; font-size: 22px; line-height: 1; }
+.noticeboard-reaction-picker button:hover, .noticeboard-reaction-picker button[aria-pressed='true'] { border-color: var(--note-rule); background: var(--note-rule); }
+.board-note-reply-preview .noticeboard-reactions { margin-top: 6px; }
 .board-note.is-dragging { transition: none; transform: rotate(0deg) translateY(-4px) scale(1.025); box-shadow: 4px 15px 28px #3020184d; }
 .board-note.is-saving { opacity: .75; }
 .board-note.is-saving button { pointer-events: none; }
@@ -176,4 +189,4 @@ html[data-theme='dark'] .noticeboard { --board-chrome: #28374cdd; }
     .noticeboard-geometry { grid-template-columns: minmax(0, 1fr) 88px; gap: 12px; }
     .noticeboard-geometry-controls label { gap: 6px; }
 }
-@media (prefers-reduced-motion: reduce) { .board-note, .noticeboard-dialog[open] { animation: none; } .board-note, .noticeboard-write { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .board-note, .noticeboard-dialog[open], .noticeboard-reaction-picker:popover-open { animation: none; } .board-note, .noticeboard-write, .noticeboard-reaction { transition: none; } }

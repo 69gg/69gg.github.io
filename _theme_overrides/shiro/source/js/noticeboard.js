@@ -30,6 +30,11 @@
     const replySubmit = document.getElementById('noticeboard-reply-submit');
     const replyCancel = document.getElementById('noticeboard-reply-cancel');
     const replyStatus = document.getElementById('noticeboard-reply-status');
+    const reactionPicker = document.getElementById('noticeboard-reaction-picker');
+    const reactionOptions = [
+        ['THUMBS_UP', '👍', '赞'], ['THUMBS_DOWN', '👎', '不赞同'], ['LAUGH', '😄', '开心'], ['HOORAY', '🎉', '庆祝'],
+        ['CONFUSED', '😕', '疑惑'], ['HEART', '❤️', '喜欢'], ['ROCKET', '🚀', '加油'], ['EYES', '👀', '关注']
+    ];
     const storageKey = `noticeboard:${config.repository}:${config.discussionNumber}`;
     const cameraKey = `${storageKey}:camera`;
     const cameraOrigin = { x: 0, y: 0 };
@@ -54,6 +59,7 @@
     let removing = null;
     let activeNote = null;
     let editingReply = null;
+    let reactionTarget = null;
     let topLayer = 2;
     let ticket = sessionStorage.getItem(`${storageKey}:session`) || '';
     const dateFormat = new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
@@ -380,6 +386,87 @@
         return button;
     }
 
+    function reactionBar(note, comment = note) {
+        const bar = document.createElement('div');
+        bar.className = 'noticeboard-reactions';
+        bar.setAttribute('aria-label', '表情回应');
+        for (const [content, emoji, label] of reactionOptions) {
+            const reaction = comment.reactions?.find((item) => item.content === content);
+            if (!reaction?.count) continue;
+            const button = action(`${emoji} ${reaction.count}`, () => toggleReaction(note, comment, content, bar), 'noticeboard-reaction');
+            button.setAttribute('aria-pressed', String(Boolean(user && reaction.viewerHasReacted)));
+            button.setAttribute('aria-label', `${label}，${reaction.count} 人回应`);
+            button.title = `${label}${user && reaction.viewerHasReacted ? ' · 点击取消' : ''}`;
+            bar.append(button);
+        }
+        const add = action('', () => openReactionPicker(note, comment, add, bar), 'noticeboard-reaction noticeboard-reaction-add');
+        add.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9M17 3v6m-3-3h6M8 14s1.5 3 4 3 4-3 4-3"/><path d="M8 9h.01M12 9h.01"/></svg>';
+        add.setAttribute('aria-label', '添加表情回应');
+        add.setAttribute('aria-haspopup', 'true');
+        add.setAttribute('aria-expanded', 'false');
+        add.title = '添加表情回应';
+        bar.append(add);
+        return bar;
+    }
+
+    function openReactionPicker(note, comment, button, bar) {
+        reactionTarget?.button.setAttribute('aria-expanded', 'false');
+        reactionTarget = { note, comment, button };
+        paintPaper(reactionPicker, note.position.color);
+        reactionPicker.replaceChildren(...reactionOptions.map(([content, emoji, label]) => {
+            const choice = action(emoji, () => {
+                reactionPicker.hidePopover();
+                toggleReaction(note, comment, content, bar);
+            });
+            choice.title = label;
+            choice.setAttribute('aria-label', label);
+            choice.setAttribute('aria-pressed', String(Boolean(user && comment.reactions?.find((item) => item.content === content)?.viewerHasReacted)));
+            return choice;
+        }));
+        // Keep the picker inside the active dialog while the top layer lets it
+        // escape the scrolling paper's clipping region.
+        bar.append(reactionPicker);
+        reactionPicker.showPopover();
+        const rect = button.getBoundingClientRect();
+        reactionPicker.style.left = `${Math.max(12, Math.min(rect.left, innerWidth - reactionPicker.offsetWidth - 12))}px`;
+        const below = rect.bottom + 8;
+        reactionPicker.style.top = `${Math.max(12, below + reactionPicker.offsetHeight < innerHeight - 12 ? below : rect.top - reactionPicker.offsetHeight - 8)}px`;
+        button.setAttribute('aria-expanded', 'true');
+        reactionPicker.querySelector('button').focus({ preventScroll: true });
+    }
+
+    async function toggleReaction(note, comment, content, bar) {
+        if (!user) return login();
+        bar.setAttribute('aria-busy', 'true');
+        bar.querySelectorAll('button').forEach((button) => { button.disabled = true; });
+        try {
+            const reaction = comment.reactions?.find((item) => item.content === content);
+            if (localPreview) {
+                const item = reaction || { content, count: 0, viewerHasReacted: false };
+                if (!reaction) (comment.reactions ||= []).push(item);
+                item.count += item.viewerHasReacted ? -1 : 1;
+                item.viewerHasReacted = !item.viewerHasReacted;
+                persistPreview();
+            } else {
+                const kind = note === comment ? 'notes' : 'replies';
+                const updated = await request(`/api/${kind}/${encodeURIComponent(comment.id)}/reactions`, reaction?.viewerHasReacted ? 'DELETE' : 'POST', { content });
+                comment.reactions = updated.reactions;
+            }
+            refreshPaper(note);
+            if (thread.open && activeNote === note) renderReplies();
+        } catch (error) {
+            if (thread.open && activeNote === note) replyStatus.textContent = error.message;
+            else say(error.message);
+        } finally {
+            bar.removeAttribute('aria-busy');
+            bar.querySelectorAll('button').forEach((button) => { button.disabled = false; });
+        }
+    }
+
+    reactionPicker.addEventListener('toggle', (event) => {
+        if (event.newState === 'closed') reactionTarget?.button.setAttribute('aria-expanded', 'false');
+    });
+
     function confirmRemove(note, reply = null) {
         removing = { note, reply };
         paintPaper(removeDialog, note.position.color);
@@ -428,6 +515,7 @@
         positionNote(article, note.position);
         renderMarkdown(article.querySelector('.board-note-message'), note.body);
         renderMetadata(article.querySelector(':scope > footer'), note);
+        article.append(reactionBar(note));
         if (owns(note)) {
             article.querySelector('.board-note-pin').remove();
             const handle = document.createElement('button');
@@ -456,7 +544,7 @@
                 const metadata = document.createElement('div');
                 metadata.className = 'board-note-footer';
                 renderMetadata(metadata, reply);
-                item.append(message, metadata);
+                item.append(message, metadata, reactionBar(note, reply));
                 preview.append(item);
             });
             article.append(preview);
@@ -492,6 +580,7 @@
     function renderReplies() {
         renderMetadata(document.getElementById('noticeboard-thread-author'), activeNote);
         renderMarkdown(document.getElementById('noticeboard-thread-body'), activeNote.body);
+        document.getElementById('noticeboard-thread-reactions').replaceChildren(reactionBar(activeNote));
         const list = document.getElementById('noticeboard-replies');
         const replies = activeNote.replies || [];
         list.replaceChildren(...replies.map((reply, index) => {
@@ -500,6 +589,7 @@
             renderMetadata(item.querySelector('header div'), reply);
             item.querySelector('small').textContent = `${index + 1} 楼`;
             renderMarkdown(item.querySelector('.noticeboard-reply-message'), reply.body);
+            item.querySelector('.noticeboard-reply-message').after(reactionBar(activeNote, reply));
             const actions = item.querySelector('.noticeboard-reply-actions');
             if (owns(reply)) actions.append(action('修改', () => {
                 editingReply = reply;

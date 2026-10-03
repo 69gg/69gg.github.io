@@ -99,6 +99,7 @@ GitHub App 用户登录与 PKCE 参数见 [GitHub 官方文档](https://docs.git
 - 纸条和回复的 `body` 保持原始 Markdown，GitHub Discussions 继续原生显示。接口不改写 Markdown；本站前端复用本地 Marked 解析，并通过 DOMPurify 的 HTML profile 渲染到纸面。
 - 纸条与回复保留 GitHub 的 `createdAt`、`updatedAt` 和作者，前端将完整创建时间以及有修改时的修改时间放在同一行。页面迁到根目录后继续使用同一条 Discussion，不改变已有评论 ID 或作者。
 - Discussion 回复是纸条下面的楼层回复，保持真实 GitHub 作者身份。用户在网站上的写入、修改通过自己的 GitHub App 用户 Token 完成。
+- 留言与回复的表情使用 GitHub 原生 Reactions，支持 `THUMBS_UP`、`THUMBS_DOWN`、`LAUGH`、`HOORAY`、`CONFUSED`、`HEART`、`ROCKET`、`EYES`。读取返回各表情的 `content`、`count` 和 `viewerHasReacted`；登录访客可对任何人的内容添加或取消自己的表情，不需要内容所有权。写入使用该访客的用户 Token，不使用 App 代替访客点表情。计数读取 `reactionGroups.reactors.totalCount`，新增与取消复用 GitHub 的 [Reactions GraphQL 接口](https://docs.github.com/en/graphql/reference/reactions)。
 - 移动、修改和删除纸条，以及修改回复时，接口向 GitHub 查询 `viewerDidAuthor`，仅接受作者的操作；同时确认评论属于配置的仓库和留言板 Discussion。
 - 删除回复时允许回复作者操作；也允许该顶层纸条的作者操作。纸条作者删除别人回复时，接口先通过用户 Token 确认顶层评论归属，再使用 App 安装 Token 执行删除。App 的权限只覆盖选中的存储仓库，不赋予访客仓库管理权限。
 - 删除纸条先清理它的全部回复，再删除顶层评论，避免 GitHub 留下已擦除的父评论占位。匿名读取用单独的只读安装 Token，管理回复才申请写权限的安装 Token。
@@ -119,6 +120,8 @@ GitHub App 用户登录与 PKCE 参数见 [GitHub 官方文档](https://docs.git
 | `POST /api/notes/:id/replies` | 在纸条下回复：`{ body }` |
 | `PATCH /api/replies/:id` | 修改自己的回复：`{ body }` |
 | `DELETE /api/replies/:id` | 回复作者或纸条作者删除回复 |
+| `POST /api/notes/:id/reactions`、`POST /api/replies/:id/reactions` | 添加自己的 GitHub 表情：`{ content }` |
+| `DELETE /api/notes/:id/reactions`、`DELETE /api/replies/:id/reactions` | 取消自己的 GitHub 表情：`{ content }` |
 
 需要登录的接口使用 `Authorization: Bearer <本站会话>`。评论与回复 ID 使用 GitHub 返回的 Node ID，客户端不能自行指定作者。
 
