@@ -9,3 +9,8 @@ _multiconfig.yml
 artifacts/
 test-results/
 playwright-report/
+services/noticeboard/.dev.vars*
+services/noticeboard/.env*
+services/noticeboard/.secrets*.json
+services/noticeboard/*.pem
+services/noticeboard/.wrangler/

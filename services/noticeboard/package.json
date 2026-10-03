@@ -1,0 +1,21 @@
+{
+  "name": "null-noticeboard",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "login": "wrangler login",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "github:app": "node github-app.mjs",
+    "secrets:prepare": "node prepare-secrets.mjs",
+    "secrets:upload": "wrangler secret bulk .secrets.json"
+  },
+  "devDependencies": {
+    "js-yaml": "4.3.0",
+    "wrangler": "4.147.0"
+  }
+}

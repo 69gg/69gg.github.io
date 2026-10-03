@@ -1,34 +1,84 @@
 # 布告栏接口
 
-这是独立页面 `/guestbook/` 的轻量 Cloudflare Worker 接口。前端是本站自己的全屏纸条画布，数据保存在 GitHub Discussions；不用 Giscus UI，也不需要额外数据库。Worker 接收 GitHub 登录回调、保存纸条位置与内容、管理楼层回复。
+这是独立页面 `/guestbook/` 的轻量 Cloudflare Worker 接口。前端是本站自己的全屏纸条画布，数据保存在现有 Giscus 使用的 GitHub Discussions 仓库中，无需额外数据库。文章评论继续使用 Giscus；留言板的登录回调、纸条位置与内容、楼层回复管理由 Worker 处理。
 
-## GitHub App
+Giscus 官方 App 的凭据和登录会话不能用于自定义接口，因此留言板需要一个独立的 GitHub App。它仍使用 [现有 Discussion #6](https://github.com/69gg/69gg.github.io/discussions/6)，无需迁移留言或替换文章评论。本站构建与 GitHub Pages 工作流不会自动部署 Worker。
 
-在 [GitHub App 设置](https://github.com/settings/apps/new) 中创建一个独立的 App：
+## 准备与发布顺序
+
+### 1. 安装部署工具并取得 Worker 地址
+
+需要 Node.js 22 或更新版本，以及可创建 Workers 的 Cloudflare 账户。在本目录安装独立锁定的 Wrangler：
+
+```sh
+cd services/noticeboard
+npm ci
+npm run login
+npm run deploy
+```
+
+第一次发布用于取得固定的 `workers.dev` 地址，例如 `https://null-noticeboard.<账户子域名>.workers.dev`。此时 App 与 Secrets 尚未配置，接口还不能提供留言服务；站点的 `guestbook.api_url` 先保持空值。`workers_dev: true` 启用正式地址，`preview_urls: false` 关闭每次版本上传产生的预览地址，GitHub 登录使用正式地址。
+
+### 2. 创建并安装 GitHub App
+
+把上一步输出的实际 HTTPS 地址传给工具：
+
+```sh
+npm run github:app -- --api-url "https://实际的Worker地址"
+```
+
+工具仅输出注册链接，不创建 App。它从 `wrangler.jsonc`、站点 `_config.yml` 和留言板页面的 `root_path` 读取仓库、名称与站点地址，预填登录回调和权限。打开输出的链接，在 GitHub 中确认后创建；名称已被占用时，可通过 `--name` 指定其他名称。注册链接参数见 [GitHub 官方文档](https://docs.github.com/en/apps/sharing-github-apps/registering-a-github-app-using-url-parameters)。
 
 | 设置 | 值 |
 | --- | --- |
-| Homepage URL | 本站留言板地址，例如 `https://www.pylindex.top/guestbook/` |
-| Callback URL | Worker 的完整地址加 `/auth/callback` |
+| Homepage URL | 工具读取的本站留言板地址 |
+| Callback URL | 正式 Worker 地址加 `/auth/callback` |
+| Request user authorization (OAuth) during installation | 不启用；访客从留言板发起带状态校验的登录 |
 | Webhook | 不启用 |
 | Repository permissions → Discussions | Read and write |
 | Repository permissions → Metadata | Read-only，GitHub 自动添加 |
 | 其他仓库、组织与账户权限 | 不申请 |
-| Where can this GitHub App be installed? | Any account，让公开访客可以授权登录 |
+| Where can this GitHub App be installed? | Any account，公开 App |
 
 把 App 安装到 `69gg` 账户，**仅选择 `69gg.github.io` 仓库**。访客只需要授权登录，不需要在自己的仓库安装 App。
 
-记录 App ID 和 Client ID，生成 Client secret 和一份私钥。下载的 RSA 私钥先转成 Web Crypto 支持的 PKCS#8 格式：
+### 3. 填写 App ID 并导入 Secrets
+
+从 App 设置中记录 App ID 和 Client ID，分别填写到 `wrangler.jsonc` 的 `vars.GITHUB_APP_ID` 与 `vars.GITHUB_CLIENT_ID`。这两个值不是密钥。生成一个 Client secret，再下载 GitHub App 的 RSA 私钥。
+
+准备工具会把下载的私钥转换为 Worker Web Crypto 所需的 PKCS#8，并生成 32 字节随机会话密钥：
 
 ```sh
-openssl pkcs8 -topk8 -nocrypt -in /安全目录/下载的私钥.pem -out /安全目录/github-app.pkcs8.pem
+npm run secrets:prepare -- --private-key "/安全目录/下载的私钥.pem"
+npm run secrets:upload
+npx wrangler secret put GITHUB_CLIENT_SECRET
 ```
 
-GitHub App 和 Giscus App 的凭据互相独立。Client secret、私钥和会话密钥只放在 Worker 的 Secrets 中，不写入前端、站点配置或 Git。GitHub App 用户登录流程与 PKCE 参数见 [GitHub 官方文档](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app)。
+最后一条命令会交互式接收 Client secret，避免把密钥放进命令参数和 shell 历史。准备工具只写本目录的 `.secrets.json`，不向 Cloudflare 上传，不在终端打印密钥。文件权限为 `0600`，包含 `GITHUB_PRIVATE_KEY` 与 `SESSION_SECRET`；`.secrets*.json`、`.dev.vars*`、`.env*`、本目录的 `.pem` 与 `.wrangler/` 已加入 Git 忽略规则。批量导入仅更新文件中列出的 Secrets。
 
-## Worker 配置与部署
+密钥文件只生成一次，已有同名文件时不会覆盖。后续更新 Worker 直接使用 `npm run deploy`，不要重新生成会话密钥；更换 `SESSION_SECRET` 会让所有已有网站会话失效。Client secret、私钥和会话密钥只保存在本机受限文件与 Worker Secrets 中，不写入前端或站点公开配置。
 
-在本目录运行 Wrangler。`wrangler.jsonc` 是部署配置；本仓库只提供源码，不自动部署该接口。
+### 4. 发布完整接口并接入站点
+
+```sh
+npm run deploy
+```
+
+完成 App 安装、配置和 Secrets 导入后，将同一个正式 Worker 地址填到站点根目录 `_config.shiro.yml`：
+
+```yaml
+guestbook:
+  api_url: "https://实际的Worker地址"
+  discussion_number: 6
+```
+
+之后按本站原有流程构建、发布静态页面。GitHub Pages 负责页面和资源；Worker 负责 GitHub 登录与 Discussions 读写。改用自定义接口域名时，同步修改 GitHub App 的 Callback URL 与 `guestbook.api_url`，回调地址必须完全对应。部署命令会发布接口，配置工具本身只准备本地文件和注册链接。
+
+GitHub App 用户登录与 PKCE 参数见 [GitHub 官方文档](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app)；Secrets 导入见 [Cloudflare 官方文档](https://developers.cloudflare.com/workers/configuration/secrets/)。
+
+## 配置项
+
+`wrangler.jsonc` 保存非敏感的部署配置。仓库、Discussion 和允许访问的网站来源已按本站现有设置填写，App ID 与 Client ID 等创建 App 后补入。
 
 | 配置 | 用途 |
 | --- | --- |
@@ -41,27 +91,7 @@ GitHub App 和 Giscus App 的凭据互相独立。Client secret、私钥和会�
 | `GITHUB_PRIVATE_KEY` | PKCS#8 格式的私钥，通过 Secret 设置 |
 | `SESSION_SECRET` | 32 字节随机密钥的 Base64 值，通过 Secret 设置 |
 
-当前配置沿用 [留言板 Discussion #6](https://github.com/69gg/69gg.github.io/discussions/6)。仓库已启用 Discussions；通常不用另外创建讨论。如果改用其他仓库，先创建一条留言板 Discussion，填入编号，并把 App 安装到该仓库。
-
-完成 App ID、Client ID 和来源配置后：
-
-```sh
-npx wrangler login
-npx wrangler secret put GITHUB_CLIENT_SECRET
-npx wrangler secret put GITHUB_PRIVATE_KEY < /安全目录/github-app.pkcs8.pem
-openssl rand -base64 32 | npx wrangler secret put SESSION_SECRET
-npx wrangler deploy
-```
-
-部署后，将 Worker 的 HTTPS 地址填到站点根目录 `_config.shiro.yml`：
-
-```yaml
-guestbook:
-  api_url: "https://你的布告栏接口域名"
-  discussion_number: 6
-```
-
-GitHub App 的 Callback URL 必须与最终接口地址完全对应。然后构建、发布静态站点。GitHub Pages 仍只负责静态页面，私钥及登录换取 Token 的过程由 Worker 完成。Wrangler Secret 配置见 [Cloudflare 官方文档](https://developers.cloudflare.com/workers/configuration/secrets/)。
+如果改用其他存储仓库，同步调整站点的 `comments.giscus.repo`、`guestbook.discussion_number` 和 Worker 对应配置，创建留言板 Discussion，并把 App 安装到该仓库。文章 Giscus 所用的仓库 ID 与分类 ID 也需使用新仓库的值。
 
 ## 数据与权限
 
@@ -96,4 +126,4 @@ GitHub App 的 Callback URL 必须与最终接口地址完全对应。然后构�
 
 站点未配置 `guestbook.api_url`，且在 `localhost`／`127.0.0.1` 打开时，前端使用浏览器本地存储和“预览访客”身份，可以审阅添加、拖动、修改、删除、回复操作。不会上传这些本地纸条到 GitHub，也不模拟其他用户的历史留言。
 
-如果要运行真实接口，把 Secrets 写到被 Git 忽略的 `.dev.vars`，使用 `npx wrangler dev`，并把对应接口来源填到站点的 `api_url`。真实 GitHub 登录需要 App 中存在匹配的回调地址。UI 本地审阅不需要启动 Worker。
+如果要运行真实接口，把 Secrets 写到被 Git 忽略的 `.dev.vars`，使用 `npm run dev`，并把对应接口来源填到站点的 `api_url`。真实 GitHub 登录需要 App 中存在匹配的回调地址。UI 本地审阅不需要启动 Worker。

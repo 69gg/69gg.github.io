@@ -100,6 +100,8 @@ npm run preview
 
 接口源码在 `services/noticeboard/worker.js`，部署与授权步骤见 [布告栏接口说明](services/noticeboard/README.md)。App 仅申请存储仓库的 Discussions 读写权限；纸条归属在接口内由 GitHub 确认，纸条主人删除别人回复时由 App 代为执行。匿名读取得到的安装 Token 为只读，客户端不接收 GitHub Token 明文。接口配置、密钥和静态页面分别维护，本站构建不会自动部署 Worker。
 
+Worker 使用 `services/noticeboard/` 中独立的 `package.json` 与锁文件安装 Wrangler，不加入静态博客的构建依赖。在该目录运行 `npm run github:app -- --api-url <实际接口地址>`，根据现有站点与仓库配置生成预填的 GitHub App 注册链接；`npm run secrets:prepare -- --private-key <下载的私钥.pem>` 转换 PKCS#8 私钥并生成会话密钥，写入被 Git 忽略的 `.secrets.json`。完成 Cloudflare 登录、App 创建与安装、Secrets 导入后，再填写站点的 `guestbook.api_url`。
+
 文章评论继续使用 `_config.shiro.yml` 中的 Giscus 仓库、Q&A 分类和 `pathname` 映射。
 
 评论主题为本站的 `css/giscus-folio.css`，复用 Shiro 完整的 Giscus 基础样式，覆盖为柔白纸／蓝灰纸对应的文字、输入区、边线与墨蓝按钮色。iframe 的 `color-scheme` 继续由 Shiro 随网站明暗模式同步，主题内的媒体查询随之切换。主题 URL 通过现有 `versioned_url` helper 和当前页面来源生成，不写死生产域名；本地预览允许 CORS，以便 Giscus iframe 读取本站样式。颜色维护时同步参考 `folio.css` 的纸面配色。Giscus 自定义主题方式见 [官方文档](https://github.com/giscus/giscus/blob/main/ADVANCED-USAGE.md#data-theme)。

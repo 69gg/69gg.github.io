@@ -3,6 +3,8 @@
   "name": "null-noticeboard",
   "main": "worker.js",
   "compatibility_date": "2026-10-03",
+  "workers_dev": true,
+  "preview_urls": false,
   "vars": {
     "GITHUB_REPOSITORY": "69gg/69gg.github.io",
     "DISCUSSION_NUMBER": "6",
