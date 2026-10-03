@@ -2,6 +2,7 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 const colors = new Set(['cream', 'rose', 'sage', 'blue', 'lilac']);
 const metadataPattern = /\n*<!-- null-board:(\{[^\n]*\}) -->\s*$/;
+const replyMetadataPattern = /\n*<!-- null-board-reply:(\{[^\n]*\}) -->\s*$/;
 const reactionFields = 'content viewerHasReacted reactors { totalCount }';
 const commentFields = `id body createdAt updatedAt deletedAt isMinimized
     author { login ... on User { name } }
@@ -124,12 +125,22 @@ function readComment(comment) {
     return { id: comment.id, body: comment.body, author: comment.author, createdAt: comment.createdAt, updatedAt: comment.updatedAt, reactions: readReactions(comment.reactionGroups) };
 }
 
+function readReply(comment) {
+    const match = comment.body.match(replyMetadataPattern);
+    const parentId = match ? JSON.parse(match[1]).parentId : null;
+    return { ...readComment(comment), body: comment.body.replace(replyMetadataPattern, '').trim(), parentId };
+}
+
 function readReactions(groups = []) {
     return groups.map((group) => ({ content: group.content, count: group.reactors.totalCount, viewerHasReacted: group.viewerHasReacted }));
 }
 
 function writeNote(body, position) {
     return `${body}\n\n<!-- null-board:${JSON.stringify(position)} -->`;
+}
+
+function writeReply(body, parentId) {
+    return parentId ? `${body}\n\n<!-- null-board-reply:${JSON.stringify({ parentId })} -->` : body;
 }
 
 async function listReplies(token, id, connection = null) {
@@ -169,7 +180,7 @@ async function board(token, env) {
     } while (cursor);
     return Promise.all(comments.map(async (comment, index) => ({
         ...readNote(comment, index),
-        replies: (await listReplies(token, comment.id, comment.replies)).filter((reply) => !reply.deletedAt && !reply.isMinimized).map(readComment)
+        replies: (await listReplies(token, comment.id, comment.replies)).filter((reply) => !reply.deletedAt && !reply.isMinimized).map(readReply)
     })));
 }
 
@@ -297,15 +308,20 @@ async function route(request, url, env) {
         }`, { input: { subjectId: comment.id, content: input.content } });
         return Response.json({ reactions: readReactions(data[mutation].reactionGroups) });
     }
-    if (operation === 'replies' && kind === 'notes' && request.method === 'POST') {
+    if (operation === 'replies' && request.method === 'POST') {
         const input = await request.json();
-        return Response.json(readComment(await addComment(session.accessToken, comment.discussion.id, checkBody(input.body), comment.id)), { status: 201 });
+        const note = kind === 'notes' ? comment : await getComment(session.accessToken, comment.replyTo.id, env);
+        const parentId = kind === 'replies' ? comment.id : null;
+        return Response.json(readReply(await addComment(session.accessToken, note.discussion.id, writeReply(checkBody(input.body), parentId), note.id)), { status: 201 });
     }
     if (operation) throw new HttpError(405, '不支持这个留言操作。');
     if (request.method === 'PATCH') {
         requireAuthor(comment);
         const input = await request.json();
-        if (kind === 'replies') return Response.json(readComment(await updateComment(session.accessToken, comment.id, checkBody(input.body))));
+        if (kind === 'replies') {
+            const reply = readReply(comment);
+            return Response.json(readReply(await updateComment(session.accessToken, comment.id, writeReply(checkBody(input.body), reply.parentId))));
+        }
         const note = readNote(comment);
         const body = input.body === undefined ? note.body : checkBody(input.body);
         const position = input.position === undefined ? note.position : checkPosition(input.position);

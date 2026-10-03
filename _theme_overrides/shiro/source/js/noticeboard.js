@@ -30,6 +30,7 @@
     const replySubmit = document.getElementById('noticeboard-reply-submit');
     const replyCancel = document.getElementById('noticeboard-reply-cancel');
     const replyStatus = document.getElementById('noticeboard-reply-status');
+    const replyContext = document.getElementById('noticeboard-reply-context');
     const reactionPicker = document.getElementById('noticeboard-reaction-picker');
     const reactionOptions = [
         ['THUMBS_UP', '👍', '赞'], ['THUMBS_DOWN', '👎', '不赞同'], ['LAUGH', '😄', '开心'], ['HOORAY', '🎉', '庆祝'],
@@ -59,6 +60,7 @@
     let removing = null;
     let activeNote = null;
     let editingReply = null;
+    let replyingTo = null;
     let reactionTarget = null;
     let topLayer = 2;
     let ticket = sessionStorage.getItem(`${storageKey}:session`) || '';
@@ -370,7 +372,7 @@
         geometryInputs.forEach((input) => {
             input.parentElement.querySelector('output').textContent = `${input.value}${input.name === 'rotation' ? '°' : 'px'}`;
         });
-        const scale = Math.min(120 / width, 160 / height);
+        const scale = Math.min(paperPreview.parentElement.clientWidth / width, 160 / height);
         paperPreview.style.setProperty('--preview-width', `${width * scale}px`);
         paperPreview.style.setProperty('--preview-height', `${height * scale}px`);
         paperPreview.style.setProperty('--preview-turn', `${rotation}deg`);
@@ -471,7 +473,7 @@
         removing = { note, reply };
         paintPaper(removeDialog, note.position.color);
         document.getElementById('noticeboard-delete-title').textContent = reply ? '移除这条回复？' : '移除这张纸条？';
-        document.getElementById('noticeboard-delete-description').textContent = reply ? '这条回复会从纸条和留言记录中删除。' : '纸条及其下面的回复都会删除。';
+        document.getElementById('noticeboard-delete-description').textContent = reply ? '这条回复会移除，已有的后续回复会保留。' : '纸条及其下面的回复都会删除。';
         removeDialog.showModal();
     }
 
@@ -507,6 +509,11 @@
         return { v: 2, x, y, color, ...size, rotation: Math.random() * 6 - 3 };
     }
 
+    function replyParentLabel(note, reply) {
+        const parent = note.replies?.find((item) => item.id === reply.parentId);
+        return parent ? `回复 @${parent.author?.login || '路过的人'}` : '原回复已移除';
+    }
+
     function renderNote(note) {
         const article = document.createElement('article');
         article.className = 'board-note';
@@ -538,13 +545,21 @@
             preview.className = 'board-note-reply-preview';
             replies.slice(-2).forEach((reply) => {
                 const item = document.createElement('li');
+                if (reply.parentId) {
+                    const target = document.createElement('p');
+                    target.className = 'noticeboard-reply-target';
+                    target.textContent = replyParentLabel(note, reply);
+                    item.append(target);
+                }
                 const message = document.createElement('div');
                 message.className = 'board-note-reply-text noticeboard-markdown';
                 renderMarkdown(message, reply.body);
                 const metadata = document.createElement('div');
                 metadata.className = 'board-note-footer';
                 renderMetadata(metadata, reply);
-                item.append(message, metadata, reactionBar(note, reply));
+                const reactions = reactionBar(note, reply);
+                reactions.append(action('回复', () => openThread(note, reply), 'board-note-preview-reply'));
+                item.append(message, metadata, reactions);
                 preview.append(item);
             });
             article.append(preview);
@@ -571,10 +586,32 @@
 
     function resetReplyEditor() {
         editingReply = null;
+        replyingTo = null;
+        replyContext.hidden = true;
+        replyContext.textContent = '';
         replyInput.value = '';
+        replyInput.placeholder = '写下你的回复…';
         replySubmit.textContent = '回复';
         replyCancel.hidden = true;
         replyStatus.textContent = '';
+    }
+
+    function targetReply(reply, edit = false) {
+        if (!user) return login();
+        resetReplyEditor();
+        if (edit) {
+            editingReply = reply;
+            replyInput.value = reply.body;
+            replySubmit.textContent = '保存回复';
+        } else replyingTo = reply;
+        const author = `@${reply.author?.login || '路过的人'}`;
+        replyContext.textContent = edit ? `修改 ${author} 的回复` : `回复 ${author}`;
+        replyContext.hidden = false;
+        replyInput.placeholder = `回复 ${author}…`;
+        replyCancel.textContent = edit ? '取消修改' : '取消回复';
+        replyCancel.hidden = false;
+        replyInput.focus({ preventScroll: true });
+        replyForm.scrollIntoView({ block: 'nearest', behavior: motion.matches ? 'auto' : 'smooth' });
     }
 
     function renderReplies() {
@@ -583,35 +620,51 @@
         document.getElementById('noticeboard-thread-reactions').replaceChildren(reactionBar(activeNote));
         const list = document.getElementById('noticeboard-replies');
         const replies = activeNote.replies || [];
-        list.replaceChildren(...replies.map((reply, index) => {
+        const items = new Map(replies.map((reply, index) => {
             const item = document.createElement('li');
             item.innerHTML = '<header class="noticeboard-reply-heading"><div class="board-note-footer"></div><small></small></header><div class="noticeboard-reply-message noticeboard-markdown"></div><div class="noticeboard-reply-actions"></div>';
             renderMetadata(item.querySelector('header div'), reply);
             item.querySelector('small').textContent = `${index + 1} 楼`;
             renderMarkdown(item.querySelector('.noticeboard-reply-message'), reply.body);
+            if (reply.parentId) {
+                const target = document.createElement('p');
+                target.className = 'noticeboard-reply-target';
+                target.textContent = replyParentLabel(activeNote, reply);
+                item.querySelector('header').after(target);
+            }
             item.querySelector('.noticeboard-reply-message').after(reactionBar(activeNote, reply));
             const actions = item.querySelector('.noticeboard-reply-actions');
-            if (owns(reply)) actions.append(action('修改', () => {
-                editingReply = reply;
-                replyInput.value = reply.body;
-                replySubmit.textContent = '保存回复';
-                replyCancel.hidden = false;
-                replyInput.focus();
-            }));
+            if (owns(reply)) actions.append(action('修改', () => targetReply(reply, true)));
             if (owns(reply) || owns(activeNote)) actions.append(action('移除', () => confirmRemove(activeNote, reply)));
-            return item;
+            actions.append(action('回复', () => targetReply(reply)));
+            return [reply.id, item];
         }));
+        list.replaceChildren();
+        for (const reply of replies) {
+            const parent = items.get(reply.parentId);
+            let destination = list;
+            if (parent) {
+                destination = parent.querySelector(':scope > .noticeboard-reply-children');
+                if (!destination) {
+                    destination = document.createElement('ol');
+                    destination.className = 'noticeboard-reply-children';
+                    parent.append(destination);
+                }
+            }
+            destination.append(items.get(reply.id));
+        }
         document.getElementById('noticeboard-thread-empty').hidden = replies.length > 0;
         replyForm.hidden = !user;
         document.getElementById('noticeboard-reply-login').hidden = Boolean(user);
     }
 
-    function openThread(note) {
+    function openThread(note, reply = null) {
         activeNote = note;
         paintPaper(thread, note.position.color);
         resetReplyEditor();
         renderReplies();
         thread.showModal();
+        if (reply) targetReply(reply);
     }
 
     async function saveNote(note, changes) {
@@ -722,11 +775,11 @@
         paintPaper(customSwatch, normalizeHex(hexInput.value));
         syncEditorPaper();
         geometryInputs.forEach((input) => { input.value = note?.position[input.name] ?? (input.name === 'rotation' ? Math.round(Math.random() * 6 - 3) : noteSize[input.name]); });
-        syncEditorGeometry();
         document.getElementById('noticeboard-editor-title').textContent = note ? '修改纸条' : '写张纸条';
         submit.textContent = note ? '保存纸条' : '贴上去';
         document.getElementById('noticeboard-form-status').textContent = '';
         editor.showModal();
+        syncEditorGeometry();
         bodyInput.focus();
     }
 
@@ -779,7 +832,7 @@
                 note.replies = note.replies.filter((item) => item.id !== reply.id);
                 refreshPaper(note);
                 if (activeNote === note) {
-                    if (editingReply?.id === reply.id) resetReplyEditor();
+                    if (editingReply?.id === reply.id || replyingTo?.id === reply.id) resetReplyEditor();
                     renderReplies();
                 }
             } else {
@@ -806,7 +859,8 @@
                 const updated = localPreview ? { body, updatedAt: new Date().toISOString() } : await request(`/api/replies/${encodeURIComponent(editingReply.id)}`, 'PATCH', { body });
                 Object.assign(editingReply, updated);
             } else {
-                const reply = localPreview ? { id: crypto.randomUUID(), body, author: user, createdAt: new Date().toISOString() } : await request(`/api/notes/${encodeURIComponent(activeNote.id)}/replies`, 'POST', { body });
+                const path = replyingTo ? `/api/replies/${encodeURIComponent(replyingTo.id)}/replies` : `/api/notes/${encodeURIComponent(activeNote.id)}/replies`;
+                const reply = localPreview ? { id: crypto.randomUUID(), body, author: user, createdAt: new Date().toISOString(), parentId: replyingTo?.id || null } : await request(path, 'POST', { body });
                 (activeNote.replies ||= []).push(reply);
             }
             if (localPreview) persistPreview();

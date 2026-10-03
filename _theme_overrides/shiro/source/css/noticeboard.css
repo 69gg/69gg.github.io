@@ -80,6 +80,8 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .noticeboard-reaction-picker button { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid transparent; border-radius: 4px; font-size: 22px; line-height: 1; }
 .noticeboard-reaction-picker button:hover, .noticeboard-reaction-picker button[aria-pressed='true'] { border-color: var(--note-rule); background: var(--note-rule); }
 .board-note-reply-preview .noticeboard-reactions { margin-top: 6px; }
+.board-note-preview-reply { margin-left: auto; padding: 4px; font-family: var(--folio-ui); font-size: 11px; cursor: pointer; }
+.board-note-preview-reply:hover { text-decoration: underline; text-underline-offset: 3px; }
 .board-note.is-dragging { transition: none; transform: rotate(0deg) translateY(-4px) scale(1.025); box-shadow: 4px 15px 28px #3020184d; }
 .board-note.is-saving { opacity: .75; }
 .board-note.is-saving button { pointer-events: none; }
@@ -127,7 +129,12 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .noticeboard-thread { width: min(620px, calc(100% - 32px)); }
 .noticeboard-thread-note { padding-bottom: 24px; border-bottom: 1px solid var(--note-rule); font-family: var(--folio-serif); font-size: 17px; line-height: 1.9; }
 .noticeboard-replies { margin: 0; padding: 0; list-style: none; }
-.noticeboard-replies > li { padding: 20px 0; border-bottom: 1px solid var(--note-rule); }
+.noticeboard-replies > li, .noticeboard-reply-children > li { padding: 20px 0; border-bottom: 1px solid var(--note-rule); }
+.noticeboard-reply-children { margin: 16px 0 0; padding: 0 0 0 18px; border-left: 1px solid var(--note-rule); list-style: none; }
+.noticeboard-reply-children > li { padding-block: 14px; }
+.noticeboard-reply-children > li:last-child { padding-bottom: 0; border-bottom: 0; }
+.noticeboard-reply-children .noticeboard-reply-children .noticeboard-reply-children { padding-left: 0; border-left: 0; }
+.noticeboard-reply-target { margin: 8px 0 0; font-family: var(--folio-ui); font-size: 11px; line-height: 1.6; opacity: .7; }
 .noticeboard-reply-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; font-family: var(--folio-ui); font-size: 12px; }
 .noticeboard-reply-heading small { font-size: 10px; opacity: .65; }
 .noticeboard-reply-message { margin: 10px 0 0; font-family: var(--folio-serif); font-size: 15px; line-height: 1.9; }
@@ -135,6 +142,7 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .noticeboard-reply-actions button:hover { text-decoration: underline; text-underline-offset: 3px; }
 .noticeboard-thread-empty { margin: 24px 0; font-family: var(--folio-ui); font-size: 13px; opacity: .7; }
 #noticeboard-reply-form { margin-top: 22px; }
+.noticeboard-reply-context { margin: 0 0 10px; padding-left: 10px; border-left: 2px solid var(--note-pin); font-family: var(--folio-ui); font-size: 12px; line-height: 1.6; }
 #noticeboard-reply-form textarea { min-height: 95px; font-size: 15px; }
 #noticeboard-reply-form .noticeboard-dialog-actions { margin-top: 16px; }
 #noticeboard-reply-login { margin-top: 24px; }
