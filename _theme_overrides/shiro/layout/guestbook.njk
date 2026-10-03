@@ -22,7 +22,13 @@
         <div class="noticeboard-wallpaper" id="noticeboard-wallpaper" aria-hidden="true"></div>
         <div class="noticeboard-canvas" id="noticeboard-canvas">
             <div class="noticeboard-decoration" aria-hidden="true">
-                {% include "_partial/folio/surround.njk" %}
+                <div class="noticeboard-flowers" id="noticeboard-flowers"></div>
+                <div class="folio-garden">
+                    {% for row in range(0, 12) %}
+                    <span class="folio-petal folio-petal-left" style="--petal-row: {{ row }}; --petal-delay: {{ -4 - row * 3 }}s;"></span>
+                    <span class="folio-petal folio-petal-right" style="--petal-row: {{ row }}; --petal-delay: {{ -13 - row * 5 }}s;"></span>
+                    {% endfor %}
+                </div>
                 {% include "_partial/folio/foreground.njk" %}
             </div>
             <div id="noticeboard-notes"></div>

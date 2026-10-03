@@ -24,7 +24,8 @@ function preloadAssets(folioCSS) {
 
 if (typeof hexo !== 'undefined') {
     const source = path.resolve(__dirname, '..', '_theme_overrides', 'shiro', 'source');
-    const assets = preloadAssets(fs.readFileSync(path.join(source, 'css', 'folio.css'), 'utf8'));
+    const css = ['folio.css', 'noticeboard.css'].map((file) => fs.readFileSync(path.join(source, 'css', file), 'utf8')).join('\n');
+    const assets = preloadAssets(css);
     hexo.extend.helper.register('folio_preloads', () => assets);
 }
 

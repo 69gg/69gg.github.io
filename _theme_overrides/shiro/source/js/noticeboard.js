@@ -4,6 +4,7 @@
     const config = JSON.parse(document.getElementById('noticeboard-config').textContent);
     const viewport = document.getElementById('noticeboard-viewport');
     const wallpaper = document.getElementById('noticeboard-wallpaper');
+    const flowersRoot = document.getElementById('noticeboard-flowers');
     const notesRoot = document.getElementById('noticeboard-notes');
     const editor = document.getElementById('noticeboard-editor');
     const form = document.getElementById('noticeboard-form');
@@ -31,6 +32,9 @@
     const tile = wallpaperStyle.backgroundSize.split(' ').map(parseFloat);
     const wallpaperPad = parseFloat(wallpaperStyle.getPropertyValue('--wallpaper-pad'));
     let wallpaperAnchor = { x: 0, y: 0 };
+    const flowerSpacing = parseFloat(getComputedStyle(flowersRoot).getPropertyValue('--flower-spacing'));
+    const flowerCells = new Map();
+    let flowerWindow = '';
     const localPreview = !config.apiUrl && ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
     const previewUser = { login: 'preview', name: '预览访客' };
     let notes = [];
@@ -83,6 +87,58 @@
         statusTimer = setTimeout(() => { status.textContent = ''; }, 5000);
     };
 
+    function scatterFlowers() {
+        const bounds = [
+            Math.floor(-camera.x / flowerSpacing) - 1,
+            Math.floor(-camera.y / flowerSpacing) - 1,
+            Math.floor((viewport.clientWidth - camera.x) / flowerSpacing) + 1,
+            Math.floor((viewport.clientHeight - camera.y) / flowerSpacing) + 1
+        ];
+        const nextWindow = bounds.join(':');
+        if (nextWindow === flowerWindow) return;
+        flowerWindow = nextWindow;
+        const visible = new Set();
+        for (let x = bounds[0]; x <= bounds[2]; x++) {
+            for (let y = bounds[1]; y <= bounds[3]; y++) {
+                const key = `${x}:${y}`;
+                visible.add(key);
+                if (flowerCells.has(key)) continue;
+                // World coordinates seed each cluster, so revisiting it keeps
+                // its placement without repeating or mirroring a large image.
+                let seed = Math.imul(x ^ 0x9e3779b9, 1597334677) ^ Math.imul(y, 3812015801);
+                const random = () => {
+                    seed ^= seed << 13;
+                    seed ^= seed >>> 17;
+                    seed ^= seed << 5;
+                    return (seed >>> 0) / 4294967296;
+                };
+                const anchor = document.createElement('div');
+                anchor.className = 'noticeboard-flower';
+                const size = 180 + random() * 170;
+                anchor.style.width = `${size}px`;
+                anchor.style.left = `${(x + random()) * flowerSpacing - size / 2}px`;
+                anchor.style.top = `${(y + random()) * flowerSpacing - size / 2}px`;
+                anchor.style.transform = `rotate(${random() * 100 - 50}deg)`;
+                anchor.style.opacity = .7 + random() * .3;
+                const flower = document.createElement('div');
+                flower.className = `folio-flowers folio-blossom-${1 + Math.floor(random() * 5)}`;
+                flower.style.setProperty('--flower-period-x', `${61 + random() * 64}s`);
+                flower.style.setProperty('--flower-period-y', `${79 + random() * 56}s`);
+                flower.style.setProperty('--flower-delay-x', `${-random() * 125}s`);
+                flower.style.setProperty('--flower-delay-y', `${-random() * 135}s`);
+                flower.style.animationDirection = `${random() > .5 ? 'reverse' : 'normal'}, ${random() > .5 ? 'reverse' : 'normal'}`;
+                anchor.append(flower);
+                flowersRoot.append(anchor);
+                flowerCells.set(key, anchor);
+            }
+        }
+        for (const [key, flower] of flowerCells) {
+            if (visible.has(key)) continue;
+            flower.remove();
+            flowerCells.delete(key);
+        }
+    }
+
     function paintCamera() {
         paintFrame = 0;
         if (Math.abs(camera.x - wallpaperAnchor.x) > wallpaperPad || Math.abs(camera.y - wallpaperAnchor.y) > wallpaperPad) {
@@ -93,6 +149,7 @@
         viewport.style.setProperty('--camera-y', `${camera.y}px`);
         viewport.style.setProperty('--wallpaper-x', `${camera.x - wallpaperAnchor.x}px`);
         viewport.style.setProperty('--wallpaper-y', `${camera.y - wallpaperAnchor.y}px`);
+        scatterFlowers();
     }
 
     function queuePaint() {
@@ -589,6 +646,7 @@
         renderNotes();
     }
     bindCamera();
+    window.addEventListener('resize', queuePaint);
     const syncVisibility = () => {
         document.documentElement.toggleAttribute('data-folio-paused', document.hidden);
         if (document.hidden) cancelAnimationFrame(motionFrame);

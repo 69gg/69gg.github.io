@@ -26,11 +26,13 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .noticeboard-viewport:focus-visible { outline-offset: -5px; }
 /* Keep the translated surface near viewport size; periodically rebase its
    repeat phase instead of allocating a canvas several wallpaper tiles wide. */
-.noticeboard-wallpaper { --wallpaper-pad: 128px; --board-pattern-height: calc(var(--folio-pattern-width) * 2196 / 1932); position: absolute; inset: calc(-1 * var(--wallpaper-pad)); background: url('../images/floral-paper-display.webp') center var(--wallpaper-pad) / var(--folio-pattern-width) var(--board-pattern-height) repeat; filter: var(--folio-surround-filter); transform: translate3d(var(--wallpaper-x, 0px), var(--wallpaper-y, 0px), 0); pointer-events: none; }
+.noticeboard-wallpaper { --wallpaper-pad: 128px; position: absolute; inset: calc(-1 * var(--wallpaper-pad)); background: url('../images/noticeboard-weave.webp') center var(--wallpaper-pad) / 256px 256px repeat; filter: var(--folio-surround-filter); transform: translate3d(var(--wallpaper-x, 0px), var(--wallpaper-y, 0px), 0); pointer-events: none; }
 .noticeboard-canvas { position: absolute; inset: 0; transform: translate3d(var(--camera-x, 0px), var(--camera-y, 0px), 0); pointer-events: none; }
 .noticeboard-decoration { position: absolute; inset: 0; pointer-events: none; }
-.noticeboard-decoration :is(.folio-surround, .folio-garden, .folio-foreground) { overflow: visible; }
-.noticeboard-decoration .folio-pattern { display: none; }
+.noticeboard-decoration :is(.folio-garden, .folio-foreground) { overflow: visible; }
+.noticeboard-flowers { --flower-spacing: 560px; position: absolute; inset: 0; pointer-events: none; }
+.noticeboard-flower { position: absolute; aspect-ratio: 1; filter: var(--folio-surround-filter); }
+.noticeboard-flowers .folio-flowers { inset: 0; width: 100%; margin: 0; }
 #noticeboard-notes { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 .board-note, .noticeboard-color { --note-paper: #f7eed5; --note-ink: #554637; --note-pin: #937665; }
 :is(.board-note, .noticeboard-color)[data-color='rose'] { --note-paper: #f2d9d2; --note-ink: #704b49; --note-pin: #ac7472; }

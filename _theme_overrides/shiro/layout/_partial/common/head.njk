@@ -9,7 +9,7 @@
         (() => {
             const html = document.documentElement;
             const shiro = window.__shiro;
-            shiro.folioSceneKey = {{ js_value(versioned_url('css/folio.css') + '|' + versioned_url('css/fonts.css') + '|' + versioned_url('js/folio-preload.js')) | safe }};
+            shiro.folioSceneKey = {{ js_value(versioned_url('css/folio.css') + '|' + versioned_url('css/noticeboard.css') + '|' + versioned_url('css/fonts.css') + '|' + versioned_url('js/folio-preload.js')) | safe }};
             try {
                 const ready = JSON.parse(sessionStorage.getItem('folio:scene-ready') || 'null');
                 shiro.folioWarm = ready?.key === shiro.folioSceneKey;
