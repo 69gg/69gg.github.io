@@ -8,8 +8,15 @@
     <script{{ csp_nonce_attr(gates.shiroCspNonce) }} data-cfasync="false">
         (() => {
             const html = document.documentElement;
-            html.setAttribute('data-folio-loading', '');
             const shiro = window.__shiro;
+            shiro.folioSceneKey = {{ js_value(versioned_url('css/folio.css') + '|' + versioned_url('css/fonts.css') + '|' + versioned_url('js/folio-preload.js')) | safe }};
+            try {
+                const ready = JSON.parse(sessionStorage.getItem('folio:scene-ready') || 'null');
+                shiro.folioWarm = ready?.key === shiro.folioSceneKey;
+                shiro.folioFullFonts = shiro.folioWarm && ready.fullFonts;
+            } catch (_) {}
+            if (shiro.folioWarm) html.setAttribute('data-folio-navigation', '');
+            else html.setAttribute('data-folio-loading', '');
             let timer;
             shiro.folioReady = new Promise((resolve) => {
                 shiro.revealFolio = () => {
@@ -21,22 +28,25 @@
             });
             // Never leave reading hidden if a request or the loader fails.
             const timeout = {{ js_value(config.theme_config.folio.preload_timeout | default(6000)) | safe }};
-            timer = setTimeout(shiro.revealFolio, timeout);
+            if (shiro.folioWarm) shiro.revealFolio();
+            else timer = setTimeout(shiro.revealFolio, timeout);
             // Watch preloads before their links are parsed. CSS consumes the
             // original requests; detached Images would consume them twice
             // when the HTTP cache is disabled.
             shiro.folioImagesReady = new Promise((resolve) => {
                 let remaining = {{ folio_preloads() | length }};
+                let failed = false;
                 const settle = (event) => {
                     if (!event.target.matches?.('link[data-folio-preload]')) return;
+                    if (event.type === 'error') failed = true;
                     if (--remaining > 0) return;
                     document.removeEventListener('load', settle, true);
                     document.removeEventListener('error', settle, true);
-                    resolve();
+                    resolve(!failed);
                 };
                 document.addEventListener('load', settle, true);
                 document.addEventListener('error', settle, true);
-                if (!remaining) resolve();
+                if (!remaining) resolve(true);
             });
         })();
         window.addEventListener('pagereveal', (event) => {

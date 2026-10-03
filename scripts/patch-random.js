@@ -2,8 +2,7 @@
 
 var path = require('path');
 
-hexo.extend.generator.register('urls', function(locals) {
-    var config = this.config;
+function randomPostUrls(locals, config) {
     var skipRenderList = ['**/*.js', '**/*.css'];
 
     if (Array.isArray(config.skip_render)) {
@@ -28,13 +27,26 @@ hexo.extend.generator.register('urls', function(locals) {
             return b.updated - a.updated;
         });
 
+    // One pool shared by the native navigation links and the fallback route.
+    return allPosts.map(function(post) {
+        return new URL(post.permalink).pathname;
+    });
+}
+
+hexo.extend.helper.register('random_post_urls', function() {
+    return randomPostUrls(this.site, this.config);
+});
+
+hexo.extend.generator.register('urls', function(locals) {
+    var config = this.config;
+
     var template = require(path.resolve(__dirname, '..', 'node_modules/hexo-generator-random/lib/template'));
     var html = template(config).render({
         config: config,
         // Stay on the current origin so local previews and deployments use the
         // same random-reading behavior. Preserve the configured blog root.
-        posts: allPosts.map(function(post) {
-            return { permalink: new URL(post.permalink).pathname };
+        posts: randomPostUrls(locals, config).map(function(url) {
+            return { permalink: url };
         })
     });
 

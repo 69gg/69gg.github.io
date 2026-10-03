@@ -1,6 +1,16 @@
 {# Start with Latin/symbol faces; only missing system CJK fonts need the full table. #}
 <link rel="stylesheet" href="{{ attr_url(versioned_url('css/fonts-core.css')) }}">
 <meta name="folio-fonts" content="{{ attr_url(versioned_url('css/fonts.css')) }}">
+{# Repeat visits already know whether system CJK fonts need the full table. #}
+<script{{ csp_nonce_attr(gates.shiroCspNonce) }} data-cfasync="false">
+    if (window.__shiro.folioFullFonts) {
+        const sheet = document.createElement('link');
+        sheet.rel = 'stylesheet';
+        sheet.href = document.querySelector('meta[name="folio-fonts"]').content;
+        sheet.blocking = 'render';
+        document.head.appendChild(sheet);
+    }
+</script>
 <noscript><link rel="stylesheet" href="{{ attr_url(versioned_url('css/fonts.css')) }}"></noscript>
 <link rel="stylesheet" href="{{ attr_url(versioned_url('css/style.min.css')) }}">
 {% if gates.needsCode %}
