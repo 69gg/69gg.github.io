@@ -116,7 +116,7 @@ if (fs.existsSync(sitemapPath)) {
     if (!lastmodFor(sitemap, 'https://www.pylindex.top/')) {
         failures.push('public/sitemap.xml is missing homepage lastmod');
     }
-    if (!lastmodFor(sitemap, 'https://www.pylindex.top/blog/guestbook/index.html')) {
+    if (!lastmodFor(sitemap, 'https://www.pylindex.top/guestbook/index.html')) {
         failures.push('public/sitemap.xml is missing guestbook lastmod');
     }
 

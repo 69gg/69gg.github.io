@@ -1,61 +1,68 @@
-/* A shared village noticeboard, surrounded by the existing floral wallpaper. */
-.folio-board .folio-paper-surface { display: none; }
-.folio-board .folio-main { max-width: none; padding: 36px 12px 12px; }
-.folio-board .folio-footer { color: var(--folio-masthead-ink); }
-.folio-board .folio-footer :is(.folio-footer-links, .folio-colophon, .folio-build) { color: inherit; }
-.noticeboard { --board-note-width: 252px; --board-inset: 32px; --board-cork: #ae8f69; --board-wood: #6e5141; --board-shadow: #34251940; }
-.noticeboard-heading { display: flex; align-items: center; justify-content: space-between; gap: 28px; margin: 0 20px 28px; color: var(--folio-masthead-ink); }
-.noticeboard-kicker { margin: 0 0 8px; font-family: var(--folio-ui); font-size: 11px; letter-spacing: .18em; opacity: .8; }
-.noticeboard-heading .page-title { margin: 0; color: inherit; font-size: clamp(34px, 4vw, 46px); letter-spacing: .1em; }
-.noticeboard-intro { font-family: var(--folio-serif); font-size: 15px; }
-.noticeboard-intro p { margin: 8px 0 0; }
-.noticeboard-write { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 8px 20px; border: 1px solid #f9edce8c; border-radius: 3px; background: #f8efda; color: #584735; box-shadow: 1px 4px 12px #2b1b2329; font-family: var(--folio-ui); font-size: 13px; transition: transform var(--folio-motion-panel) var(--folio-ease), box-shadow var(--folio-motion-panel); }
+/* Paper notes on an open floral canvas; all chrome stays outside its camera. */
+html:has(.folio-board) { overflow: hidden; }
+body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: #a9b3c8; }
+.noticeboard { --board-note-width: 280px; --board-chrome: #f9f7f0e0; position: fixed; inset: 0; overflow: hidden; color: var(--folio-masthead-ink); }
+.noticeboard-heading { position: absolute; z-index: 30; top: max(18px, env(safe-area-inset-top)); right: 28px; left: 28px; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px; pointer-events: none; }
+.noticeboard-heading > :is(a, .noticeboard-controls) { pointer-events: auto; }
+#noticeboard-title { margin: 0; font-family: var(--folio-serif); font-size: 24px; font-weight: 500; letter-spacing: .18em; text-shadow: 0 1px 12px #ffffff60; }
+.noticeboard-home { justify-self: start; display: inline-flex; align-items: center; gap: 8px; padding: 10px 15px; border-radius: 3px; background: var(--board-chrome); color: inherit; font-family: var(--folio-ui); font-size: 12px; transition: transform var(--folio-motion-panel) var(--folio-ease); }
+.noticeboard-home:hover { transform: translateX(-3px); }
+.noticeboard-controls { justify-self: end; display: flex; align-items: center; gap: 10px; }
+.noticeboard-controls .folio-icon-button { background: var(--board-chrome); color: inherit; }
+.noticeboard-write { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 7px 16px; border: 1px solid #f9edce8c; border-radius: 3px; background: #f8efda; color: #584735; box-shadow: 1px 4px 12px #2b1b2329; font-family: var(--folio-ui); font-size: 12px; transition: transform var(--folio-motion-panel) var(--folio-ease), box-shadow var(--folio-motion-panel); }
 .noticeboard-write span { font-size: 23px; font-weight: 300; }
 .noticeboard-write:hover { transform: translateY(-3px) rotate(-1deg); box-shadow: 2px 7px 15px #2b1b2333; }
 .noticeboard button { cursor: pointer; }
 .noticeboard button:disabled { cursor: wait; opacity: .55; }
-.noticeboard-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 20px 14px; color: var(--folio-masthead-ink); font-family: var(--folio-ui); font-size: 12px; }
-.noticeboard-account { display: flex; align-items: center; gap: 12px; }
+.noticeboard-toolbar { position: absolute; z-index: 30; right: 28px; bottom: max(20px, env(safe-area-inset-bottom)); left: 28px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; color: inherit; font-family: var(--folio-ui); font-size: 12px; pointer-events: none; }
+.noticeboard-count { display: flex; flex-direction: column; gap: 4px; padding: 9px 13px; border-radius: 3px; background: var(--board-chrome); }
+#noticeboard-mode { font-size: 10px; opacity: .75; }
+#noticeboard-mode:empty { display: none; }
+.noticeboard-account { display: flex; align-items: center; gap: 12px; padding: 4px 12px; border-radius: 3px; background: var(--board-chrome); pointer-events: auto; }
 .noticeboard-account button { padding-block: 7px; text-underline-offset: 4px; }
 .noticeboard-account button:hover { text-decoration: underline; }
-.noticeboard-frame { position: relative; padding: 13px; border: 1px solid #453b3280; border-radius: 5px; background: repeating-linear-gradient(0deg, #ffffff06 0 1px, transparent 1px 5px), linear-gradient(105deg, #ffffff22, transparent 15%, #00000012 75%), var(--board-wood); box-shadow: inset 0 1px 0 #fff6, inset 0 -2px 0 #382a26aa, 0 10px 22px var(--board-shadow), 0 2px 3px #20151e40; }
-.noticeboard-frame::before, .noticeboard-frame::after { content: ''; position: absolute; left: 5px; right: 5px; height: 1px; background: #e7c5a333; pointer-events: none; }
-.noticeboard-frame::before { top: 6px; }
-.noticeboard-frame::after { bottom: 6px; }
-.noticeboard-viewport { overflow: auto; border: 1px solid #3f34257a; border-radius: 1px; box-shadow: inset 0 3px 10px #30221345; background: var(--board-cork); scrollbar-color: #71584199 transparent; scrollbar-width: thin; }
-.noticeboard-canvas { position: relative; width: max(100%, 880px); min-height: 610px; overflow: hidden; isolation: isolate; background: radial-gradient(ellipse at 25% 10%, #fae9c021, transparent 65%), var(--board-cork); }
-.noticeboard-canvas::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: url('../images/paper-handmade.webp') 0 0 / 72px repeat; mix-blend-mode: multiply; opacity: .8; }
+.noticeboard-viewport { position: absolute; inset: 0; overflow: hidden; cursor: grab; touch-action: none; }
+.noticeboard-viewport.is-panning { cursor: grabbing; user-select: none; }
+.noticeboard-viewport:focus-visible { outline-offset: -5px; }
+/* Keep the translated surface near viewport size; periodically rebase its
+   repeat phase instead of allocating a canvas several wallpaper tiles wide. */
+.noticeboard-wallpaper { --wallpaper-pad: 128px; --board-pattern-height: calc(var(--folio-pattern-width) * 2196 / 1932); position: absolute; inset: calc(-1 * var(--wallpaper-pad)); background: url('../images/floral-paper-display.webp') center var(--wallpaper-pad) / var(--folio-pattern-width) var(--board-pattern-height) repeat; filter: var(--folio-surround-filter); transform: translate3d(var(--wallpaper-x, 0px), var(--wallpaper-y, 0px), 0); pointer-events: none; }
+.noticeboard-canvas { position: absolute; inset: 0; transform: translate3d(var(--camera-x, 0px), var(--camera-y, 0px), 0); pointer-events: none; }
+.noticeboard-decoration { position: absolute; inset: 0; pointer-events: none; }
+.noticeboard-decoration :is(.folio-surround, .folio-garden, .folio-foreground) { overflow: visible; }
+.noticeboard-decoration .folio-pattern { display: none; }
+#noticeboard-notes { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 .board-note, .noticeboard-color { --note-paper: #f7eed5; --note-ink: #554637; --note-pin: #937665; }
 :is(.board-note, .noticeboard-color)[data-color='rose'] { --note-paper: #f2d9d2; --note-ink: #704b49; --note-pin: #ac7472; }
 :is(.board-note, .noticeboard-color)[data-color='sage'] { --note-paper: #e0e6cf; --note-ink: #4a5946; --note-pin: #788b70; }
 :is(.board-note, .noticeboard-color)[data-color='blue'] { --note-paper: #dce8ed; --note-ink: #465769; --note-pin: #708796; }
 :is(.board-note, .noticeboard-color)[data-color='lilac'] { --note-paper: #e6dcef; --note-ink: #5b4e6b; --note-pin: #8b7899; }
-.board-note { position: absolute; left: calc(var(--board-inset) + var(--note-x) * (100% - var(--board-note-width) - 2 * var(--board-inset))); top: var(--note-y); width: var(--board-note-width); padding: 32px 24px 20px; background: linear-gradient(175deg, #fff5, transparent 40%, #816a4320), var(--note-paper); color: var(--note-ink); box-shadow: 1px 4px 4px #3b281e30, 3px 12px 18px #3b281e1f, inset 0 1px 0 #fff8; transform: rotate(var(--note-turn)); transform-origin: 50% 18px; transition: transform var(--folio-motion-panel) var(--folio-ease), box-shadow var(--folio-motion-panel); animation: board-note-arrive 540ms var(--folio-ease) backwards; }
+.board-note { position: absolute; left: var(--note-x); top: var(--note-y); width: var(--board-note-width); padding: 38px 24px 20px; background: linear-gradient(175deg, #fff5, transparent 40%, #816a4320), var(--note-paper); color: var(--note-ink); box-shadow: 1px 4px 4px #3b281e30, 3px 12px 18px #3b281e1f, inset 0 1px 0 #fff8; transform: rotate(var(--note-turn)); transform-origin: 50% 18px; transition: transform var(--folio-motion-panel) var(--folio-ease), box-shadow var(--folio-motion-panel); animation: board-note-arrive 540ms var(--folio-ease) backwards; pointer-events: auto; cursor: default; }
 .board-note::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: url('../images/paper-handmade.webp') 0 0 / 120px repeat; mix-blend-mode: multiply; opacity: .58; }
 .board-note::after { content: ''; position: absolute; right: 3px; bottom: -2px; left: 8px; height: 8px; z-index: -1; background: #35272124; filter: blur(4px); transform: rotate(-2deg); }
 .board-note > * { position: relative; }
-.board-note-welcome { padding-top: 38px; }
-.board-note-welcome-title { margin: 0 0 16px; font-family: var(--folio-serif); font-size: 20px; font-weight: 500; letter-spacing: .03em; }
 .board-note-message { margin: 0 0 20px; max-height: 280px; overflow: auto; scrollbar-width: thin; font-family: var(--folio-serif); font-size: 16px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
-.board-note-welcome .board-note-message { font-size: 15px; line-height: 1.9; }
-.board-note-signature { font-family: var(--folio-brand-font); font-size: 26px; opacity: .85; }
 .board-note-pin { position: absolute; top: 11px; left: calc(50% - 7px); width: 14px; height: 14px; border: 1px solid #fff4; border-radius: 50%; background: radial-gradient(circle at 30% 25%, #ffffffad, transparent 45%), var(--note-pin); box-shadow: 1px 3px 3px #35281866; }
-.board-note-handle { position: absolute; inset: 0 0 auto; height: 32px; width: 100%; cursor: grab; touch-action: none; border: 0; background: transparent; }
+.board-note-handle { position: absolute; inset: 0 0 auto; height: 38px; width: 100%; cursor: grab; touch-action: none; border: 0; background: transparent; }
 .board-note-handle:active { cursor: grabbing; }
-.board-note-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-family: var(--folio-ui); font-size: 11px; }
+.board-note-footer { display: flex; flex-direction: column; gap: 5px; font-family: var(--folio-ui); font-size: 11px; line-height: 1.6; }
 .board-note-author { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.board-note-date { font-family: var(--folio-date-font); font-size: 15px; opacity: .8; white-space: nowrap; }
+.board-note-date { opacity: .75; font-variant-numeric: tabular-nums; }
+.board-note-date span { margin-right: 6px; }
 .board-note-actions { display: flex; gap: 14px; margin-top: 13px; padding-top: 10px; border-top: 1px solid currentColor; border-color: color-mix(in srgb, var(--note-ink) 16%, transparent); font-family: var(--folio-ui); font-size: 11px; }
 .board-note-actions button { padding-block: 4px; opacity: .85; cursor: pointer; }
 .board-note-actions button:hover { opacity: 1; text-decoration: underline; text-underline-offset: 3px; }
 .board-note-reply { margin-left: auto; }
 .board-note-reply-preview { padding-top: 10px; margin: 0; list-style: none; font-family: var(--folio-serif); font-size: 12px; line-height: 1.7; }
-.board-note-reply-preview li { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: 7px; opacity: .85; }
+.board-note-reply-preview { max-height: 190px; overflow: auto; scrollbar-width: thin; }
+.board-note-reply-preview li { margin-top: 12px; }
+.board-note-reply-preview p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0 0 5px; }
+.board-note-reply-preview .board-note-footer { font-size: 10px; gap: 2px; }
 .board-note.is-dragging { transition: none; transform: rotate(0deg) translateY(-4px) scale(1.025); box-shadow: 4px 15px 28px #3020184d; }
 .board-note.is-saving { opacity: .75; }
 .board-note.is-saving button { pointer-events: none; }
-.noticeboard-caption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 14px 18px 0; color: var(--folio-masthead-ink); font-family: var(--folio-ui); font-size: 11px; line-height: 1.8; }
-.noticeboard-status { min-height: 1.8em; margin: 8px 18px 0; color: var(--folio-masthead-ink); font-family: var(--folio-ui); font-size: 12px; }
+.noticeboard-status { position: absolute; z-index: 35; left: 50%; bottom: 100px; max-width: calc(100% - 40px); margin: 0; padding: 9px 16px; border-radius: 3px; background: var(--board-chrome); color: inherit; font-family: var(--folio-ui); font-size: 12px; transform: translateX(-50%); pointer-events: none; }
+.noticeboard-status:empty { display: none; }
 .noticeboard-dialog { width: min(440px, calc(100% - 40px)); max-height: calc(100svh - 60px); padding: 30px; border: 1px solid #f5e7cbaa; border-radius: 4px; background: linear-gradient(#fff3, transparent), #f7eedb; color: #554637; box-shadow: 0 25px 80px #1b1c3166; }
 .noticeboard-dialog::backdrop { background: #20263666; backdrop-filter: blur(3px); }
 .noticeboard-dialog[open] { animation: board-dialog-arrive 300ms var(--folio-ease) both; }
@@ -79,12 +86,10 @@
 .noticeboard-delete-dialog p { margin: 20px 0 28px; font-family: var(--folio-ui); font-size: 13px; line-height: 1.8; }
 .noticeboard-thread { width: min(560px, calc(100% - 40px)); }
 .noticeboard-thread-note { padding-bottom: 24px; border-bottom: 1px solid #9a826838; }
-.noticeboard-thread-note span { font-family: var(--folio-ui); font-size: 12px; color: #8b755d; }
 .noticeboard-thread-note p { margin: 12px 0 0; font-family: var(--folio-serif); font-size: 18px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
 .noticeboard-replies { margin: 0; padding: 0; list-style: none; }
 .noticeboard-replies > li { padding: 20px 0; border-bottom: 1px solid #9a826826; }
-.noticeboard-reply-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-family: var(--folio-ui); font-size: 12px; }
-.noticeboard-reply-heading time { margin-left: 10px; font-family: var(--folio-date-font); font-size: 15px; opacity: .7; }
+.noticeboard-reply-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; font-family: var(--folio-ui); font-size: 12px; }
 .noticeboard-reply-heading small { font-size: 10px; opacity: .65; }
 .noticeboard-reply-message { margin: 8px 0 0; font-family: var(--folio-serif); font-size: 15px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
 .noticeboard-reply-actions { display: flex; justify-content: flex-end; gap: 14px; margin-top: 10px; font-family: var(--folio-ui); font-size: 11px; }
@@ -94,20 +99,20 @@
 #noticeboard-reply-form textarea { min-height: 95px; font-size: 15px; }
 #noticeboard-reply-form .noticeboard-dialog-actions { margin-top: 16px; }
 #noticeboard-reply-login { margin-top: 24px; }
-html[data-theme='dark'] .noticeboard { --board-cork: #766653; --board-wood: #463c35; --board-shadow: #14203766; }
+html[data-theme='dark'] .noticeboard { --board-chrome: #28374cdd; }
 @keyframes board-note-arrive { from { opacity: 0; transform: rotate(calc(var(--note-turn) - 3deg)) translateY(-12px); } to { opacity: 1; transform: rotate(var(--note-turn)); } }
 @keyframes board-dialog-arrive { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
 @media (max-width: 767px) {
-    .folio-board .folio-main { padding: 30px 0 8px; }
-    .noticeboard-heading { margin: 0 10px 24px; gap: 16px; align-items: flex-end; }
-    .noticeboard-heading .page-title { font-size: 34px; }
-    .noticeboard-kicker { font-size: 10px; letter-spacing: .1em; }
-    .noticeboard-intro { font-size: 13px; }
-    .noticeboard-write { gap: 3px; padding: 7px 12px; min-height: 42px; font-size: 11px; white-space: nowrap; }
+    .noticeboard-heading { left: 12px; right: 12px; gap: 6px; }
+    #noticeboard-title { font-size: 19px; letter-spacing: .12em; }
+    .noticeboard-home { padding: 9px 10px; font-size: 11px; gap: 5px; }
+    .noticeboard-controls { gap: 5px; }
+    .noticeboard-controls .folio-icon-button { width: 34px; height: 34px; }
+    .noticeboard-write { gap: 3px; padding: 5px 9px; min-height: 34px; font-size: 11px; white-space: nowrap; }
     .noticeboard-write span { font-size: 19px; }
-    .noticeboard-toolbar { padding-inline: 10px; font-size: 11px; }
-    .noticeboard-frame { padding: 9px; }
-    .noticeboard-caption { padding-inline: 10px; }
+    .noticeboard-toolbar { left: 12px; right: 12px; font-size: 11px; gap: 8px; }
+    .noticeboard-count { max-width: 54%; padding: 7px 10px; }
+    .noticeboard-account { gap: 8px; }
     .noticeboard-dialog { padding: 24px; }
 }
 @media (prefers-reduced-motion: reduce) { .board-note, .noticeboard-dialog[open] { animation: none; } .board-note, .noticeboard-write { transition: none; } }

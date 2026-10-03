@@ -46,7 +46,7 @@ function collectLastmods() {
     const pageFiles = {
         [`${blogUrl}/categories/index.html`]: path.join('source', 'categories', 'index.md'),
         [`${blogUrl}/tags/index.html`]: path.join('source', 'tags', 'index.md'),
-        [`${blogUrl}/guestbook/index.html`]: path.join('source', 'guestbook', 'index.md')
+        [`${homeUrl}guestbook/index.html`]: path.join('source', 'guestbook', 'index.md')
     };
 
     for (const [loc, relativePath] of Object.entries(pageFiles)) {
@@ -101,7 +101,7 @@ const insertHomeUrl = (xml, lastmods) => {
         '  </url>'
     ].filter(Boolean).join('\n');
 
-    let next = xml;
+    let next = xml.replaceAll(`${blogUrl}/guestbook/index.html`, `${homeUrl}guestbook/index.html`);
     if (!next.includes(`<loc>${homeUrl}</loc>`)) {
         const urlsetMatch = next.match(/<urlset[^>]*>/);
         if (!urlsetMatch) {
@@ -116,7 +116,7 @@ const insertHomeUrl = (xml, lastmods) => {
 };
 
 const prependHomeUrl = (text) => {
-    const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const lines = text.replaceAll(`${blogUrl}/guestbook/index.html`, `${homeUrl}guestbook/index.html`).split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
     if (!lines.includes(homeUrl)) {
         lines.unshift(homeUrl);
     }

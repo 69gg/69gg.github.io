@@ -1,0 +1,13 @@
+<!doctype html>
+{% set gates = page_feature_gates() %}
+<html lang="{{ escape_attr(gates.pageLang) }}" class="h-full scroll-smooth shiro-preloader-done">
+{% include "_partial/common/head.njk" %}
+<body class="folio-body folio-board">
+    <a href="#main-content" class="shiro-skip-link">{{ escape_html(__('common.skip_to_content')) }}</a>
+    <main id="main-content" tabindex="-1">{% block content %}{% endblock %}</main>
+    {% if gates.darkModeToggle %}
+    <script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} src="{{ attr_url(versioned_url('js/theme-toggle.min.js')) }}"></script>
+    {% endif %}
+    <script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} src="{{ attr_url(versioned_url('js/noticeboard.js')) }}"></script>
+</body>
+</html>

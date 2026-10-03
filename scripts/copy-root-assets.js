@@ -19,3 +19,8 @@ fs.mkdirSync(publicDir, { recursive: true });
 for (const [source, target] of files) {
     fs.copyFileSync(source, target);
 }
+
+// The noticeboard shares theme assets but belongs to the site root.
+if (typeof hexo === 'undefined') {
+    fs.renameSync(path.join(publicDir, 'blog', 'guestbook'), path.join(publicDir, 'guestbook'));
+}

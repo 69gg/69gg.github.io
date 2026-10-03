@@ -1,6 +1,6 @@
 # 布告栏接口
 
-这是 `/blog/guestbook/` 的轻量 Cloudflare Worker 接口。前端是本站自己的纸条布告栏，数据保存在 GitHub Discussions；不用 Giscus UI，也不需要额外数据库。Worker 接收 GitHub 登录回调、保存纸条位置与内容、管理楼层回复。
+这是独立页面 `/guestbook/` 的轻量 Cloudflare Worker 接口。前端是本站自己的全屏纸条画布，数据保存在 GitHub Discussions；不用 Giscus UI，也不需要额外数据库。Worker 接收 GitHub 登录回调、保存纸条位置与内容、管理楼层回复。
 
 ## GitHub App
 
@@ -8,7 +8,7 @@
 
 | 设置 | 值 |
 | --- | --- |
-| Homepage URL | 本站留言板地址，例如 `https://www.pylindex.top/blog/guestbook/` |
+| Homepage URL | 本站留言板地址，例如 `https://www.pylindex.top/guestbook/` |
 | Callback URL | Worker 的完整地址加 `/auth/callback` |
 | Webhook | 不启用 |
 | Repository permissions → Discussions | Read and write |
@@ -65,7 +65,8 @@ GitHub App 的 Callback URL 必须与最终接口地址完全对应。然后构�
 
 ## 数据与权限
 
-- 顶层 Discussion 评论是一张纸条，正文末尾的隐藏 HTML 注释保存 `v`、`x`、`y`、`color`、`rotation`。`x` 为水平方向可移动范围内的比例，`y` 为布告栏内的像素坐标。无元数据的旧留言按默认位置显示。
+- 顶层 Discussion 评论是一张纸条，正文末尾的隐藏 HTML 注释保存 `v`、`x`、`y`、`color`、`rotation`。当前 `v: 2` 使用画布的像素坐标 `x`、`y`，允许负坐标，没有原木框的边界限制。旧 `v: 1` 的水平比例坐标仍可读取，前端按原 880px 布告栏换算显示，只有编辑或移动该纸条时才保存为新坐标。无元数据的旧留言按默认位置显示。
+- 纸条与回复保留 GitHub 的 `createdAt`、`updatedAt` 和作者，前端显示完整创建时间以及有修改时的修改时间。页面迁到根目录后继续使用同一条 Discussion，不改变已有评论 ID 或作者。
 - Discussion 回复是纸条下面的楼层回复，保持真实 GitHub 作者身份。用户在网站上的写入、修改通过自己的 GitHub App 用户 Token 完成。
 - 移动、修改和删除纸条，以及修改回复时，接口向 GitHub 查询 `viewerDidAuthor`，仅接受作者的操作；同时确认评论属于配置的仓库和留言板 Discussion。
 - 删除回复时允许回复作者操作；也允许该顶层纸条的作者操作。纸条作者删除别人回复时，接口先通过用户 Token 确认顶层评论归属，再使用 App 安装 Token 执行删除。App 的权限只覆盖选中的存储仓库，不赋予访客仓库管理权限。

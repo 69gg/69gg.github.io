@@ -80,11 +80,17 @@ npm run preview
 
 ## 留言板与评论
 
-个人主页的“留言板”进入 `/blog/guestbook/`。`source/guestbook/index.md` 使用独立的 `guestbook.njk` 布局：保留花纹背景，中间是木框布告栏，不使用 Giscus 的 UI。访客可以挑选五种淡色纸条；登录后能添加纸条、拖动图钉保存位置、编辑或删除自己的纸条。小屏幕横向滑动查看布告栏；图钉也支持方向键移动。
+个人主页的“留言板”进入独立的 `/guestbook/`，不隶属于博客。`source/guestbook/index.md` 使用 `guestbook.njk` 和 `_guestbook_layout.njk`：复用原花纹背景、字体和主题切换，不显示博客导航、页脚、外围边框、欢迎纸条或介绍文案。顶部居中显示标题，左右分别保留回首页、主题切换与贴纸条入口。博客桌面和手机导航也有返回根目录个人主页的入口。
+
+留言板是全屏、可自由平移的纸条画布，没有木框或可张贴区域限制。按住空白处拖动视角，背景与纸条同步移动，松手后轻缓减速；滚轮、触控板和画布上的方向键也能平移。当前视角保存在标签页会话中。按住自己的纸条上沿可以移动位置，上沿方向键也可移动；其他人无法移动。新纸条优先贴到当前视角的空位，超出视野时平滑带到纸条位置。减少动态效果时关闭惯性与过渡。背景使用原图片的重复纹样，视角平移通过 `transform` 完成。
+
+纸条有五种淡色纸面，纸条及回复均显示作者、创建时间、修改时间（发生修改时），时间按 Asia/Shanghai 显示到分钟。移动纸条也属于一次修改。页面不展示虚构的用户纸条。
 
 每张纸条下面显示最近两条回复，点击“回一句”／“回复”查看完整的楼层回复并发言。回复者可以修改、删除自己的回复；纸条主人也可以删除自己纸条下面的回复。删除纸条会同时删除它下面的回复。
 
 留言板沿用原路径对应的 [GitHub Discussion](https://github.com/69gg/69gg.github.io/discussions/6)。纸条对应顶层评论，回复对应 Discussion 回复，纸条位置与颜色随评论保存。自定义登录和读写通过轻量接口与 GitHub App 完成，接口地址配置在 `_config.shiro.yml` 的 `guestbook.api_url`。这需要单独配置 GitHub App，无法直接使用 Giscus 的登录会话。在未配置接口的 localhost 本地预览中，使用“预览访客”身份和浏览器本地存储审阅纸条、移动与回复交互；这些预览留言不会上传 GitHub。线上接口未配置时仅显示布告栏，暂不开放张贴。
+
+构建时 `scripts/copy-root-assets.js` 将 Hexo 生成的留言板移到 `public/guestbook/`，共享静态资源继续从 `/blog/` 加载；canonical、社交元信息、首页入口与站点地图使用根目录路径，留言板不纳入博客搜索索引。页面的 `root_path` 为 `/guestbook/`。本地审阅使用 `npm run build` 后的 `npm run preview`。
 
 接口源码在 `services/noticeboard/worker.js`，部署与授权步骤见 [布告栏接口说明](services/noticeboard/README.md)。App 仅申请存储仓库的 Discussions 读写权限；纸条归属在接口内由 GitHub 确认，纸条主人删除别人回复时由 App 代为执行。匿名读取得到的安装 Token 为只读，客户端不接收 GitHub Token 明文。接口配置、密钥和静态页面分别维护，本站构建不会自动部署 Worker。
 

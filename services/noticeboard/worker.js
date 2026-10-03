@@ -87,15 +87,15 @@ async function installationToken(env, permission = 'read') {
 }
 
 function defaultPosition(index = 0) {
-    const slot = index + 1;
-    return { x: [.035, .375, .715][slot % 3], y: 46 + Math.floor(slot / 3) * 360, color: 'cream', rotation: (index * 5) % 7 - 3 };
+    return { v: 2, x: 100 + (index % 3) * 315, y: 150 + Math.floor(index / 3) * 420, color: 'cream', rotation: (index * 5) % 7 - 3 };
 }
 
 function checkPosition(position) {
-    if (!position || !colors.has(position.color) || ['x', 'y', 'rotation'].some((field) => !Number.isFinite(position[field])) || position.x < 0 || position.x > 1 || position.y < 0 || Math.abs(position.rotation) > 12) {
+    const version = position?.v || 1;
+    if (!position || ![1, 2].includes(version) || !colors.has(position.color) || ['x', 'y', 'rotation'].some((field) => !Number.isFinite(position[field])) || (version === 1 && (position.x < 0 || position.x > 1 || position.y < 0)) || Math.abs(position.rotation) > 12) {
         throw new HttpError(400, '纸条的位置或颜色不正确。');
     }
-    return { x: position.x, y: position.y, color: position.color, rotation: position.rotation };
+    return { v: version, x: position.x, y: position.y, color: position.color, rotation: position.rotation };
 }
 
 function checkBody(body) {
@@ -117,7 +117,7 @@ function readComment(comment) {
 }
 
 function writeNote(body, position) {
-    return `${body}\n\n<!-- null-board:${JSON.stringify({ v: 1, ...position })} -->`;
+    return `${body}\n\n<!-- null-board:${JSON.stringify(position)} -->`;
 }
 
 async function listReplies(token, id, connection = null) {

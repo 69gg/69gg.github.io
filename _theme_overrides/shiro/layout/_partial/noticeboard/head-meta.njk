@@ -1,0 +1,11 @@
+{% set page_url = origin_url(page.root_path) %}
+<title>{{ escape_html(page.title) }}</title>
+<meta name="description" content="{{ escape_attr(page.description) }}">
+<meta property="og:title" content="{{ escape_attr(page.title) }}">
+<meta property="og:description" content="{{ escape_attr(page.description) }}">
+<meta property="og:url" content="{{ escape_attr(page_url) }}">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{ escape_attr(page.title) }}">
+<link rel="canonical" href="{{ attr_url(page_url) }}">
+<link rel="icon" href="{{ attr_url(safe_resource_url_for(gates.siteFavicon, '/favicon.svg', true)) }}">

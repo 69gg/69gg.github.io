@@ -1,34 +1,33 @@
-{% extends "_layout.njk" %}
+{% extends "_guestbook_layout.njk" %}
+{% from "_macro/ui.njk" import icon_theme_system, icon_theme_light, icon_theme_dark with context %}
 
 {% block content %}
 <section class="noticeboard" aria-labelledby="noticeboard-title">
     <script type="application/json" id="noticeboard-config">{{ js_value({ apiUrl: config.theme_config.guestbook.api_url, repository: config.theme_config.comments.giscus.repo, discussionNumber: config.theme_config.guestbook.discussion_number }) | safe }}</script>
     <header class="noticeboard-heading">
-        <div>
-            <p class="noticeboard-kicker">来来往往，见字如面</p>
-            <h1 id="noticeboard-title" class="page-title" data-pagefind-body data-pagefind-meta="title">{{ escape_html(page.title) }}</h1>
-            <div class="noticeboard-intro" data-pagefind-body>{{ page.content | safe }}</div>
+        <a href="/" class="noticeboard-home"><span aria-hidden="true">←</span> 回首页</a>
+        <h1 id="noticeboard-title">{{ escape_html(page.title) }}</h1>
+        <div class="noticeboard-controls">
+            {% if gates.darkModeToggle %}
+            <button id="themeToggle" type="button" class="folio-icon-button" aria-label="{{ escape_attr(__('theme.' + gates.darkModeDefault)) }}" data-label-system="{{ escape_attr(__('theme.system')) }}" data-label-light="{{ escape_attr(__('theme.light')) }}" data-label-dark="{{ escape_attr(__('theme.dark')) }}" disabled>{{ icon_theme_system() }}{{ icon_theme_light() }}{{ icon_theme_dark() }}</button>
+            {% endif %}
+            <button type="button" class="noticeboard-write" id="noticeboard-write"><span aria-hidden="true">＋</span> 贴纸条</button>
         </div>
-        <button type="button" class="noticeboard-write" id="noticeboard-write"><span aria-hidden="true">＋</span> 贴一张纸条</button>
     </header>
     <div class="noticeboard-toolbar" data-pagefind-ignore>
-        <span id="noticeboard-count">等候纸条到来</span>
+        <div class="noticeboard-count"><span id="noticeboard-count">0 张纸条</span><span id="noticeboard-mode"></span></div>
         <div class="noticeboard-account"><span id="noticeboard-user"></span><button type="button" id="noticeboard-login">登录 GitHub</button><button type="button" id="noticeboard-logout" hidden>退出</button></div>
     </div>
-    <div class="noticeboard-frame" data-pagefind-ignore>
-        <div class="noticeboard-viewport" id="noticeboard-viewport" tabindex="0" aria-label="布告栏，小屏幕可左右滚动查看">
-            <div class="noticeboard-canvas" id="noticeboard-canvas">
-                <aside class="board-note board-note-welcome" data-color="cream" style="--note-x: .035; --note-y: 46px; --note-turn: -3deg;">
-                    <span class="board-note-pin" aria-hidden="true"></span>
-                    <p class="board-note-welcome-title">给路过这里的你</p>
-                    <p class="board-note-message">这儿没有固定话题。<br>一段近况，一个念头，<br>或是随手的一句问候。<br><br>挑张纸，把它留下吧。</p>
-                    <span class="board-note-signature">{{ escape_html(config.title) }}</span>
-                </aside>
-                <div id="noticeboard-notes"></div>
+    <div class="noticeboard-viewport" id="noticeboard-viewport" tabindex="0" aria-label="留言画布，拖动空白处或使用方向键移动视角" data-pagefind-ignore>
+        <div class="noticeboard-wallpaper" id="noticeboard-wallpaper" aria-hidden="true"></div>
+        <div class="noticeboard-canvas" id="noticeboard-canvas">
+            <div class="noticeboard-decoration" aria-hidden="true">
+                {% include "_partial/folio/surround.njk" %}
+                {% include "_partial/folio/foreground.njk" %}
             </div>
+            <div id="noticeboard-notes"></div>
         </div>
     </div>
-    <div class="noticeboard-caption" data-pagefind-ignore><span>拖动自己的图钉挪位置，点“回一句”聊聊天。</span><span id="noticeboard-mode"></span></div>
     <p id="noticeboard-status" class="noticeboard-status" role="status" aria-live="polite" data-pagefind-ignore></p>
     <noscript><p class="noticeboard-status">启用 JavaScript 后，可以查看和张贴纸条。</p></noscript>
 </section>
@@ -54,7 +53,7 @@
 
 <dialog class="noticeboard-dialog noticeboard-thread" id="noticeboard-thread" aria-labelledby="noticeboard-thread-title" data-pagefind-ignore>
     <div class="noticeboard-dialog-heading"><h2 id="noticeboard-thread-title">纸条下的闲聊</h2><button type="button" class="noticeboard-close" data-close="noticeboard-thread" aria-label="关闭">×</button></div>
-    <div class="noticeboard-thread-note"><span id="noticeboard-thread-author"></span><p id="noticeboard-thread-body"></p></div>
+    <div class="noticeboard-thread-note"><div id="noticeboard-thread-author" class="board-note-footer"></div><p id="noticeboard-thread-body"></p></div>
     <ol class="noticeboard-replies" id="noticeboard-replies"></ol>
     <p class="noticeboard-thread-empty" id="noticeboard-thread-empty">还没有回复，来打个招呼吧。</p>
     <form id="noticeboard-reply-form">
