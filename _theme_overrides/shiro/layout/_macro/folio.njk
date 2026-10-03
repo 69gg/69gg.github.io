@@ -1,0 +1,7 @@
+{# One heading treatment for archive and taxonomy pages. Data stays in Shiro helpers. #}
+{% macro directory_title(label, value="") %}
+<header class="folio-directory-header">
+    {% if value %}<p class="folio-directory-label">{{ escape_html(label) }}</p>{% endif %}
+    <h1 class="section-title">{{ escape_html(value if value else label) }}</h1>
+</header>
+{% endmacro %}

@@ -1,0 +1,51 @@
+{# Single archive entry: date + linked title. Shared by both list macros below. #}
+{% macro archive_item(post) %}
+{% set post_date_attr = date(post.date, 'YYYY-MM-DD') %}
+{% set post_date_text = date(post.date, 'YYYY/MM/DD') %}
+<article class="group folio-directory-row">
+    <time datetime="{{ escape_attr(post_date_attr) }}" class="folio-directory-date oldstyle-nums">
+        {{ escape_html(post_date_text) }}
+    </time>
+    <h3 class="folio-directory-post-title">
+        <a href="{{ href_for(post.path) }}" class="link-underline break-words">{{ escape_html(post.title) }}</a>
+    </h3>
+</article>
+{% endmacro %}
+
+{% macro render_list(posts) %}
+    <div class="folio-archive">
+        {% for group in posts_by_year(posts) %}
+        <section class="folio-archive-year">
+            <h2 class="section-heading">
+                {% if group.year %}
+                {# Yearly archive page (same helper as post meta date links). #}
+                <a href="{{ attr_url(archive_url(group.year)) }}"
+                    class="section-heading-link oldstyle-nums">{{ escape_html(group.year) }}</a>
+                {% endif %}
+            </h2>
+            <div class="folio-directory-list">
+                {% for post in group.posts %}
+                {{ archive_item(post) }}
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+{# limit > 0: only the first N posts (category cloud / previews).
+   Accepts a Hexo Query (toArray) or a plain array (already sliced). #}
+{% macro render_simple_list(posts, limit=0) %}
+    <div class="folio-directory-list">
+        {% if posts and posts.toArray %}
+        {% set items = posts.toArray() %}
+        {% else %}
+        {% set items = posts if posts else [] %}
+        {% endif %}
+        {% for post in items %}
+            {% if limit <= 0 or loop.index <= limit %}
+            {{ archive_item(post) }}
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endmacro %}
