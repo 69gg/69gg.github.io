@@ -1,6 +1,6 @@
 # Site
 site:
-  favicon: /favicon.svg
+  favicon: https://image.fatcattech.cn/i/2026/05/16/1255mw3.png
   since: 2024
   seal: true
   seal_text: "白"
