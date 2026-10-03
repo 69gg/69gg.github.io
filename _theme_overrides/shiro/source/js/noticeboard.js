@@ -27,7 +27,8 @@
     const replyStatus = document.getElementById('noticeboard-reply-status');
     const storageKey = `noticeboard:${config.repository}:${config.discussionNumber}`;
     const cameraKey = `${storageKey}:camera`;
-    let camera = JSON.parse(sessionStorage.getItem(cameraKey) || '{"x":0,"y":0}');
+    const cameraOrigin = { x: 0, y: 0 };
+    let camera = JSON.parse(sessionStorage.getItem(cameraKey) || JSON.stringify(cameraOrigin));
     let paintFrame = 0;
     let motionFrame = 0;
     let statusTimer;
@@ -239,13 +240,9 @@
         return { ...position, v: 2, x: 32 + position.x * (880 - 252 - 64), y: position.y + 96 };
     }
 
-    function revealPaper(paper, note) {
-        paper.style.zIndex = ++topLayer;
-        const rect = paper.getBoundingClientRect();
-        if (rect.left >= 20 && rect.right <= innerWidth - 20 && rect.top >= 90 && rect.bottom <= innerHeight - 90) return;
+    function moveCamera(target) {
         cancelAnimationFrame(motionFrame);
         const start = { ...camera };
-        const target = { x: (viewport.clientWidth - paper.offsetWidth) / 2 - note.position.x, y: Math.max(100, (viewport.clientHeight - paper.offsetHeight) / 2) - note.position.y };
         const at = performance.now();
         const step = (now) => {
             const progress = motion.matches ? 1 : Math.min(1, (now - at) / 320);
@@ -256,6 +253,13 @@
             else rememberCamera();
         };
         motionFrame = requestAnimationFrame(step);
+    }
+
+    function revealPaper(paper, note) {
+        paper.style.zIndex = ++topLayer;
+        const rect = paper.getBoundingClientRect();
+        if (rect.left >= 20 && rect.right <= innerWidth - 20 && rect.top >= 90 && rect.bottom <= innerHeight - 90) return;
+        moveCamera({ x: (viewport.clientWidth - paper.offsetWidth) / 2 - note.position.x, y: Math.max(100, (viewport.clientHeight - paper.offsetHeight) / 2) - note.position.y });
     }
 
     function renderMetadata(container, comment) {
@@ -671,6 +675,7 @@
 
     document.querySelectorAll('[data-close]').forEach((button) => button.addEventListener('click', () => document.getElementById(button.dataset.close).close()));
     writeButton.addEventListener('click', () => openEditor());
+    document.getElementById('noticeboard-center').addEventListener('click', () => moveCamera(cameraOrigin));
     loginButton.addEventListener('click', login);
     logoutButton.addEventListener('click', () => {
         ticket = '';

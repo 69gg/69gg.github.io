@@ -15,6 +15,8 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .noticeboard button { cursor: pointer; }
 .noticeboard button:disabled { cursor: wait; opacity: .55; }
 .noticeboard-toolbar { position: absolute; z-index: 30; right: 28px; bottom: max(20px, env(safe-area-inset-bottom)); left: 28px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; color: inherit; font-family: var(--folio-ui); font-size: 12px; pointer-events: none; }
+.noticeboard-toolbar-actions { display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+.noticeboard-center { flex: 0 0 auto; background: var(--board-chrome); color: inherit; }
 .noticeboard-count { display: flex; flex-direction: column; gap: 4px; padding: 9px 13px; border-radius: 3px; background: var(--board-chrome); }
 #noticeboard-mode { font-size: 10px; opacity: .75; }
 #noticeboard-mode:empty { display: none; }
@@ -145,6 +147,8 @@ html[data-theme='dark'] .noticeboard { --board-chrome: #28374cdd; }
     .noticeboard-toolbar { left: 12px; right: 12px; font-size: 11px; gap: 8px; }
     .noticeboard-count { max-width: 54%; padding: 7px 10px; }
     .noticeboard-account { gap: 8px; }
+    .noticeboard-toolbar-actions { gap: 8px; }
+    .noticeboard-center { width: 34px; height: 34px; }
     .noticeboard-dialog { padding: 24px; }
     .noticeboard-color { padding-inline: 8px; }
 }

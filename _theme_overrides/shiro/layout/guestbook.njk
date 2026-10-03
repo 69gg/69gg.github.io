@@ -16,7 +16,10 @@
     </header>
     <div class="noticeboard-toolbar" data-pagefind-ignore>
         <div class="noticeboard-count"><span id="noticeboard-count">0 张纸条</span><span id="noticeboard-mode"></span></div>
-        <div class="noticeboard-account"><span id="noticeboard-user"></span><button type="button" id="noticeboard-login">登录 GitHub</button><button type="button" id="noticeboard-logout" hidden>退出</button></div>
+        <div class="noticeboard-toolbar-actions">
+            <div class="noticeboard-account"><span id="noticeboard-user"></span><button type="button" id="noticeboard-login">登录 GitHub</button><button type="button" id="noticeboard-logout" hidden>退出</button></div>
+            <button type="button" id="noticeboard-center" class="noticeboard-center folio-icon-button" aria-label="回到画布中心" title="回到画布中心"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
     </div>
     <div class="noticeboard-viewport" id="noticeboard-viewport" tabindex="0" aria-label="留言画布，拖动空白处或使用方向键移动视角" data-pagefind-ignore>
         <div class="noticeboard-wallpaper" id="noticeboard-wallpaper" aria-hidden="true"></div>
