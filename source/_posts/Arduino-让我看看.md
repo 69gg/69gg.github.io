@@ -2,6 +2,15 @@
 title: Arduino<-让我看看！
 abbrlink: b02665a2
 date: 2025-07-14 14:03:00
+categories:
+  - 技术笔记
+tags:
+  - Arduino
+  - NFC
+  - 硬件制作
+  - 科技竞赛
+summary: >-
+  为科技竞赛选购 Arduino UNO、配置 CLion 并点亮第一盏灯，再从《百年孤独》得到灵感，构思 NFC 触碰播放的语音记忆盒子。
 ---
 
 # 山重水复疑无路

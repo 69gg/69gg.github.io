@@ -90,13 +90,28 @@ npm run preview
 
 只有主动更新字体时才运行 `python tools/vendor-fonts.py`（Python 标准库即可）。该工具从 Google Fonts 下载 WOFF2 分片，保留 `unicode-range` 与字重范围，将 URL 改为本地路径，并保存官方许可证和校验清单。更新后重新构建、运行测试，并将字体、样式表与清单一并提交。Google Fonts 上游：[字体仓库](https://github.com/google/fonts)。
 
-## 文章摘要
+## 文章分类、标签与摘要
+
+文章元数据统一维护在 `source/_posts/` 的 Markdown front matter 中。现有 19 篇文章均有主分类、主题标签和手写摘要：
+
+| 主分类 | 内容 | 篇数 |
+| --- | --- | --- |
+| 技术笔记 | 汇编、Arduino 与内网穿透的学习和制作记录 | 4 |
+| 随笔 | 军训、参赛旅行与校园桌游制作经历 | 3 |
+| 诗词 | 校园、课业与社会感怀的诗、词、散曲 | 12 |
+
+每篇文章使用一个主分类，标签补充具体技术、主题或文体。分类页与标签页沿用 Shiro 根据文章元数据自动生成的列表，无需另维护文章链接。
 
 首页及后续分页优先使用文章 front matter 中的非空字符串 `summary`，按纯文本显示并转义 HTML；支持 YAML 折叠多行写法：
 
 ```yaml
 ---
 title: 文章标题
+categories:
+  - 技术笔记
+tags:
+  - Arduino
+  - 硬件制作
 summary: >-
   在这里写文章摘要。
   多行会合并成一段文字。

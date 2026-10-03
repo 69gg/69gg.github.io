@@ -2,6 +2,15 @@
 title: Frp内网穿透搭建记录
 abbrlink: 76b170c9
 date: 2024-12-27 15:14:00
+categories:
+  - 技术笔记
+tags:
+  - frp
+  - 内网穿透
+  - 树莓派
+  - Linux
+summary: >-
+  从家中设备无法对外提供服务的问题出发，记录 frp 服务端的下载安装、启动配置、screen 后台运行和控制面板访问。
 ---
 
 # 第一章 问题发现

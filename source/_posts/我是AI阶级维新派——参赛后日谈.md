@@ -2,6 +2,16 @@
 title: 我是AI阶级维新派——参赛后日谈
 abbrlink: 388522f1
 date: 2026-05-16 19:38:23
+categories:
+  - 随笔
+tags:
+  - AI编程
+  - Vibe Coding
+  - 科技竞赛
+  - 大连
+  - 旅行
+summary: >-
+  从早期用 AI 写代码、参加编程比赛，回顾到带着 Arduino 作品去大连参赛的夏天。记录海边见闻、比赛的遗憾，也聊聊我为什么把越来越多的编码工作交给 AI。
 ---
 
 > 从[前文](/blog/posts/23f12bf5/)继续。

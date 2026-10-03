@@ -2,6 +2,16 @@
 title: Arduino->不要啦！
 abbrlink: 23f12bf5
 date: 2025-07-16 10:06:00
+categories:
+  - 技术笔记
+tags:
+  - Arduino
+  - NFC
+  - 硬件制作
+  - 语音播放
+  - 科技竞赛
+summary: >-
+  配件到齐后，把 MFRC522 读卡模块和 DFPlayer Mini 接上 Arduino，实现刷卡播放语音。附完整代码、重复触发处理与后续改进想法，也顺手试了试手机 NFC 标签。
 ---
 
 # 物流毕，快递一
