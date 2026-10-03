@@ -38,6 +38,7 @@
 <dialog class="noticeboard-dialog" id="noticeboard-editor" data-color="cream" aria-labelledby="noticeboard-editor-title" data-pagefind-ignore>
     <form id="noticeboard-form">
         <div class="noticeboard-dialog-heading"><h2 id="noticeboard-editor-title">写张纸条</h2><button type="button" class="noticeboard-close" data-close="noticeboard-editor" aria-label="关闭">×</button></div>
+        <p class="noticeboard-reply-context" id="noticeboard-editor-context" hidden></p>
         <label class="sr-only" for="noticeboard-body">纸条内容</label>
         <textarea id="noticeboard-body" name="body" rows="7" placeholder="今天有什么想说的？" aria-describedby="noticeboard-editor-markdown" required></textarea>
         <p class="noticeboard-markdown-hint" id="noticeboard-editor-markdown">支持 Markdown</p>
@@ -58,6 +59,7 @@
             </div>
             <div class="noticeboard-geometry-preview" aria-hidden="true"><div class="noticeboard-preview-paper"><span class="board-note-pin"></span><p id="noticeboard-preview-body"></p></div></div>
         </fieldset>
+        <p class="noticeboard-sizing-hint">内容较长时，纸张会自动延长。</p>
         <div class="noticeboard-dialog-actions"><button type="button" data-close="noticeboard-editor">先收起来</button><button class="noticeboard-submit" id="noticeboard-submit" type="submit">贴上去</button></div>
         <p class="noticeboard-form-status" id="noticeboard-form-status" role="status"></p>
     </form>
@@ -67,20 +69,5 @@
     <form id="noticeboard-delete-form"><h2 id="noticeboard-delete-title">移除这张纸条？</h2><p id="noticeboard-delete-description">纸条及其下面的回复都会删除。</p><div class="noticeboard-dialog-actions"><button type="button" data-close="noticeboard-delete">留下它</button><button type="submit" class="noticeboard-submit">移除</button></div></form>
 </dialog>
 
-<dialog class="noticeboard-dialog noticeboard-thread" id="noticeboard-thread" aria-label="纸条回复" data-pagefind-ignore>
-    <div class="noticeboard-dialog-heading"><div id="noticeboard-thread-author" class="board-note-footer"></div><button type="button" class="noticeboard-close" data-close="noticeboard-thread" aria-label="关闭">×</button></div>
-    <div class="noticeboard-thread-note"><div id="noticeboard-thread-body" class="noticeboard-markdown"></div><div id="noticeboard-thread-reactions"></div></div>
-    <ol class="noticeboard-replies" id="noticeboard-replies"></ol>
-    <p class="noticeboard-thread-empty" id="noticeboard-thread-empty">还没有回复，来打个招呼吧。</p>
-    <form id="noticeboard-reply-form">
-        <p class="noticeboard-reply-context" id="noticeboard-reply-context" hidden></p>
-        <label class="sr-only" for="noticeboard-reply-body">回复内容</label>
-        <textarea id="noticeboard-reply-body" name="body" rows="3" placeholder="写下你的回复…" aria-describedby="noticeboard-reply-markdown" required></textarea>
-        <p class="noticeboard-markdown-hint" id="noticeboard-reply-markdown">支持 Markdown</p>
-        <div class="noticeboard-dialog-actions"><button type="button" id="noticeboard-reply-cancel" hidden>取消修改</button><button type="submit" class="noticeboard-submit" id="noticeboard-reply-submit">回复</button></div>
-    </form>
-    <button type="button" class="noticeboard-submit" id="noticeboard-reply-login">登录 GitHub 后回复</button>
-    <p class="noticeboard-form-status" id="noticeboard-reply-status" role="status" aria-live="polite"></p>
-</dialog>
 <div class="noticeboard-dialog noticeboard-reaction-picker" id="noticeboard-reaction-picker" popover="auto" role="group" aria-label="选择表情回应" data-pagefind-ignore></div>
 {% endblock %}

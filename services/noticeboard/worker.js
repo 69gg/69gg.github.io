@@ -127,8 +127,8 @@ function readComment(comment) {
 
 function readReply(comment) {
     const match = comment.body.match(replyMetadataPattern);
-    const parentId = match ? JSON.parse(match[1]).parentId : null;
-    return { ...readComment(comment), body: comment.body.replace(replyMetadataPattern, '').trim(), parentId };
+    const metadata = match ? JSON.parse(match[1]) : null;
+    return { ...readComment(comment), body: comment.body.replace(replyMetadataPattern, '').trim(), parentId: metadata?.parentId || null, position: metadata?.position || null };
 }
 
 function readReactions(groups = []) {
@@ -139,8 +139,8 @@ function writeNote(body, position) {
     return `${body}\n\n<!-- null-board:${JSON.stringify(position)} -->`;
 }
 
-function writeReply(body, parentId) {
-    return parentId ? `${body}\n\n<!-- null-board-reply:${JSON.stringify({ parentId })} -->` : body;
+function writeReply(body, parentId, position) {
+    return `${body}\n\n<!-- null-board-reply:${JSON.stringify({ parentId, position })} -->`;
 }
 
 async function listReplies(token, id, connection = null) {
@@ -312,7 +312,8 @@ async function route(request, url, env) {
         const input = await request.json();
         const note = kind === 'notes' ? comment : await getComment(session.accessToken, comment.replyTo.id, env);
         const parentId = kind === 'replies' ? comment.id : null;
-        return Response.json(readReply(await addComment(session.accessToken, note.discussion.id, writeReply(checkBody(input.body), parentId), note.id)), { status: 201 });
+        const position = input.position === undefined ? undefined : checkPosition(input.position);
+        return Response.json(readReply(await addComment(session.accessToken, note.discussion.id, writeReply(checkBody(input.body), parentId, position), note.id)), { status: 201 });
     }
     if (operation) throw new HttpError(405, '不支持这个留言操作。');
     if (request.method === 'PATCH') {
@@ -320,7 +321,9 @@ async function route(request, url, env) {
         const input = await request.json();
         if (kind === 'replies') {
             const reply = readReply(comment);
-            return Response.json(readReply(await updateComment(session.accessToken, comment.id, writeReply(checkBody(input.body), reply.parentId))));
+            const body = input.body === undefined ? reply.body : checkBody(input.body);
+            const position = input.position === undefined ? reply.position : checkPosition(input.position);
+            return Response.json(readReply(await updateComment(session.accessToken, comment.id, writeReply(body, reply.parentId, position))));
         }
         const note = readNote(comment);
         const body = input.body === undefined ? note.body : checkBody(input.body);
