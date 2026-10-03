@@ -95,7 +95,13 @@ function checkPosition(position) {
     if (!position || ![1, 2].includes(version) || (!colors.has(position.color) && !/^#[\da-f]{6}$/i.test(position.color)) || ['x', 'y', 'rotation'].some((field) => !Number.isFinite(position[field])) || (version === 1 && (position.x < 0 || position.x > 1 || position.y < 0)) || Math.abs(position.rotation) > 12) {
         throw new HttpError(400, '纸条的位置或颜色不正确。');
     }
-    return { v: version, x: position.x, y: position.y, color: position.color, rotation: position.rotation };
+    const size = {};
+    for (const field of ['width', 'height']) {
+        if (position[field] === undefined) continue;
+        if (!Number.isFinite(position[field]) || position[field] <= 0) throw new HttpError(400, '纸条的尺寸不正确。');
+        size[field] = position[field];
+    }
+    return { v: version, x: position.x, y: position.y, color: position.color, rotation: position.rotation, ...size };
 }
 
 function checkBody(body) {

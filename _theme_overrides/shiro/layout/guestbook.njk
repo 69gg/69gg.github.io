@@ -26,15 +26,9 @@
         <div class="noticeboard-canvas" id="noticeboard-canvas">
             <div class="noticeboard-decoration" aria-hidden="true">
                 <div class="noticeboard-flowers" id="noticeboard-flowers"></div>
-                <div class="folio-garden">
-                    {% for row in range(0, 12) %}
-                    <span class="folio-petal folio-petal-left" style="--petal-row: {{ row }}; --petal-delay: {{ -4 - row * 3 }}s;"></span>
-                    <span class="folio-petal folio-petal-right" style="--petal-row: {{ row }}; --petal-delay: {{ -13 - row * 5 }}s;"></span>
-                    {% endfor %}
-                </div>
-                {% include "_partial/folio/foreground.njk" %}
             </div>
             <div id="noticeboard-notes"></div>
+            <div class="noticeboard-petals" id="noticeboard-petals" aria-hidden="true"></div>
         </div>
     </div>
     <p id="noticeboard-status" class="noticeboard-status" role="status" aria-live="polite" data-pagefind-ignore></p>
@@ -55,6 +49,14 @@
             <label class="noticeboard-color" id="noticeboard-custom-color"><input type="radio" name="color" value="custom"><span class="noticeboard-color-chip" aria-hidden="true"></span><span>自定义</span></label>
             </div>
             <label class="noticeboard-hex" for="noticeboard-color-hex"><span>HEX 颜色</span><input id="noticeboard-color-hex" type="text" inputmode="text" pattern="#?([a-fA-F0-9]{3}|[a-fA-F0-9]{6})" maxlength="7" placeholder="#RRGGBB" autocomplete="off" spellcheck="false" required disabled></label>
+        </fieldset>
+        <fieldset class="noticeboard-geometry"><legend>纸条外形</legend>
+            <div class="noticeboard-geometry-controls">
+                <label for="noticeboard-width"><span>宽度</span><input id="noticeboard-width" name="width" type="range" min="260" max="560" step="10"><output for="noticeboard-width"></output></label>
+                <label for="noticeboard-height"><span>高度</span><input id="noticeboard-height" name="height" type="range" min="300" max="760" step="10"><output for="noticeboard-height"></output></label>
+                <label for="noticeboard-rotation"><span>倾斜</span><input id="noticeboard-rotation" name="rotation" type="range" min="-12" max="12" step="1"><output for="noticeboard-rotation"></output></label>
+            </div>
+            <div class="noticeboard-geometry-preview" aria-hidden="true"><div class="noticeboard-preview-paper"><span class="board-note-pin"></span><p id="noticeboard-preview-body"></p></div></div>
         </fieldset>
         <div class="noticeboard-dialog-actions"><button type="button" data-close="noticeboard-editor">先收起来</button><button class="noticeboard-submit" id="noticeboard-submit" type="submit">贴上去</button></div>
         <p class="noticeboard-form-status" id="noticeboard-form-status" role="status"></p>

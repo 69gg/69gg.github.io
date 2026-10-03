@@ -5,6 +5,7 @@
     const viewport = document.getElementById('noticeboard-viewport');
     const wallpaper = document.getElementById('noticeboard-wallpaper');
     const flowersRoot = document.getElementById('noticeboard-flowers');
+    const petalsRoot = document.getElementById('noticeboard-petals');
     const notesRoot = document.getElementById('noticeboard-notes');
     const editor = document.getElementById('noticeboard-editor');
     const form = document.getElementById('noticeboard-form');
@@ -13,6 +14,10 @@
     const customSwatch = document.getElementById('noticeboard-custom-color');
     const defaultPaperColor = getComputedStyle(form.querySelector('.noticeboard-color')).getPropertyValue('--note-paper').trim();
     const bodyInput = document.getElementById('noticeboard-body');
+    const geometryInputs = ['width', 'height', 'rotation'].map((name) => form.elements[name]);
+    const paperPreview = editor.querySelector('.noticeboard-preview-paper');
+    const noteStyle = getComputedStyle(document.querySelector('.noticeboard'));
+    const noteSize = { width: parseFloat(noteStyle.getPropertyValue('--board-note-width')), height: parseFloat(noteStyle.getPropertyValue('--board-note-height')) };
     const submit = document.getElementById('noticeboard-submit');
     const removeDialog = document.getElementById('noticeboard-delete');
     const status = document.getElementById('noticeboard-status');
@@ -39,7 +44,8 @@
     let wallpaperAnchor = { x: 0, y: 0 };
     const flowerSpacing = parseFloat(getComputedStyle(flowersRoot).getPropertyValue('--flower-spacing'));
     const flowerCells = new Map();
-    let flowerWindow = '';
+    const petalSpacing = parseFloat(getComputedStyle(petalsRoot).getPropertyValue('--petal-spacing'));
+    const petalCells = new Map();
     const localPreview = !config.apiUrl && ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
     const previewUser = { login: 'preview', name: '预览访客' };
     let notes = [];
@@ -92,22 +98,22 @@
         statusTimer = setTimeout(() => { status.textContent = ''; }, 5000);
     };
 
-    function scatterFlowers() {
+    function scatterLayer(root, cells, spacing, create) {
         const bounds = [
-            Math.floor(-camera.x / flowerSpacing) - 1,
-            Math.floor(-camera.y / flowerSpacing) - 1,
-            Math.floor((viewport.clientWidth - camera.x) / flowerSpacing) + 1,
-            Math.floor((viewport.clientHeight - camera.y) / flowerSpacing) + 1
+            Math.floor(-camera.x / spacing) - 1,
+            Math.floor(-camera.y / spacing) - 1,
+            Math.floor((viewport.clientWidth - camera.x) / spacing) + 1,
+            Math.floor((viewport.clientHeight - camera.y) / spacing) + 1
         ];
         const nextWindow = bounds.join(':');
-        if (nextWindow === flowerWindow) return;
-        flowerWindow = nextWindow;
+        if (nextWindow === root.dataset.window) return;
+        root.dataset.window = nextWindow;
         const visible = new Set();
         for (let x = bounds[0]; x <= bounds[2]; x++) {
             for (let y = bounds[1]; y <= bounds[3]; y++) {
                 const key = `${x}:${y}`;
                 visible.add(key);
-                if (flowerCells.has(key)) continue;
+                if (cells.has(key)) continue;
                 // World coordinates seed each cluster, so revisiting it keeps
                 // its placement without repeating or mirroring a large image.
                 let seed = Math.imul(x ^ 0x9e3779b9, 1597334677) ^ Math.imul(y, 3812015801);
@@ -117,31 +123,58 @@
                     seed ^= seed << 5;
                     return (seed >>> 0) / 4294967296;
                 };
-                const anchor = document.createElement('div');
-                anchor.className = 'noticeboard-flower';
-                const size = 180 + random() * 170;
-                anchor.style.width = `${size}px`;
-                anchor.style.left = `${(x + random()) * flowerSpacing - size / 2}px`;
-                anchor.style.top = `${(y + random()) * flowerSpacing - size / 2}px`;
-                anchor.style.transform = `rotate(${random() * 100 - 50}deg)`;
-                anchor.style.opacity = .7 + random() * .3;
-                const flower = document.createElement('div');
-                flower.className = `folio-flowers folio-blossom-${1 + Math.floor(random() * 5)}`;
-                flower.style.setProperty('--flower-period-x', `${61 + random() * 64}s`);
-                flower.style.setProperty('--flower-period-y', `${79 + random() * 56}s`);
-                flower.style.setProperty('--flower-delay-x', `${-random() * 125}s`);
-                flower.style.setProperty('--flower-delay-y', `${-random() * 135}s`);
-                flower.style.animationDirection = `${random() > .5 ? 'reverse' : 'normal'}, ${random() > .5 ? 'reverse' : 'normal'}`;
-                anchor.append(flower);
-                flowersRoot.append(anchor);
-                flowerCells.set(key, anchor);
+                const element = create(x, y, random);
+                root.append(element);
+                cells.set(key, element);
             }
         }
-        for (const [key, flower] of flowerCells) {
+        for (const [key, element] of cells) {
             if (visible.has(key)) continue;
-            flower.remove();
-            flowerCells.delete(key);
+            element.remove();
+            cells.delete(key);
         }
+    }
+
+    function scatterFlowers() {
+        scatterLayer(flowersRoot, flowerCells, flowerSpacing, (x, y, random) => {
+            const anchor = document.createElement('div');
+            anchor.className = 'noticeboard-flower';
+            const size = 170 + random() * 110;
+            anchor.style.width = `${size}px`;
+            anchor.style.left = `${(x + .2 + random() * .6) * flowerSpacing - size / 2}px`;
+            anchor.style.top = `${(y + .2 + random() * .6) * flowerSpacing - size / 2}px`;
+            anchor.style.transform = `rotate(${random() * 100 - 50}deg)`;
+            anchor.style.opacity = .7 + random() * .3;
+            const flower = document.createElement('div');
+            flower.className = `folio-flowers folio-blossom-${1 + Math.floor(random() * 5)}`;
+            flower.style.setProperty('--flower-period-x', `${61 + random() * 64}s`);
+            flower.style.setProperty('--flower-period-y', `${79 + random() * 56}s`);
+            flower.style.setProperty('--flower-delay-x', `${-random() * 125}s`);
+            flower.style.setProperty('--flower-delay-y', `${-random() * 135}s`);
+            flower.style.animationDirection = `${random() > .5 ? 'reverse' : 'normal'}, ${random() > .5 ? 'reverse' : 'normal'}`;
+            anchor.append(flower);
+            return anchor;
+        });
+    }
+
+    function scatterPetals() {
+        scatterLayer(petalsRoot, petalCells, petalSpacing, (x, y, random) => {
+            const petal = document.createElement('span');
+            petal.className = 'folio-petal';
+            petal.style.left = `${(x + random()) * petalSpacing}px`;
+            petal.style.top = `${(y + random()) * petalSpacing - petalSpacing / 2}px`;
+            petal.style.setProperty('--petal-size', `${16 + random() * 15}px`);
+            petal.style.setProperty('--petal-x', `${random() * 240 - 120}px`);
+            petal.style.setProperty('--petal-y', `${380 + random() * 260}px`);
+            petal.style.setProperty('--petal-sway', `${random() * 44 - 22}px`);
+            petal.style.setProperty('--petal-start', `${random() * 360}deg`);
+            petal.style.setProperty('--petal-turn', `${random() * 280 - 140}deg`);
+            const period = 48 + random() * 36;
+            petal.style.setProperty('--petal-period', `${period}s`);
+            petal.style.setProperty('--petal-delay', `${-random() * period}s`);
+            petal.style.setProperty('--petal-opacity', `${.25 + random() * .25}`);
+            return petal;
+        });
     }
 
     function paintCamera() {
@@ -155,6 +188,7 @@
         viewport.style.setProperty('--wallpaper-x', `${camera.x - wallpaperAnchor.x}px`);
         viewport.style.setProperty('--wallpaper-y', `${camera.y - wallpaperAnchor.y}px`);
         scatterFlowers();
+        scatterPetals();
     }
 
     function queuePaint() {
@@ -321,6 +355,22 @@
         if (!hexInput.disabled) paintPaper(customSwatch, selectedPaperColor());
     }
 
+    function editorGeometry() {
+        return Object.fromEntries(geometryInputs.map((input) => [input.name, Number(input.value)]));
+    }
+
+    function syncEditorGeometry() {
+        const { width, height, rotation } = editorGeometry();
+        geometryInputs.forEach((input) => {
+            input.parentElement.querySelector('output').textContent = `${input.value}${input.name === 'rotation' ? '°' : 'px'}`;
+        });
+        const scale = Math.min(120 / width, 160 / height);
+        paperPreview.style.setProperty('--preview-width', `${width * scale}px`);
+        paperPreview.style.setProperty('--preview-height', `${height * scale}px`);
+        paperPreview.style.setProperty('--preview-turn', `${rotation}deg`);
+        document.getElementById('noticeboard-preview-body').textContent = bodyInput.value || '今天有什么想说的？';
+    }
+
     function action(label, onClick, className = '') {
         const button = document.createElement('button');
         button.type = 'button';
@@ -349,6 +399,8 @@
         element.style.setProperty('--note-x', `${position.x}px`);
         element.style.setProperty('--note-y', `${position.y}px`);
         element.style.setProperty('--note-turn', `${position.rotation}deg`);
+        element.style.setProperty('--note-width', `${position.width || noteSize.width}px`);
+        element.style.setProperty('--note-height', `${position.height || noteSize.height}px`);
         paintPaper(element, position.color);
     }
 
@@ -356,16 +408,16 @@
         document.getElementById('noticeboard-count').textContent = `${notes.length} 张纸条`;
     }
 
-    function nextPosition(color = 'cream') {
+    function nextPosition(color = 'cream', size = noteSize) {
         let slot = 0;
         let x, y;
-        const origin = { x: (viewport.clientWidth - 280) / 2 - camera.x, y: Math.max(110, viewport.clientHeight / 2 - 160) - camera.y };
+        const origin = { x: (viewport.clientWidth - size.width) / 2 - camera.x, y: Math.max(110, (viewport.clientHeight - size.height) / 2) - camera.y };
         do {
-            x = origin.x + [0, 315, -315][slot % 3];
-            y = origin.y + Math.floor(slot / 3) * 420;
+            x = origin.x + [0, size.width + 35, -size.width - 35][slot % 3];
+            y = origin.y + Math.floor(slot / 3) * (size.height + 40);
             slot++;
-        } while (notes.some((note) => Math.abs(note.position.x - x) < 290 && Math.abs(note.position.y - y) < 370));
-        return { v: 2, x, y, color, rotation: Math.random() * 6 - 3 };
+        } while (notes.some(({ position }) => x < position.x + (position.width || noteSize.width) + 20 && x + size.width + 20 > position.x && y < position.y + (position.height || noteSize.height) + 20 && y + size.height + 20 > position.y));
+        return { v: 2, x, y, color, ...size, rotation: Math.random() * 6 - 3 };
     }
 
     function renderNote(note) {
@@ -579,6 +631,8 @@
         hexInput.value = color.startsWith('#') ? color : defaultPaperColor;
         paintPaper(customSwatch, normalizeHex(hexInput.value));
         syncEditorPaper();
+        geometryInputs.forEach((input) => { input.value = note?.position[input.name] ?? (input.name === 'rotation' ? Math.round(Math.random() * 6 - 3) : noteSize[input.name]); });
+        syncEditorGeometry();
         document.getElementById('noticeboard-editor-title').textContent = note ? '修改纸条' : '写张纸条';
         submit.textContent = note ? '保存纸条' : '贴上去';
         document.getElementById('noticeboard-form-status').textContent = '';
@@ -590,6 +644,8 @@
         if (event.target.name === 'color') syncEditorPaper();
     });
     hexInput.addEventListener('input', syncEditorPaper);
+    geometryInputs.forEach((input) => input.addEventListener('input', syncEditorGeometry));
+    bodyInput.addEventListener('input', syncEditorGeometry);
     hexInput.addEventListener('blur', () => {
         if (hexInput.checkValidity()) hexInput.value = normalizeHex(hexInput.value);
     });
@@ -598,7 +654,8 @@
         event.preventDefault();
         const body = bodyInput.value.trim();
         if (!body) return;
-        const position = editing ? { ...editing.position, color: selectedPaperColor() } : nextPosition(selectedPaperColor());
+        const geometry = editorGeometry();
+        const position = { ...(editing ? editing.position : nextPosition(selectedPaperColor(), geometry)), ...geometry, color: selectedPaperColor() };
         submit.disabled = true;
         const formStatus = document.getElementById('noticeboard-form-status');
         formStatus.textContent = '正在把纸条贴好…';

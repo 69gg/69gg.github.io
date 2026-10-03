@@ -1,7 +1,7 @@
 /* Paper notes on an open floral canvas; all chrome stays outside its camera. */
 html:has(.folio-board) { overflow: hidden; }
 body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: #a9b3c8; }
-.noticeboard { --board-note-width: 280px; --board-chrome: #f9f7f0e0; position: fixed; inset: 0; overflow: hidden; color: var(--folio-masthead-ink); }
+.noticeboard { --board-note-width: 320px; --board-note-height: 440px; --board-chrome: #f9f7f0e0; position: fixed; inset: 0; overflow: hidden; color: var(--folio-masthead-ink); }
 .noticeboard-heading { position: absolute; z-index: 30; top: max(18px, env(safe-area-inset-top)); right: 28px; left: 28px; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px; pointer-events: none; }
 .noticeboard-heading > :is(a, .noticeboard-controls) { pointer-events: auto; }
 #noticeboard-title { margin: 0; font-family: var(--folio-serif); font-size: 24px; font-weight: 500; letter-spacing: .18em; text-shadow: 0 1px 12px #ffffff60; }
@@ -32,26 +32,30 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .noticeboard-canvas { position: absolute; inset: 0; transform: translate3d(var(--camera-x, 0px), var(--camera-y, 0px), 0); pointer-events: none; }
 .noticeboard-decoration { position: absolute; inset: 0; pointer-events: none; }
 .noticeboard-decoration :is(.folio-garden, .folio-foreground) { overflow: visible; }
-.noticeboard-flowers { --flower-spacing: 560px; position: absolute; inset: 0; pointer-events: none; }
+.noticeboard-flowers { --flower-spacing: 760px; position: absolute; inset: 0; pointer-events: none; }
 .noticeboard-flower { position: absolute; aspect-ratio: 1; filter: var(--folio-surround-filter); }
 .noticeboard-flowers .folio-flowers { inset: 0; width: 100%; margin: 0; }
+.noticeboard-petals { --petal-spacing: 500px; position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.noticeboard-petals .folio-petal { width: var(--petal-size); height: calc(var(--petal-size) * .74); animation-name: board-petal; }
 #noticeboard-notes { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 :is(.board-note, .noticeboard-color, .noticeboard-dialog) { --note-paper: #f7eed5; --note-ink: #554637; --note-pin: #937665; --note-dark-ink: #302c28; --note-light-ink: #fff9ef; --note-rule: color-mix(in srgb, var(--note-ink) 18%, transparent); }
 :is(.board-note, .noticeboard-color, .noticeboard-dialog)[data-color='rose'] { --note-paper: #f2d9d2; --note-ink: #704b49; --note-pin: #ac7472; }
 :is(.board-note, .noticeboard-color, .noticeboard-dialog)[data-color='sage'] { --note-paper: #e0e6cf; --note-ink: #4a5946; --note-pin: #788b70; }
 :is(.board-note, .noticeboard-color, .noticeboard-dialog)[data-color='blue'] { --note-paper: #dce8ed; --note-ink: #465769; --note-pin: #708796; }
 :is(.board-note, .noticeboard-color, .noticeboard-dialog)[data-color='lilac'] { --note-paper: #e6dcef; --note-ink: #5b4e6b; --note-pin: #8b7899; }
-.board-note { position: absolute; left: var(--note-x); top: var(--note-y); width: var(--board-note-width); padding: 38px 24px 20px; background: linear-gradient(175deg, #fff5, transparent 40%, #816a4320), var(--note-paper); color: var(--note-ink); box-shadow: 1px 4px 4px #3b281e30, 3px 12px 18px #3b281e1f, inset 0 1px 0 #fff8; transform: rotate(var(--note-turn)); transform-origin: 50% 18px; transition: transform var(--folio-motion-panel) var(--folio-ease), box-shadow var(--folio-motion-panel); animation: board-note-arrive 540ms var(--folio-ease) backwards; pointer-events: auto; cursor: default; }
+.board-note { position: absolute; left: var(--note-x); top: var(--note-y); display: flex; flex-direction: column; box-sizing: border-box; width: var(--note-width, var(--board-note-width)); height: var(--note-height, var(--board-note-height)); padding: 38px 24px 20px; background: linear-gradient(175deg, #fff5, transparent 40%, #816a4320), var(--note-paper); color: var(--note-ink); box-shadow: 1px 4px 4px #3b281e30, 3px 12px 18px #3b281e1f, inset 0 1px 0 #fff8; transform: rotate(var(--note-turn)); transform-origin: 50% 18px; transition: transform var(--folio-motion-panel) var(--folio-ease), box-shadow var(--folio-motion-panel); animation: board-note-arrive 540ms var(--folio-ease) backwards; pointer-events: auto; cursor: default; }
 .board-note::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: url('../images/paper-handmade.webp') 0 0 / 120px repeat; mix-blend-mode: multiply; opacity: .58; }
 .board-note::after { content: ''; position: absolute; right: 3px; bottom: -2px; left: 8px; height: 8px; z-index: -1; background: #35272124; filter: blur(4px); transform: rotate(-2deg); }
 .board-note > * { position: relative; }
-.board-note-message { margin: 0 0 20px; max-height: 280px; overflow: auto; scrollbar-width: thin; font-family: var(--folio-serif); font-size: 16px; line-height: 1.9; }
+.board-note-message { flex: 1 1 auto; min-height: 44px; margin: 0 0 18px; overflow: auto; scrollbar-width: thin; font-family: var(--folio-serif); font-size: 16px; line-height: 1.9; }
+.board-note > :is(.board-note-footer, .board-note-actions, .noticeboard-reactions) { flex-shrink: 0; }
 .board-note-pin { position: absolute; top: 11px; left: calc(50% - 7px); width: 14px; height: 14px; border: 1px solid #fff4; border-radius: 50%; background: radial-gradient(circle at 30% 25%, #ffffffad, transparent 45%), var(--note-pin); box-shadow: 1px 3px 3px #35281866; }
 .board-note-handle { position: absolute; inset: 0 0 auto; height: 38px; width: 100%; cursor: grab; touch-action: none; border: 0; background: transparent; }
 .board-note-handle:active { cursor: grabbing; }
 .board-note-footer { display: flex; flex-direction: column; gap: 5px; min-width: 0; font-family: var(--folio-ui); font-size: 11px; line-height: 1.6; }
 .board-note-author { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.board-note-timestamps { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: -.025em; white-space: nowrap; }
+.board-note-timestamps { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 10px; letter-spacing: -.025em; }
+.board-note-date { white-space: nowrap; }
 .board-note-date { opacity: .75; font-variant-numeric: tabular-nums; }
 .board-note-date span { margin-right: 4px; }
 .board-note-actions { display: flex; gap: 14px; margin-top: 13px; padding-top: 10px; border-top: 1px solid currentColor; border-color: color-mix(in srgb, var(--note-ink) 16%, transparent); font-family: var(--folio-ui); font-size: 11px; }
@@ -59,7 +63,7 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .board-note-actions button:hover { opacity: 1; text-decoration: underline; text-underline-offset: 3px; }
 .board-note-reply { margin-left: auto; }
 .board-note-reply-preview { padding-top: 10px; margin: 0; list-style: none; font-family: var(--folio-serif); font-size: 12px; line-height: 1.7; }
-.board-note-reply-preview { max-height: 190px; overflow: auto; scrollbar-width: thin; }
+.board-note-reply-preview { flex: 0 1 auto; min-height: 0; max-height: 110px; overflow: auto; scrollbar-width: thin; }
 .board-note-reply-preview li { margin-top: 12px; }
 .board-note-reply-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0 0 5px; }
 .board-note-reply-preview .board-note-footer { font-size: 10px; gap: 2px; }
@@ -91,6 +95,16 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .noticeboard-hex input { box-sizing: border-box; width: 136px; padding: 9px 12px; border: 1px solid var(--note-rule); border-radius: 3px; background: color-mix(in srgb, var(--note-paper) 96%, var(--note-ink)); color: inherit; font-family: var(--font-code); font-size: 13px; }
 .noticeboard-hex input:disabled { opacity: .45; }
 .noticeboard-dialog :is(textarea, input):focus-visible { outline: 2px solid var(--note-ink); outline-offset: 2px; }
+.noticeboard-geometry { display: grid; grid-template-columns: minmax(0, 1fr) 128px; align-items: center; gap: 20px; min-width: 0; margin: 24px 0; padding: 0; border: 0; }
+.noticeboard-geometry legend { margin-bottom: 14px; font-family: var(--folio-ui); font-size: 12px; }
+.noticeboard-geometry-controls { display: grid; gap: 16px; }
+.noticeboard-geometry-controls label { display: grid; grid-template-columns: 2em minmax(0, 1fr) 42px; align-items: center; gap: 12px; font-family: var(--folio-ui); font-size: 11px; }
+.noticeboard-geometry-controls input { width: 100%; margin: 0; accent-color: var(--note-ink); cursor: pointer; }
+.noticeboard-geometry-controls output { text-align: right; font-variant-numeric: tabular-nums; }
+.noticeboard-geometry-preview { display: grid; place-items: center; height: 170px; }
+.noticeboard-preview-paper { position: relative; box-sizing: border-box; width: var(--preview-width); height: var(--preview-height); padding: 22px 12px 12px; background: linear-gradient(175deg, #fff4, #816a4315), var(--note-paper); color: var(--note-ink); box-shadow: 1px 3px 3px #3b281e30, 2px 8px 12px #3b281e20; transform: rotate(var(--preview-turn)); transition: transform 160ms ease; }
+.noticeboard-preview-paper .board-note-pin { top: 5px; left: calc(50% - 3px); width: 6px; height: 6px; }
+.noticeboard-preview-paper p { height: 100%; margin: 0; overflow: hidden; font-family: var(--folio-serif); font-size: 7px; line-height: 1.8; white-space: pre-wrap; }
 .noticeboard-dialog-actions { display: flex; justify-content: flex-end; gap: 20px; align-items: center; font-family: var(--folio-ui); font-size: 12px; }
 .noticeboard-submit { padding: 10px 20px; border: 1px solid var(--note-ink); border-radius: 3px; background: var(--note-ink); color: var(--note-paper); }
 .noticeboard-submit:disabled { opacity: .5; cursor: wait; }
@@ -136,6 +150,14 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 html[data-theme='dark'] .noticeboard { --board-chrome: #28374cdd; }
 @keyframes board-note-arrive { from { opacity: 0; transform: rotate(calc(var(--note-turn) - 3deg)) translateY(-12px); } to { opacity: 1; transform: rotate(var(--note-turn)); } }
 @keyframes board-dialog-arrive { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes board-petal {
+    0% { opacity: 0; transform: translate(0, -30px) rotate(var(--petal-start)); }
+    18% { opacity: var(--petal-opacity); }
+    30% { transform: translate(calc(var(--petal-x) * .3 + var(--petal-sway)), calc(var(--petal-y) * .3)) rotate(calc(var(--petal-start) + var(--petal-turn) * .3)); }
+    65% { transform: translate(calc(var(--petal-x) * .65 - var(--petal-sway)), calc(var(--petal-y) * .65)) rotate(calc(var(--petal-start) + var(--petal-turn) * .65)); }
+    85% { opacity: var(--petal-opacity); }
+    100% { opacity: 0; transform: translate(var(--petal-x), var(--petal-y)) rotate(calc(var(--petal-start) + var(--petal-turn))); }
+}
 @media (max-width: 767px) {
     .noticeboard-heading { left: 12px; right: 12px; gap: 6px; }
     #noticeboard-title { font-size: 19px; letter-spacing: .12em; }
@@ -151,5 +173,7 @@ html[data-theme='dark'] .noticeboard { --board-chrome: #28374cdd; }
     .noticeboard-center { width: 34px; height: 34px; }
     .noticeboard-dialog { padding: 24px; }
     .noticeboard-color { padding-inline: 8px; }
+    .noticeboard-geometry { grid-template-columns: minmax(0, 1fr) 88px; gap: 12px; }
+    .noticeboard-geometry-controls label { gap: 6px; }
 }
 @media (prefers-reduced-motion: reduce) { .board-note, .noticeboard-dialog[open] { animation: none; } .board-note, .noticeboard-write { transition: none; } }
