@@ -1,14 +1,15 @@
-{% from "_macro/ui.njk" import meta with context %}
 <article class="folio-entry">
-    <div class="folio-entry-date" aria-hidden="true">
+    <a class="folio-entry-date" href="{{ attr_url(archive_url(date(post.date, 'YYYY'))) }}" aria-label="{{ escape_attr(date(post.date, 'YYYY年M月D日')) }}">
+      <time class="folio-calendar" datetime="{{ escape_attr(date(post.date, 'YYYY-MM-DD')) }}" aria-hidden="true">
         <span>{{ date(post.date, 'MMM') }}</span>
         <span class="folio-day">{{ date(post.date, 'DD') }}</span>
         <span>{{ date(post.date, 'YYYY') }}</span>
-    </div>
+      </time>
+    </a>
     <div class="folio-entry-content">
         <header>
             <h2><a href="{{ href_for(post.path) }}">{{ escape_html(post.title) }}</a></h2>
-            {{ meta(post, false, "folio-entry-meta") }}
+            {% include "_partial/folio/entry-meta.njk" %}
         </header>
         <div class="prose-shiro folio-excerpt">
             {%- if post.summary is string and (post.summary | trim) -%}

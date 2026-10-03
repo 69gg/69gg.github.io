@@ -1,13 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="384" height="384" viewBox="0 0 384 384">
   <filter id="paper" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-    <feTurbulence type="fractalNoise" baseFrequency=".62" numOctaves="3" seed="7" stitchTiles="stitch" result="grain"/>
-    <feTurbulence type="fractalNoise" baseFrequency=".035 .32" numOctaves="2" seed="17" stitchTiles="stitch" result="fibers"/>
-    <feComposite in="grain" in2="fibers" operator="arithmetic" k2=".65" k3=".35"/>
+    <feTurbulence type="fractalNoise" baseFrequency=".55" numOctaves="3" seed="7" stitchTiles="stitch" result="grain"/>
+    <feTurbulence type="fractalNoise" baseFrequency=".06 .12" numOctaves="3" seed="17" stitchTiles="stitch" result="fibers"/>
+    <feComposite in="grain" in2="fibers" operator="arithmetic" k2=".72" k3=".28" result="height"/>
+    <feDiffuseLighting in="height" surfaceScale="2" diffuseConstant=".75" lighting-color="#fff" result="relief">
+      <feDistantLight azimuth="225" elevation="52"/>
+    </feDiffuseLighting>
+    <feComposite in="height" in2="relief" operator="arithmetic" k2=".65" k3=".35"/>
     <feColorMatrix type="saturate" values="0"/>
     <feComponentTransfer>
-      <feFuncR type="linear" slope="2.8" intercept="-.9"/>
-      <feFuncG type="linear" slope="2.8" intercept="-.9"/>
-      <feFuncB type="linear" slope="2.8" intercept="-.9"/>
+      <feFuncR type="linear" slope="3.3" intercept="-1.1"/>
+      <feFuncG type="linear" slope="3.3" intercept="-1.1"/>
+      <feFuncB type="linear" slope="3.3" intercept="-1.1"/>
       <feFuncA type="table" tableValues="1 1"/>
     </feComponentTransfer>
   </filter>

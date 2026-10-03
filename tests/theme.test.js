@@ -6,11 +6,29 @@ const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
 const yaml = require('js-yaml');
+const crypto = require('node:crypto');
 const { patchTheme } = require('../tools/patch-theme');
 
 const rootDir = path.resolve(__dirname, '..');
 const config = yaml.load(fs.readFileSync(path.join(rootDir, '_config.yml'), 'utf8'));
 const publicDir = path.join(rootDir, config.public_dir);
+
+test('self-hosted font subsets and their licenses are complete and copied unchanged', () => {
+    const fontDir = path.join(rootDir, '_theme_overrides/shiro/source/fonts');
+    const manifest = JSON.parse(fs.readFileSync(path.join(fontDir, 'manifest.json'), 'utf8'));
+    const css = fs.readFileSync(path.join(rootDir, '_theme_overrides/shiro/source/css/fonts.css'), 'utf8');
+    assert.doesNotMatch(css, /url\(\s*(?:https?:|local\()/);
+    const urls = [...css.matchAll(/url\(\.\.\/fonts\/([^)]+)\)/g)].map((match) => match[1]);
+    assert.deepEqual(new Set(urls), new Set(Object.keys(manifest.assets)));
+    for (const [filename, metadata] of Object.entries(manifest.assets)) {
+        const data = fs.readFileSync(path.join(fontDir, filename));
+        assert.equal(data.subarray(0, 4).toString(), 'wOF2');
+        assert.equal(crypto.createHash('sha256').update(data).digest('hex'), metadata.sha256);
+        assert.deepEqual(data, fs.readFileSync(path.join(publicDir, 'fonts', filename)));
+        const license = fs.readFileSync(path.join(fontDir, path.dirname(filename), 'OFL.txt'), 'utf8');
+        assert.match(license, /SIL OPEN FONT LICENSE/);
+    }
+});
 
 test('presentation overrides survive fresh installs and repeated builds without removing upstream assets', (t) => {
     const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'folio-theme-'));

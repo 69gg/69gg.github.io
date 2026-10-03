@@ -1,12 +1,13 @@
-{# Paper stays still; transparent flower cutouts and petals move independently. #}
+{# Separate asymmetric cutouts, each with its own two slow, independent phases. #}
 <div class="folio-surround" aria-hidden="true">
     <div class="folio-pattern"></div>
-    {% for layer in range(1, 4) %}
-    <div class="folio-flowers folio-flowers-{{ layer }}"></div>
+    {% for row in range(0, 6) %}
+    <div class="folio-flowers folio-flowers-left folio-blossom-{{ row % 5 + 1 }}" style="--flower-row: {{ row }}; --flower-period-x: {{ 31 + row * 5 }}s; --flower-period-y: {{ 43 + row * 7 }}s; --flower-delay-x: {{ -5 - row * 11 }}s; --flower-delay-y: {{ -19 - row * 7 }}s;"></div>
+    <div class="folio-flowers folio-flowers-right folio-blossom-{{ (row + 2) % 5 + 1 }}" style="--flower-row: {{ row }}; --flower-period-x: {{ 37 + row * 7 }}s; --flower-period-y: {{ 53 + row * 5 }}s; --flower-delay-x: {{ -21 - row * 9 }}s; --flower-delay-y: {{ -7 - row * 13 }}s;"></div>
     {% endfor %}
 </div>
 <div class="folio-garden" aria-hidden="true">
-    {% for row in range(0, 10) %}
+    {% for row in range(0, 12) %}
     <span class="folio-petal folio-petal-left" style="--petal-row: {{ row }}; --petal-delay: {{ -4 - row * 3 }}s;"></span>
     <span class="folio-petal folio-petal-right" style="--petal-row: {{ row }}; --petal-delay: {{ -13 - row * 5 }}s;"></span>
     {% endfor %}

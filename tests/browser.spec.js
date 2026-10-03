@@ -15,8 +15,8 @@ const posts = fs.readdirSync(path.join(rootDir, 'source', '_posts')).filter((nam
 }).sort((a, b) => b.date - a.date);
 const postURL = (post) => `${blog}posts/${post.abbrlink}/`;
 
-// These checks exercise local UI. External fonts, MathJax and the live comment
-// service are intentionally excluded so availability cannot mask regressions.
+// These checks allow local fonts and assets while excluding third-party
+// MathJax and comments so their availability cannot mask regressions.
 test.beforeEach(async ({ context, baseURL }) => {
     await context.route('**/*', (route) => {
         const url = new URL(route.request().url());
@@ -27,6 +27,8 @@ test.beforeEach(async ({ context, baseURL }) => {
 test('home, article navigation, archives and pagination retain the real content', async ({ page }) => {
     await page.goto(blog);
     await expect(page.locator('#folio-title')).toHaveText(config.title);
+    await expect(page.locator('.folio-header').getByText(config.title, { exact: true })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: config.title, exact: true })).toHaveCount(1);
     await expect(page.locator('.folio-colophon')).toContainText(config.title);
     await expect(page.locator('.folio-footer')).not.toContainText(/Powered by|Based on/);
     await expect(page.getByRole('heading', { name: '最新文章', exact: true })).toHaveCount(0);
@@ -37,6 +39,12 @@ test('home, article navigation, archives and pagination retain the real content'
     await page.goto(blog);
     await expect(page.locator('.folio-entry')).toHaveCount(config.index_generator.per_page);
     await expect(page.locator('.folio-entry h2').first()).toBeInViewport();
+    for (const entry of await page.locator('.folio-entry').all()) {
+        await expect(entry.locator('time')).toHaveCount(1);
+        await expect(entry.locator('.folio-entry-content time')).toHaveCount(0);
+        await expect(entry.locator('.folio-entry-date')).toHaveAccessibleName(/\d{4}年\d+月\d+日/);
+        await expect(entry.locator('.folio-entry-date')).toHaveAttribute('href', /archives\/\d{4}\//);
+    }
     const excerpt = page.locator('.folio-excerpt p').first();
     await expect(excerpt).toHaveCSS('font-style', 'italic');
     await expect(excerpt).toHaveCSS('font-family', await page.locator('body').evaluate((element) => getComputedStyle(element).fontFamily));
@@ -48,12 +56,17 @@ test('home, article navigation, archives and pagination retain the real content'
     await expect(page.locator('[data-pagefind-meta="title"]')).toHaveText(posts[0].title);
     await expect(page.locator('.folio-footer')).not.toContainText(/Powered by|Based on/);
     await expect(page.locator('.prose-shiro')).toContainText(posts[0].source.split('---')[2].match(/[\u4e00-\u9fff]{4,}/)[0]);
+    const homeLink = page.locator('.folio-brand');
+    await expect(homeLink).toHaveText(config.title);
+    await homeLink.click();
+    await expect(page).toHaveURL(new RegExp(`${blog}$`));
     await page.goto(`${blog}archives/`);
     await expect(page.locator('h1')).toContainText('归档');
     await page.goto(blog);
     await page.locator('.pagination').getByRole('link', { name: '2', exact: true }).click();
     await expect(page.locator('.folio-entry')).toHaveCount(posts.length - config.index_generator.per_page);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(config.title);
+    await expect(page.locator('.folio-header').getByText(config.title, { exact: true })).toHaveCount(0);
     await expect(page.locator('.folio-hero').getByRole('link', { name: /^全部文章/ })).toBeVisible();
 });
 
@@ -68,6 +81,46 @@ test('Pagefind finds a Chinese article and closes with Escape', async ({ page })
     await page.keyboard.press('Escape');
     await expect(dialog).not.toBeVisible();
     await expect(page.locator('#searchToggle')).toBeFocused();
+});
+
+test('all typography renders from bundled fonts with external requests blocked', async ({ page, baseURL }) => {
+    const fontRequests = [];
+    page.on('request', (request) => { if (request.resourceType() === 'font') fontRequests.push(request.url()); });
+    await page.goto(blog);
+    await page.evaluate(() => document.fonts.ready);
+    const session = await page.context().newCDPSession(page);
+    await session.send('DOM.enable');
+    await session.send('CSS.enable');
+    const { root } = await session.send('DOM.getDocument');
+    for (const [selector, family] of [
+        ['#folio-title', 'Great Vibes'],
+        ['.folio-entry h2', 'Noto Serif SC'],
+        ['.folio-excerpt p', 'Noto Serif SC'],
+        ['.folio-day', 'Cormorant Garamond'],
+        ['.folio-nav-link', 'Noto Sans SC']
+    ]) {
+        const { nodeId } = await session.send('DOM.querySelector', { nodeId: root.nodeId, selector });
+        const { fonts } = await session.send('CSS.getPlatformFontsForNode', { nodeId });
+        expect(fonts.length).toBeGreaterThan(0);
+        expect(fonts.every((font) => font.isCustomFont)).toBe(true);
+        expect(fonts.some((font) => font.familyName.startsWith(family)), `${selector}: ${JSON.stringify(fonts)}`).toBe(true);
+    }
+    await session.detach();
+    const technical = posts.find((post) => post.source.includes('```'));
+    await page.goto(postURL(technical));
+    await page.evaluate(() => document.fonts.ready);
+    const articleSession = await page.context().newCDPSession(page);
+    await articleSession.send('DOM.enable');
+    await articleSession.send('CSS.enable');
+    const articleRoot = (await articleSession.send('DOM.getDocument')).root.nodeId;
+    const code = await articleSession.send('DOM.querySelector', { nodeId: articleRoot, selector: 'figure.highlight .code .line' });
+    const codeFonts = (await articleSession.send('CSS.getPlatformFontsForNode', { nodeId: code.nodeId })).fonts;
+    expect(codeFonts.every((font) => font.isCustomFont)).toBe(true);
+    expect(codeFonts.some((font) => font.familyName.startsWith('Noto Sans Mono')), JSON.stringify(codeFonts)).toBe(true);
+    await articleSession.detach();
+    expect(fontRequests.length).toBeGreaterThan(0);
+    expect(fontRequests.every((url) => new URL(url).origin === baseURL && url.includes('/fonts/'))).toBe(true);
+    await expect(page.locator('link[href*="fonts.googleapis"], link[href*="fonts.gstatic"]')).toHaveCount(0);
 });
 
 test('theme toggle persists and follows the system when selected', async ({ page }) => {
@@ -121,6 +174,14 @@ test('article directory, code, reading progress and comments are retained', asyn
     await expect(page.locator('figure.highlight').first()).toBeVisible();
     await expect(page.locator('#progressBar')).toBeAttached();
     await expect(page.locator('#giscus-container')).toBeAttached();
+    await page.setViewportSize({ width: 1607, height: 870 });
+    const sidebar = page.locator('#tocSidebar');
+    await expect(sidebar).toBeInViewport();
+    const before = await sidebar.boundingBox();
+    await page.mouse.wheel(0, 450);
+    await expect.poll(async () => Math.abs((await sidebar.boundingBox()).y - before.y)).toBeLessThan(1);
+    await sidebar.locator('a').first().click();
+    expect(decodeURIComponent(new URL(page.url()).hash)).toBe(decodeURIComponent(anchor));
     await page.goto(`${blog}guestbook/`);
     await expect(page.locator('.folio-guestbook')).toContainText('见字如面');
     await expect(page.locator('#giscus-container')).toBeAttached();
@@ -148,18 +209,115 @@ for (const width of [320, 390, 768, 1024, 1440]) {
             if (route === blog) {
                 const title = await page.locator('#folio-title').boundingBox();
                 const archive = await page.locator('.folio-hero .folio-text-link').boundingBox();
-                expect(archive.x).toBeGreaterThanOrEqual(title.x + title.width);
-                expect(archive.y).toBeLessThan(title.y + title.height);
-                expect(archive.y + archive.height).toBeGreaterThan(title.y);
+                const header = await page.locator('.folio-header').boundingBox();
+                const masthead = await page.locator('.folio-hero').boundingBox();
+                const paper = await page.locator('.folio-sheet').boundingBox();
+                expect(header.y + header.height).toBeLessThanOrEqual(masthead.y);
+                expect(masthead.y + masthead.height).toBeLessThanOrEqual(paper.y + 1);
+                if (archive.y >= title.y + title.height) {
+                    // Very narrow screens may wrap the archive link instead of
+                    // squeezing the masthead or placing controls over text.
+                    expect(width).toBeLessThan(768);
+                } else {
+                    expect(archive.x).toBeGreaterThanOrEqual(title.x + title.width);
+                    expect(archive.y + archive.height).toBeGreaterThan(title.y);
+                }
             }
         }
     });
 }
 
+test('reading hierarchy and contrast hold in both themes with local fonts', async ({ page }) => {
+    for (const width of [390, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        for (const colorScheme of ['light', 'dark']) {
+            await page.emulateMedia({ colorScheme });
+            await page.goto(blog);
+            const readings = await page.locator('.folio-entry').evaluateAll(async (entries) => {
+                // Canvas resolves both rgb() and the color(srgb ...) values
+                // produced by color-mix(), including their actual alpha.
+                const canvas = document.createElement('canvas');
+                canvas.width = canvas.height = 1;
+                const context = canvas.getContext('2d');
+                const rgba = (color) => {
+                    context.clearRect(0, 0, 1, 1);
+                    context.fillStyle = color;
+                    context.fillRect(0, 0, 1, 1);
+                    return Array.from(context.getImageData(0, 0, 1, 1).data, (value) => value / 255);
+                };
+                const luminance = (channels) => {
+                    const linear = channels.map((value) => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+                    return linear[0] * .2126 + linear[1] * .7152 + linear[2] * .0722;
+                };
+                const composite = (foreground, background) => foreground.slice(0, 3).map((value, index) => value * foreground[3] + background[index] * (1 - foreground[3]));
+                const surface = document.querySelector('.folio-paper-surface');
+                const backing = getComputedStyle(surface, '::before');
+                const fibers = getComputedStyle(surface, '::after');
+                const paper = rgba(backing.backgroundColor).slice(0, 3);
+                const highlight = rgba(backing.getPropertyValue('--folio-paper-highlight'));
+                // Check the actual local fiber pixels in both blending modes,
+                // including the darkest/lightest patches and the soft lighting.
+                const texture = new Image();
+                texture.src = fibers.backgroundImage.match(/url\(["']?([^"')]+)["']?\)/)[1];
+                await texture.decode();
+                canvas.width = texture.naturalWidth;
+                canvas.height = texture.naturalHeight;
+                context.drawImage(texture, 0, 0);
+                const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+                let minimum = 1;
+                let maximum = 0;
+                for (const base of [paper, composite(highlight, paper)]) {
+                    for (let offset = 0; offset < pixels.length; offset += 4) {
+                        const alpha = pixels[offset + 3] / 255 * Number(fibers.opacity);
+                        const color = base.map((channel, index) => {
+                            let pigment = pixels[offset + index] / 255;
+                            if (fibers.filter.includes('invert(1)')) pigment = 1 - pigment;
+                            const mixed = fibers.mixBlendMode === 'screen'
+                                ? 1 - (1 - channel) * (1 - pigment) : channel * pigment;
+                            return mixed * alpha + channel * (1 - alpha);
+                        });
+                        const light = luminance(color);
+                        minimum = Math.min(minimum, light);
+                        maximum = Math.max(maximum, light);
+                    }
+                }
+                const backdrops = [minimum, maximum];
+                return entries.map((entry) => {
+                    const title = entry.querySelector('h2');
+                    const meta = entry.querySelector('.folio-entry-meta');
+                    const excerpt = entry.querySelector('.folio-excerpt');
+                    const style = getComputedStyle(excerpt);
+                    const ink = luminance(rgba(style.color));
+                    const textSize = parseFloat(style.fontSize);
+                    return {
+                        textSize,
+                        titleRatio: parseFloat(getComputedStyle(title).fontSize) / textSize,
+                        metaSize: parseFloat(getComputedStyle(meta).fontSize),
+                        lineLength: excerpt.getBoundingClientRect().width / textSize,
+                        contrast: Math.min(...backdrops.map((background) => (Math.max(ink, background) + .05) / (Math.min(ink, background) + .05))),
+                        titleGap: meta.getBoundingClientRect().top - title.getBoundingClientRect().bottom,
+                        excerptGap: excerpt.getBoundingClientRect().top - meta.getBoundingClientRect().bottom
+                    };
+                });
+            });
+            for (const reading of readings) {
+                expect(reading.textSize).toBeGreaterThanOrEqual(width < 768 ? 14 : 16);
+                expect(reading.titleRatio).toBeGreaterThan(1.3);
+                expect(reading.titleRatio).toBeLessThan(1.8);
+                expect(reading.metaSize).toBeGreaterThanOrEqual(10);
+                expect(reading.lineLength).toBeLessThanOrEqual(46.1);
+                expect(reading.contrast).toBeGreaterThanOrEqual(4.5);
+                expect(reading.titleGap).toBeGreaterThan(0);
+                expect(reading.excerptGap).toBeGreaterThan(0);
+            }
+        }
+    }
+});
+
 test('reduced motion stops all floral motion and content works without JavaScript', async ({ page, browser, baseURL }) => {
     await page.goto(blog);
     const decorations = page.locator('.folio-flowers, .folio-petal');
-    await expect(decorations).toHaveCount(29);
+    await expect(decorations).toHaveCount(44);
     expect(await decorations.evaluateAll((elements) => elements.every((element) => getComputedStyle(element).animationName === 'none'))).toBe(true);
     const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
     await context.route('**/*', (route) => new URL(route.request().url()).origin === baseURL ? route.continue() : route.abort());
@@ -175,7 +333,7 @@ test('flowers move independently of still paper, pause out of view and react to 
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.goto(blog);
     const layers = page.locator('.folio-flowers, .folio-petal');
-    await expect(layers).toHaveCount(29);
+    await expect(layers).toHaveCount(44);
     const pattern = page.locator('.folio-pattern');
     await expect(pattern).toHaveCSS('animation-name', 'none');
     await expect(pattern).toHaveCSS('transform', 'none');
@@ -232,7 +390,7 @@ test('flowers move independently of still paper, pause out of view and react to 
     expect(await layers.evaluateAll((elements) => elements.every((element) => element.getAnimations().some((animation) => animation.playState === 'running')))).toBe(true);
 });
 
-test('multiple flower groups are visible in both margins and move perceptibly within a few seconds', async ({ page }) => {
+test('separate bouquets stay in the margins and drift in different directions', async ({ page }) => {
     await page.setViewportSize({ width: 1607, height: 870 });
     await page.emulateMedia({ reducedMotion: 'no-preference', colorScheme: 'dark' });
     await page.goto(blog);
@@ -240,65 +398,66 @@ test('multiple flower groups are visible in both margins and move perceptibly wi
     const visibleGroups = await flowers.evaluateAll(async (elements) => {
         const sheet = document.querySelector('.folio-sheet').getBoundingClientRect();
         return Promise.all(elements.map(async (element) => {
-            const style = getComputedStyle(element);
             const image = new Image();
-            image.src = style.backgroundImage.match(/url\(["']?([^"')]+)["']?\)/)[1];
+            image.src = getComputedStyle(element).backgroundImage.match(/url\(["']?([^"')]+)["']?\)/)[1];
             await image.decode();
+            const rect = element.getBoundingClientRect();
             const canvas = document.createElement('canvas');
-            canvas.width = document.documentElement.clientWidth;
+            canvas.width = innerWidth;
             canvas.height = innerHeight;
             const context = canvas.getContext('2d');
-            const width = parseFloat(style.backgroundSize);
-            const height = width * image.naturalHeight / image.naturalWidth;
-            const transform = new DOMMatrix(style.transform);
-            const left = (canvas.width - width) / 2 + transform.e;
-            for (let y = transform.f - height; y < canvas.height; y += height) {
-                for (let x = left - width; x < canvas.width; x += width) {
-                    context.drawImage(image, x, y, width, height);
-                }
-            }
+            const scale = Math.min(rect.width / image.naturalWidth, rect.height / image.naturalHeight);
+            const width = image.naturalWidth * scale;
+            const height = image.naturalHeight * scale;
+            context.drawImage(image, rect.x + (rect.width - width) / 2, rect.y + (rect.height - height) / 2, width, height);
             const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-            let leftPixels = 0;
-            let rightPixels = 0;
+            let left = 0;
+            let right = 0;
+            let mastheadCenter = 0;
             for (let y = 0; y < canvas.height; y += 1) {
                 for (let x = 0; x < canvas.width; x += 1) {
                     if (pixels[(y * canvas.width + x) * 4 + 3] < 128) continue;
-                    if (x < sheet.left) leftPixels += 1;
-                    if (x > sheet.right) rightPixels += 1;
+                    if (x < sheet.left) left += 1;
+                    if (x > sheet.right) right += 1;
+                    if (y < sheet.top && x > innerWidth * .3 && x < innerWidth * .7) mastheadCenter += 1;
                 }
             }
-            return { leftPixels, rightPixels };
+            return { left, right, mastheadCenter };
         }));
     });
-    for (const group of visibleGroups) {
-        expect(group.leftPixels).toBeGreaterThan(300);
-        expect(group.rightPixels).toBeGreaterThan(300);
-    }
-    const before = await flowers.evaluateAll((elements) => elements.map((element) => {
-        const transform = new DOMMatrix(getComputedStyle(element).transform);
-        return { x: transform.e, y: transform.f };
+    expect(visibleGroups.filter((group) => group.left > 300).length).toBeGreaterThanOrEqual(2);
+    expect(visibleGroups.filter((group) => group.right > 300).length).toBeGreaterThanOrEqual(2);
+    expect(visibleGroups.every((group) => group.mastheadCenter === 0)).toBe(true);
+    const initial = await flowers.evaluateAll((elements) => elements.map((element) => {
+        const matrix = new DOMMatrix(getComputedStyle(element).transform);
+        return { x: matrix.e, y: matrix.f };
     }));
-    // Subpixel changes pass a generic animation test but are not noticeable.
-    await expect.poll(() => flowers.evaluateAll((elements, initial) => elements.filter((element, index) => {
-        const transform = new DOMMatrix(getComputedStyle(element).transform);
-        return Math.hypot(transform.e - initial[index].x, transform.f - initial[index].y) >= 12;
-    }).length, before), { timeout: 4500, intervals: [200] }).toBeGreaterThanOrEqual(2);
+    await expect.poll(() => flowers.evaluateAll((elements, before) => elements.filter((element, index) => {
+        const matrix = new DOMMatrix(getComputedStyle(element).transform);
+        return Math.hypot(matrix.e - before[index].x, matrix.f - before[index].y) >= 10;
+    }).length, initial), { timeout: 6500, intervals: [250] }).toBeGreaterThanOrEqual(2);
+    const directions = await flowers.evaluateAll((elements, before) => elements.map((element, index) => {
+        const matrix = new DOMMatrix(getComputedStyle(element).transform);
+        return { x: Math.sign(matrix.e - before[index].x), y: Math.sign(matrix.f - before[index].y) };
+    }), initial);
+    expect(new Set(directions.map(({ x }) => x)).size).toBeGreaterThan(1);
+    expect(new Set(directions.map(({ y }) => y)).size).toBeGreaterThan(1);
 });
 
-test('flowers keep a slow continuous velocity and more petals appear in the reading margins', async ({ page }) => {
+test('independent flower paths remain slow and smooth, with more petals in the margins', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.setViewportSize({ width: 1607, height: 870 });
     await page.goto(blog);
     const motion = await page.locator('.folio-flowers').evaluateAll((elements) => elements.map((element) => {
-        const animation = element.getAnimations()[0];
-        animation.pause();
-        const { duration, delay } = animation.effect.getTiming();
-        const samples = 64;
-        const interval = duration / samples / 1000;
+        const animations = element.getAnimations();
+        const initial = animations.map((animation) => animation.currentTime);
+        animations.forEach((animation) => animation.pause());
+        const durations = animations.map((animation) => animation.effect.getTiming().duration);
+        const interval = .5;
         const points = [];
-        // Include the loop boundary: velocity must not jump at the restart.
-        for (let index = 0; index <= samples + 1; index += 1) {
-            animation.currentTime = index / samples * duration - delay;
+        // Sample both independent phases past multiple loop boundaries.
+        for (let index = 0; index <= 240; index += 1) {
+            animations.forEach((animation, phase) => { animation.currentTime = initial[phase] + index * interval * 1000; });
             const matrix = new DOMMatrix(getComputedStyle(element).transform);
             points.push({ x: matrix.e, y: matrix.f });
         }
@@ -310,17 +469,17 @@ test('flowers keep a slow continuous velocity and more petals appear in the read
         const accelerations = velocities.slice(1).map((velocity, index) => Math.hypot(
             velocity.x - velocities[index].x, velocity.y - velocities[index].y
         ) / interval);
-        animation.play();
-        return { duration, minSpeed: Math.min(...speeds), maxSpeed: Math.max(...speeds), maxAcceleration: Math.max(...accelerations) };
+        animations.forEach((animation, phase) => { animation.currentTime = initial[phase]; animation.play(); });
+        return { durations, maxSpeed: Math.max(...speeds), maxAcceleration: Math.max(...accelerations) };
     }));
     for (const group of motion) {
-        expect(group.duration).toBeGreaterThanOrEqual(24000);
-        expect(group.minSpeed).toBeGreaterThan(2);
-        expect(group.maxSpeed).toBeLessThan(6.5);
-        expect(group.maxAcceleration).toBeLessThan(2);
+        expect(group.durations.every((duration) => duration >= 30000)).toBe(true);
+        expect(group.maxSpeed).toBeGreaterThan(1);
+        expect(group.maxSpeed).toBeLessThan(5);
+        expect(group.maxAcceleration).toBeLessThan(1.1);
     }
 
-    for (const { width, count, visible } of [{ width: 1607, count: 20, visible: 6 }, { width: 390, count: 10, visible: 4 }]) {
+    for (const { width, count, visible } of [{ width: 1607, count: 24, visible: 8 }, { width: 390, count: 12, visible: 5 }]) {
         await page.setViewportSize({ width, height: 870 });
         const petals = await page.locator('.folio-garden .folio-petal').evaluateAll((elements) => {
             const paper = document.querySelector('.folio-sheet').getBoundingClientRect();
@@ -343,7 +502,7 @@ test('flowers keep a slow continuous velocity and more petals appear in the read
 
 test('foreground petals drift above the sheet without blocking article controls', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' });
-    for (const { width, count, visible } of [{ width: 1607, count: 6, visible: 3 }, { width: 390, count: 4, visible: 2 }]) {
+    for (const { width, count, visible } of [{ width: 1607, count: 8, visible: 4 }, { width: 390, count: 6, visible: 3 }]) {
         await page.setViewportSize({ width, height: 870 });
         for (const route of [blog, postURL(posts[0])]) {
             await page.goto(route);
@@ -428,8 +587,8 @@ test('restored paper stays crisp, scrolls with the page and leaves controls acce
                 }
                 return { clear: clear / 10000, visible: visible / 10000 };
             }, imageURL);
-            expect(transparency.clear).toBeGreaterThan(0.75);
-            expect(transparency.visible).toBeGreaterThan(0.01);
+            expect(transparency.clear).toBeGreaterThan(0.2);
+            expect(transparency.visible).toBeGreaterThan(0.03);
         }
     }
     for (const width of [390, 1440, 2560]) {

@@ -29,13 +29,15 @@
     </div>
     {% include "_partial/folio/surround.njk" %}
     <div class="folio-shell">
+        {% include "_partial/folio/foreground.njk" %}
+        {% include "_partial/common/header.njk" %}
+        {% if is_home() %}
+        {% include "_partial/folio/hero.njk" %}
+        {% endif %}
 
         <!-- Reading sheet -->
         <div class="folio-sheet">
-            {% include "_partial/folio/foreground.njk" %}
-
-            {% include "_partial/common/header.njk" %}
-
+            <div class="folio-paper-surface" aria-hidden="true"></div>
             <!-- Main Content -->
             <main id="main-content" class="folio-main" tabindex="-1">
                 {% block content %}{% endblock %}

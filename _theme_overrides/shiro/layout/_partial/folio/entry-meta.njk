@@ -1,0 +1,27 @@
+{# The calendar already supplies the date. Reuse Shiro's category/count helpers. #}
+{% from "_macro/ui.njk" import icon_folder, icon_book with context %}
+{% set wc = word_count_meta(post, {
+    timeSuffix: __('word_count.time_minutes'),
+    countLabel: __('word_count.count'),
+    timeLabel: __('word_count.time')
+}) %}
+{% set cat_meta = post_meta_category(post) if post.categories and post.categories.length > 0 else null %}
+{% if (cat_meta and cat_meta.primary) or (wc and (wc.count != null or wc.time != null)) %}
+<div class="folio-entry-meta">
+    {% if cat_meta and cat_meta.primary %}
+    <span class="folio-meta-group">
+        {{ icon_folder() }}
+        <a href="{{ href_for(cat_meta.primary.path) }}" title="{{ escape_attr(cat_meta.title) }}">{{ escape_html(cat_meta.primary.name) }}</a>
+        {% if cat_meta.moreCount > 0 %}<span title="{{ escape_attr(cat_meta.title) }}">{{ escape_html(__('categories.meta_more', cat_meta.moreCount)) }}</span>{% endif %}
+    </span>
+    {% endif %}
+    {% if wc and (wc.count != null or wc.time != null) %}
+    <span class="folio-meta-group"{% if wc.title %} title="{{ escape_attr(wc.title) }}"{% endif %}>
+        {{ icon_book() }}
+        {% if wc.count != null %}<span aria-label="{{ escape_attr(__('word_count.count') + ': ' + wc.count) }}">{{ escape_html(wc.count) }}</span>{% endif %}
+        {% if wc.count != null and wc.time != null %}<span aria-hidden="true">/</span>{% endif %}
+        {% if wc.time != null %}<span aria-label="{{ escape_attr(__('word_count.time') + ': ' + wc.time) }}">{{ escape_html(wc.time) }}</span>{% endif %}
+    </span>
+    {% endif %}
+</div>
+{% endif %}

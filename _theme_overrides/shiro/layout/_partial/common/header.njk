@@ -5,7 +5,7 @@
             <path d="M20 33V18M20 26C8 26 8 18 8 18s10-1 12 8Zm0-5c11 0 12-8 12-8s-10 0-12 8Z" stroke="currentColor" stroke-width="1.2"/>
             <path d="M20 18C10 17 11 8 14 9c3 0 5 4 6 9Zm0 0c-5-8-2-14 1-13s4 8-1 13Zm0 0c1-10 8-13 9-9s-4 8-9 9Z" fill="currentColor" opacity=".7"/>
         </svg>
-        <span>{{ escape_html(config.title) }}</span>
+        {% if not is_home() %}<span>{{ escape_html(config.title) }}</span>{% endif %}
     </a>
 
     <nav class="folio-desktop-nav" aria-label="{{ escape_attr(__('nav.menu')) }}">
