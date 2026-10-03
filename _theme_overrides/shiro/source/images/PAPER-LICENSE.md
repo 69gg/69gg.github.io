@@ -9,7 +9,8 @@ Subtle Patterns and distributed in transparent form by Transparent Textures.
 - License: Creative Commons Attribution-ShareAlike 3.0 Unported (see below)
 
 Its pixels and transparency are unchanged. CSS repeats it at a modest scale,
-uses multiply blending in both themes, and controls its opacity. The raised
+uses multiply blending in the light theme and inverted screen blending in the
+dark theme, and controls its opacity. The raised
 fiber detail comes from the texture itself. Attribution is retained beside
 the CSS rule.
 

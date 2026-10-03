@@ -54,7 +54,7 @@ npm run preview
 
 - 改版只作用于 `/blog/`。配色、正文宽度、断点、字体分工和间距集中在 `_theme_overrides/shiro/source/css/folio.css`；日间与夜间使用同一套 CSS 变量。
 - 背景保留参考图中的蓝紫底色、白花、枝叶、织纹、四角花饰与双线边框。导航和首页大站名直接落在花纹背景上，文章列表及页脚落在下方独立的阅读纸上。首页与分页只显示一个大站名；内页显示可返回首页的小站名。站名来自 `_config.yml` 的 `title`，当前为 `Null's Blog`。
-- 阅读部分使用单张哑光纤维纸。独立的 `.folio-paper-surface` 放在正文下方：底层为纸色、侧光和窄幅边缘阴影，上层为本地 `paper-handmade.webp` 手工纸纹理，以 150px 平铺、正片叠底显示。纸纹自带纤维起伏，配合薄纸边和向右下方投落的软影呈现厚度，不做折角、叠页或塑料反光。浅色为暖白纸；夜间为灯光下亮度较低的暖米色纸，墨蓝文字保持清楚。通过 `--folio-paper`、`--folio-paper-grain-opacity`、`--folio-paper-grain-blend`、`--folio-paper-edge-light`、`--folio-paper-edge-shade`、`--folio-paper-contact` 和 `--folio-paper-shadow` 调整。
+- 阅读部分使用单张哑光纤维纸。独立的 `.folio-paper-surface` 放在正文下方：底层为纸色、侧光和窄幅边缘阴影，上层为本地 `paper-handmade.webp` 手工纸纹理，以 150px 平铺。日间使用柔白纸和墨蓝文字，纸纹正片叠底；夜间使用蓝灰纸和浅色文字，将纸纹反色后滤色叠加，让纤维在深色纸上仍可见。两种模式同时切换纸面和文字的明暗关系，避免都呈现为偏黄的浅纸。纸纹自带纤维起伏，配合薄纸边和向右下方投落的软影呈现厚度，不做折角、叠页或塑料反光。通过 `--folio-paper`、`--folio-paper-grain-opacity`、`--folio-paper-grain-blend`、`--folio-paper-grain-filter`、`--folio-paper-edge-light`、`--folio-paper-edge-shade`、`--folio-paper-contact` 和 `--folio-paper-shadow` 调整。
 - 纸边使用四条轻微起伏的 `paper-edge-*.svg` 遮罩，以固定 4px 深度沿各自边缘平铺，不随正文长度放大，也不做明显锯齿或撕口。遮罩和投影只作用于装饰层，正文及焦点轮廓不裁切，文章固定目录的定位也不受影响。装饰设为 `aria-hidden`、`pointer-events: none`。旧的程序噪声 `grain.svg` 不再用作阅读纸纹。
 - 当前纸纹来源为 Le Marquis 的 [Handmade Paper](https://www.transparenttextures.com/handmade-paper.html)，透明版本由 Transparent Textures 提供，原始集合为 Subtle Patterns。转换成无损 WebP 随站点保存，页面无需向素材站发请求；来源、作者、CC BY-SA 3.0 许可及转换说明见 `_theme_overrides/shiro/source/images/PAPER-LICENSE.md`。上一版 `paper-fibers.webp` 保留为素材，不再绘制到阅读区。
 - `source/images/floral-paper.webp` 保留用户清晰参考图的原始裁片。实际静止背景为 `floral-paper-still.webp`：花枝原位用相邻纸纹补齐，中央镜像接缝也用非镜像纸纹替换，避免紧贴在一起的成对花簇。桌面按素材原尺寸平铺，手机等比缩小，避免拉伸放大造成粗糙；纸纹本身不飘动。
@@ -115,4 +115,4 @@ npm run test:e2e
 
 GitHub Actions 构建时运行产物检查和 Node 测试。浏览器回归测试可按需在本地执行；长页尺寸检查先等待本地字体就绪，并在懒加载评论样式引起布局变化时重新定位页底花角，仍要求花角完整可见。审阅截图可放在已忽略的 `artifacts/review/`，测试失败的截图与 trace 位于已忽略的 `test-results/`。
 
-摘要测试使用真实文章卡片模板和 Shiro 视图模型，覆盖 `summary` 优先级、多行 YAML、HTML 转义，以及无有效 `summary` 时的手动摘要、自动截断和关闭自动摘要等回退行为。浏览器另在明暗主题与桌面、手机宽度下检查标题和摘要的字号比例、最小字号、最大行长，以及标题、元信息、摘要之间不会重叠。对比度检查将本地纤维纹理的实际像素、明暗模式的混合方式、透明度和柔光一起计算，覆盖纸纹最深、最浅位置的标题、元信息、摘要、日期与阅读链接对比度，并检查纤维纹理本身有可见起伏；花枝测试采样完整循环，检查摆幅扩大后速度和加速度仍保持平缓。字体测试在阻断第三方请求的情况下检查浏览器实际使用的字体，确认站名、中文标题、摘要、导航、日期和代码均来自本地 Web Font；Node 测试校验每份 WOFF2、许可证及构建拷贝的完整性。
+摘要测试使用真实文章卡片模板和 Shiro 视图模型，覆盖 `summary` 优先级、多行 YAML、HTML 转义，以及无有效 `summary` 时的手动摘要、自动截断和关闭自动摘要等回退行为。浏览器另在明暗主题与桌面、手机宽度下检查标题和摘要的字号比例、最小字号、最大行长，以及标题、元信息、摘要之间不会重叠。对比度检查将本地纤维纹理的实际像素、明暗模式的混合方式、透明度和柔光一起计算，覆盖纸纹最深、最浅位置的标题、元信息、摘要、日期与阅读链接对比度；纸纹起伏按纹理最亮与最暗位置的相对对比衡量，兼顾柔白纸和蓝灰纸。另要求明暗纸面的相对亮度有足够差距、日间使用深色字且夜间使用浅色字，防止两个模式重新变得接近。花枝测试采样完整循环，检查摆幅扩大后速度和加速度仍保持平缓。字体测试在阻断第三方请求的情况下检查浏览器实际使用的字体，确认站名、中文标题、摘要、导航、日期和代码均来自本地 Web Font；Node 测试校验每份 WOFF2、许可证及构建拷贝的完整性。

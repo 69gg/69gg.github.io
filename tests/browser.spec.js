@@ -240,6 +240,7 @@ for (const width of [320, 390, 768, 1024, 1440]) {
 test('reading hierarchy and contrast hold in both themes with local fonts', async ({ page }) => {
     for (const width of [390, 1440]) {
         await page.setViewportSize({ width, height: 900 });
+        const paperByTheme = {};
         for (const colorScheme of ['light', 'dark']) {
             await page.emulateMedia({ colorScheme });
             await page.goto(blog);
@@ -315,12 +316,15 @@ test('reading hierarchy and contrast hold in both themes with local fonts', asyn
                         metaSize: parseFloat(getComputedStyle(meta).fontSize),
                         lineLength: excerpt.getBoundingClientRect().width / textSize,
                         contrast,
-                        fiberVariation: fiberMaximum - fiberMinimum,
+                        paperLuminance: (minimum + maximum) / 2,
+                        inkLuminance: luminance(rgba(style.color)),
+                        fiberContrast: (fiberMaximum - fiberMinimum) / (fiberMaximum + fiberMinimum),
                         titleGap: meta.getBoundingClientRect().top - title.getBoundingClientRect().bottom,
                         excerptGap: excerpt.getBoundingClientRect().top - meta.getBoundingClientRect().bottom
                     };
                 });
             });
+            paperByTheme[colorScheme] = readings[0].paperLuminance;
             for (const reading of readings) {
                 expect(reading.textSize).toBeGreaterThanOrEqual(width < 768 ? 14 : 16);
                 expect(reading.titleRatio).toBeGreaterThan(1.3);
@@ -328,14 +332,20 @@ test('reading hierarchy and contrast hold in both themes with local fonts', asyn
                 expect(reading.metaSize).toBeGreaterThanOrEqual(10);
                 expect(reading.lineLength).toBeLessThanOrEqual(46.1);
                 expect(reading.contrast).toBeGreaterThanOrEqual(4.5);
-                // The fiber relief is visible even without a lighting gradient,
-                // while staying quiet enough for continuous reading.
-                expect(reading.fiberVariation).toBeGreaterThan(.025);
-                expect(reading.fiberVariation).toBeLessThan(.18);
+                // Relative texture contrast stays meaningful on both white and
+                // dark paper, without counting the lighting gradient as relief.
+                expect(reading.fiberContrast).toBeGreaterThan(.025);
+                expect(reading.fiberContrast).toBeLessThan(.18);
+                if (colorScheme === 'dark') {
+                    expect(reading.inkLuminance).toBeGreaterThan(reading.paperLuminance);
+                } else {
+                    expect(reading.inkLuminance).toBeLessThan(reading.paperLuminance);
+                }
                 expect(reading.titleGap).toBeGreaterThan(0);
                 expect(reading.excerptGap).toBeGreaterThan(0);
             }
         }
+        expect(paperByTheme.light - paperByTheme.dark).toBeGreaterThan(.5);
     }
 });
 
