@@ -30,7 +30,7 @@ test('home, article navigation, archives and pagination retain the real content'
     await expect(page.locator('.folio-header').getByText(config.title, { exact: true })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: config.title, exact: true })).toHaveCount(1);
     await expect(page.locator('.folio-colophon')).toContainText(config.title);
-    await expect(page.locator('.folio-footer')).not.toContainText(/Powered by|Based on/);
+    await expect(page.locator('.folio-footer')).not.toContainText(/Powered by|Based on|风过留痕/);
     await expect(page.getByRole('heading', { name: '最新文章', exact: true })).toHaveCount(0);
     const archive = page.locator('.folio-hero').getByRole('link', { name: /^全部文章/ });
     await expect(archive).toContainText(String(posts.length));
@@ -51,6 +51,7 @@ test('home, article navigation, archives and pagination retain the real content'
     for (const item of theme.menu) {
         await expect(page.locator('.folio-desktop-nav').getByRole('link', { name: item.name, exact: true })).toBeVisible();
     }
+    await expect(page.locator('.folio-desktop-nav a')).toHaveCount(theme.menu.length);
     await page.getByRole('heading', { name: posts[0].title, exact: true }).getByRole('link').click();
     await expect(page).toHaveURL(new RegExp(`${postURL(posts[0])}$`));
     await expect(page.locator('[data-pagefind-meta="title"]')).toHaveText(posts[0].title);
@@ -153,6 +154,7 @@ test('mobile menu is keyboard accessible and closes after selection', async ({ p
     await expect(page.locator('#mobileMenu')).not.toBeVisible();
     await page.locator('#menuBtn').click();
     await expect(page.locator('#mobileMenu')).toBeVisible();
+    await expect(page.locator('#mobileMenu a')).toHaveCount(theme.menu.length);
     await expect(page.locator('#mobileMenu a').first()).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(page.locator('#menuBtn')).toBeFocused();
@@ -222,6 +224,12 @@ for (const width of [320, 390, 768, 1024, 1440]) {
                 const header = await page.locator('.folio-header').boundingBox();
                 const masthead = await page.locator('.folio-hero').boundingBox();
                 const paper = await page.locator('.folio-sheet').boundingBox();
+                const pagination = await page.locator('.pagination').boundingBox();
+                const endmark = await page.locator('.folio-endmark').boundingBox();
+                const footerLinks = await page.locator('.folio-footer-links').boundingBox();
+                expect(endmark.y - (pagination.y + pagination.height)).toBeGreaterThanOrEqual(0);
+                expect(endmark.y - (pagination.y + pagination.height)).toBeLessThanOrEqual(24);
+                expect(footerLinks.y - (pagination.y + pagination.height)).toBeLessThanOrEqual(64);
                 expect(header.y + header.height).toBeLessThanOrEqual(masthead.y);
                 expect(masthead.y + masthead.height).toBeLessThanOrEqual(paper.y + 1);
                 if (archive.y >= title.y + title.height) {

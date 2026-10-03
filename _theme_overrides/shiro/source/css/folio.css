@@ -272,7 +272,7 @@ body.folio-body {
 html:not(.js) .folio-actions { display: none; }
 .folio-hero { position: relative; z-index: 1; display: flex; align-items: baseline; justify-content: space-between; gap: 24px; margin: 0 var(--folio-gutter); padding: 36px 0 38px; }
 .folio-hero h1 { min-width: 0; margin: 0; font-family: var(--folio-display-font); font-size: clamp(68px, 7vw, 94px); font-style: normal; font-weight: 400; line-height: 1.15; letter-spacing: 0; overflow-wrap: anywhere; animation: folio-arrive 1.1s ease both; }
-.folio-journal { padding: 0 var(--folio-gutter) 12px; scroll-margin-top: 30px; }
+.folio-journal { padding: 0 var(--folio-gutter); scroll-margin-top: 30px; }
 .folio-text-link { display: inline-flex; flex-shrink: 0; align-items: baseline; gap: 10px; padding-block: 8px; color: var(--folio-muted); font-family: var(--folio-ui); font-size: 12px; line-height: 1.7; white-space: nowrap; }
 .folio-text-link > :last-child { transition: transform .3s ease; }
 .folio-text-link:hover > :last-child { transform: translate(2px, -2px); }
@@ -298,7 +298,7 @@ html:not(.js) .folio-actions { display: none; }
 .folio-read-link { display: inline-flex; align-items: center; gap: 13px; min-height: 32px; margin-top: 14px; color: var(--folio-accent); font-family: var(--folio-ui); font-size: 11px; letter-spacing: .08em; }
 .folio-read-link span { font-family: var(--folio-ui); font-size: 20px; line-height: 1; transition: transform .3s; }
 .folio-read-link:hover span { transform: translateX(6px); }
-.folio-home .pagination { margin: 40px 0 15px; }
+.folio-home .pagination { margin: 40px 0 0; }
 .folio-home .pagination .current { color: var(--folio-accent); }
 .folio-inner .folio-header { margin-bottom: 24px; }
 .folio-inner .folio-main { max-width: 860px; margin: 0 auto; padding: 64px var(--folio-gutter) 10px; min-height: 360px; }
@@ -312,16 +312,15 @@ html:not(.js) .folio-actions { display: none; }
 .folio-inner .prose-shiro :is(pre, figure.highlight) { font-size: 13px; line-height: 1.7; }
 .folio-inner .section-divider { border-color: var(--folio-rule); }
 .folio-inner .section-heading { color: var(--folio-accent); }
-.folio-footer { padding: 48px var(--folio-gutter) 18px; text-align: center; }
-.folio-endmark { display: flex; align-items: center; justify-content: center; gap: 18px; color: var(--folio-gold); margin: 13px 0 20px; font-size: 21px; }
+.folio-footer { padding: 16px var(--folio-gutter) 18px; text-align: center; }
+.folio-endmark { display: flex; align-items: center; justify-content: center; gap: 18px; color: var(--folio-gold); margin: 0 0 14px; font-size: 21px; line-height: 1; }
 .folio-endmark span { width: 55px; height: 1px; background: var(--folio-rule); }
-.folio-footer-note { font-size: 14px; letter-spacing: .2em; color: var(--folio-muted); }
-.folio-footer-links { display: flex; justify-content: center; align-items: center; gap: 25px; margin: 24px 0 32px; font-size: 11px; color: var(--folio-muted); }
+.folio-footer-links { display: flex; justify-content: center; align-items: center; gap: 25px; margin: 0 0 20px; font-size: 11px; color: var(--folio-muted); }
 .folio-footer-links a { display: inline-flex; align-items: center; gap: 5px; }
 .folio-footer-links svg { width: 12px; height: 12px; }
 .folio-footer a:hover { color: var(--folio-accent); }
-.folio-colophon { display: flex; justify-content: center; gap: 10px; padding-top: 19px; font-family: var(--folio-ui); font-size: 11px; color: var(--folio-muted); }
-.folio-build { font-family: var(--folio-ui); font-size: 9px; color: var(--folio-muted); opacity: .8; margin-top: 14px; letter-spacing: .025em; }
+.folio-colophon { display: flex; justify-content: center; gap: 10px; font-family: var(--folio-ui); font-size: 11px; color: var(--folio-muted); }
+.folio-build { font-family: var(--folio-ui); font-size: 9px; color: var(--folio-muted); opacity: .8; margin-top: 10px; letter-spacing: .025em; }
 .folio-body .back-to-top { background: var(--folio-paper); color: var(--folio-accent); border: 1px solid var(--folio-rule); box-shadow: 0 2px 16px #29203610; }
 .folio-body .progress-bar { background: var(--folio-accent); }
 .folio-guestbook { text-align: center; padding: 38px 0 50px; }
@@ -406,8 +405,7 @@ html[data-folio-paused] :is(.folio-flowers, .folio-petal) { animation-play-state
     .folio-inner .group time.w-24 { width: 70px; font-size: 11px; }
     .folio-inner .group.gap-6 { gap: 14px; }
     .folio-inner .group h3 { font-size: 14px; }
-    .folio-footer { padding: 26px var(--folio-gutter) 22px; }
-    .folio-footer-note { font-size: 12px; letter-spacing: .15em; }
+    .folio-footer { padding-bottom: 22px; }
     .folio-colophon { flex-direction: column; gap: 6px; font-size: 11px; }
     .folio-build { font-size: 8px; line-height: 1.7; }
     .folio-guestbook { padding: 24px 0 32px; }

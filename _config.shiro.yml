@@ -14,8 +14,6 @@ menu:
     url: /
   - name: 归档
     url: /archives
-  - name: 留言
-    url: /guestbook
   - name: 随机
     url: /random
 
@@ -83,7 +81,3 @@ analytics:
 # Search
 search:
   enabled: true
-
-# Blog presentation. Content, links and page counts continue to come from Hexo.
-folio:
-  note: 风过留痕，字里相逢。

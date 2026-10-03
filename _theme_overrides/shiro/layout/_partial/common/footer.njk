@@ -1,7 +1,6 @@
 {% from "_macro/ui.njk" import icon_rss with context %}
 <footer class="folio-footer" data-pagefind-ignore>
     <div class="folio-endmark" aria-hidden="true"><span></span>✧<span></span></div>
-    <p class="folio-footer-note">{{ escape_html(theme.folio.note) }}</p>
     <nav class="folio-footer-links" aria-label="更多浏览方式">
         <a href="{{ href_for('/archives/') }}">归档</a>
         <a href="{{ href_for('/categories/') }}">分类</a>
