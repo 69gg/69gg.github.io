@@ -53,6 +53,9 @@ test('presentation overrides survive fresh installs and repeated builds without 
     fs.mkdirSync(path.join(overrides, 'layout'), { recursive: true });
     fs.mkdirSync(path.join(overrides, 'source', 'css'), { recursive: true });
     fs.writeFileSync(path.join(themeDir, 'package.json'), '{}');
+    for (const dependency of ['marked', 'dompurify']) {
+        fs.symlinkSync(path.join(rootDir, 'node_modules', dependency), path.join(fixture, 'node_modules', dependency), 'junction');
+    }
     fs.writeFileSync(path.join(themeDir, 'source', 'js', 'search.js'), 'upstream search');
     fs.writeFileSync(path.join(overrides, 'layout', 'index.njk'), 'first design');
     fs.writeFileSync(path.join(overrides, 'source', 'css', 'folio.css'), 'folio styles');
@@ -62,6 +65,9 @@ test('presentation overrides survive fresh installs and repeated builds without 
     assert.equal(fs.readFileSync(path.join(themeDir, 'layout', 'index.njk'), 'utf8'), 'revised design');
     assert.equal(fs.readFileSync(path.join(themeDir, 'source', 'css', 'folio.css'), 'utf8'), 'folio styles');
     assert.equal(fs.readFileSync(path.join(themeDir, 'source', 'js', 'search.js'), 'utf8'), 'upstream search');
+    for (const modulePath of ['marked/marked.min.js', 'dompurify/purify.min.js']) {
+        assert.deepEqual(fs.readFileSync(path.join(themeDir, 'source', 'js', 'vendor', path.basename(modulePath))), fs.readFileSync(require.resolve(modulePath)));
+    }
 });
 
 test('missing theme gives an actionable install error', () => {

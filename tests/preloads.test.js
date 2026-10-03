@@ -28,7 +28,8 @@ test('preloads follow changed CSS assets and match mask CORS without forcing fon
 });
 
 test('all visual preloads exist and appear before optional fetches on every blog page', () => {
-    const assets = preloadAssets(fs.readFileSync(path.join(source, 'css', 'folio.css'), 'utf8'), fs.readFileSync(path.join(source, 'css', 'fonts.css'), 'utf8'));
+    const css = ['folio.css', 'noticeboard.css'].map((file) => fs.readFileSync(path.join(source, 'css', file), 'utf8')).join('\n');
+    const assets = preloadAssets(css);
     assert.equal(new Set(assets.map((asset) => asset.path)).size, assets.length);
     assert.equal(assets.filter((asset) => asset.priority === 'high').length, 1);
     assert.equal(assets.filter((asset) => asset.as === 'font').length, 0);

@@ -22,6 +22,8 @@
 
 GitHub Actions 会发布 `public/`。不要使用 `npm run deploy` 发布到 `main` 分支；当前仓库源码也在 `main`。
 
+CI 的预加载断言同时读取 `folio.css` 和 `noticeboard.css`，与构建 helper 的资源集合一致。模板覆盖测试的临时安装目录包含 Shiro 及已安装的 Marked、DOMPurify 浏览器依赖，并检查资源复制后内容一致、上游资源仍保留。
+
 ## 构建
 
 ```bash
