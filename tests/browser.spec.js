@@ -140,6 +140,16 @@ test('theme toggle persists and follows the system when selected', async ({ page
 test('mobile menu is keyboard accessible and closes after selection', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(blog);
+    // All controls share the same backdrop; the menu arrow must remain as
+    // legible as the search icon, including the upstream dark-mode hover state.
+    for (const colorScheme of ['light', 'dark']) {
+        await page.emulateMedia({ colorScheme });
+        const iconColor = await page.locator('#searchToggle svg').evaluate((icon) => getComputedStyle(icon).color);
+        await expect(page.locator('#menuChevron')).toHaveCSS('color', iconColor);
+        await page.locator('#menuBtn').hover();
+        await expect(page.locator('#menuChevron')).toHaveCSS('color', iconColor);
+        await page.mouse.move(0, 0);
+    }
     await expect(page.locator('#mobileMenu')).not.toBeVisible();
     await page.locator('#menuBtn').click();
     await expect(page.locator('#mobileMenu')).toBeVisible();
@@ -266,6 +276,8 @@ test('reading hierarchy and contrast hold in both themes with local fonts', asyn
                 const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
                 let minimum = 1;
                 let maximum = 0;
+                let fiberMinimum = 1;
+                let fiberMaximum = 0;
                 for (const base of [paper, composite(highlight, paper)]) {
                     for (let offset = 0; offset < pixels.length; offset += 4) {
                         const alpha = pixels[offset + 3] / 255 * Number(fibers.opacity);
@@ -279,6 +291,10 @@ test('reading hierarchy and contrast hold in both themes with local fonts', asyn
                         const light = luminance(color);
                         minimum = Math.min(minimum, light);
                         maximum = Math.max(maximum, light);
+                        if (base === paper) {
+                            fiberMinimum = Math.min(fiberMinimum, light);
+                            fiberMaximum = Math.max(fiberMaximum, light);
+                        }
                     }
                 }
                 const backdrops = [minimum, maximum];
@@ -287,14 +303,19 @@ test('reading hierarchy and contrast hold in both themes with local fonts', asyn
                     const meta = entry.querySelector('.folio-entry-meta');
                     const excerpt = entry.querySelector('.folio-excerpt');
                     const style = getComputedStyle(excerpt);
-                    const ink = luminance(rgba(style.color));
                     const textSize = parseFloat(style.fontSize);
+                    const textElements = [title, meta, excerpt, entry.querySelector('.folio-read-link'), entry.querySelector('.folio-entry-date')];
+                    const contrast = Math.min(...textElements.flatMap((element) => {
+                        const ink = luminance(rgba(getComputedStyle(element).color));
+                        return backdrops.map((background) => (Math.max(ink, background) + .05) / (Math.min(ink, background) + .05));
+                    }));
                     return {
                         textSize,
                         titleRatio: parseFloat(getComputedStyle(title).fontSize) / textSize,
                         metaSize: parseFloat(getComputedStyle(meta).fontSize),
                         lineLength: excerpt.getBoundingClientRect().width / textSize,
-                        contrast: Math.min(...backdrops.map((background) => (Math.max(ink, background) + .05) / (Math.min(ink, background) + .05))),
+                        contrast,
+                        fiberVariation: fiberMaximum - fiberMinimum,
                         titleGap: meta.getBoundingClientRect().top - title.getBoundingClientRect().bottom,
                         excerptGap: excerpt.getBoundingClientRect().top - meta.getBoundingClientRect().bottom
                     };
@@ -307,6 +328,10 @@ test('reading hierarchy and contrast hold in both themes with local fonts', asyn
                 expect(reading.metaSize).toBeGreaterThanOrEqual(10);
                 expect(reading.lineLength).toBeLessThanOrEqual(46.1);
                 expect(reading.contrast).toBeGreaterThanOrEqual(4.5);
+                // The fiber relief is visible even without a lighting gradient,
+                // while staying quiet enough for continuous reading.
+                expect(reading.fiberVariation).toBeGreaterThan(.025);
+                expect(reading.fiberVariation).toBeLessThan(.18);
                 expect(reading.titleGap).toBeGreaterThan(0);
                 expect(reading.excerptGap).toBeGreaterThan(0);
             }
@@ -456,7 +481,7 @@ test('independent flower paths remain slow and smooth, with more petals in the m
         const interval = .5;
         const points = [];
         // Sample both independent phases past multiple loop boundaries.
-        for (let index = 0; index <= 240; index += 1) {
+        for (let index = 0; index <= 280; index += 1) {
             animations.forEach((animation, phase) => { animation.currentTime = initial[phase] + index * interval * 1000; });
             const matrix = new DOMMatrix(getComputedStyle(element).transform);
             points.push({ x: matrix.e, y: matrix.f });
@@ -470,13 +495,21 @@ test('independent flower paths remain slow and smooth, with more petals in the m
             velocity.x - velocities[index].x, velocity.y - velocities[index].y
         ) / interval);
         animations.forEach((animation, phase) => { animation.currentTime = initial[phase]; animation.play(); });
-        return { durations, maxSpeed: Math.max(...speeds), maxAcceleration: Math.max(...accelerations) };
+        return {
+            durations,
+            horizontalSpan: Math.max(...points.map(({ x }) => x)) - Math.min(...points.map(({ x }) => x)),
+            verticalSpan: Math.max(...points.map(({ y }) => y)) - Math.min(...points.map(({ y }) => y)),
+            maxSpeed: Math.max(...speeds),
+            maxAcceleration: Math.max(...accelerations)
+        };
     }));
     for (const group of motion) {
         expect(group.durations.every((duration) => duration >= 30000)).toBe(true);
         expect(group.maxSpeed).toBeGreaterThan(1);
         expect(group.maxSpeed).toBeLessThan(5);
         expect(group.maxAcceleration).toBeLessThan(1.1);
+        expect(group.horizontalSpan).toBeGreaterThan(80);
+        expect(group.verticalSpan).toBeGreaterThan(52);
     }
 
     for (const { width, count, visible } of [{ width: 1607, count: 24, visible: 8 }, { width: 390, count: 12, visible: 5 }]) {
@@ -597,6 +630,7 @@ test('restored paper stays crisp, scrolls with the page and leaves controls acce
         expect(drawnWidth).toBeLessThanOrEqual(paperWidth);
         for (const route of [blog, postURL(posts[0]), `${blog}tags/`]) {
             await page.goto(route);
+            await page.evaluate(() => document.fonts.ready);
             const topCorners = page.locator('.folio-corner-tl, .folio-corner-tr');
             const bottomCorners = page.locator('.folio-corner-bl, .folio-corner-br');
             for (const corner of await topCorners.all()) {
@@ -632,9 +666,12 @@ test('restored paper stays crisp, scrolls with the page and leaves controls acce
             }
             for (const corner of await bottomCorners.all()) {
                 // The article's comment widget can change the document height
-                // as the footer first enters view. Follow the actual corner.
-                await corner.scrollIntoViewIfNeeded();
-                await expect(corner).toBeInViewport({ ratio: 1 });
+                // as the footer first enters view. Retry the positioning as
+                // well as the assertion, without relaxing full visibility.
+                await expect(async () => {
+                    await corner.scrollIntoViewIfNeeded();
+                    await expect(corner).toBeInViewport({ ratio: 1, timeout: 500 });
+                }).toPass({ timeout: 5000 });
             }
             const bottomEdges = await bottomCorners.evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().bottom));
             expect(bottomEdges[0]).toBeCloseTo(bottomEdges[1]);

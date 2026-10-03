@@ -11,25 +11,28 @@
 }
 :root {
     --folio-pattern-width: 1932px;
-    --folio-flower-x: 18px;
-    --folio-flower-y: 13px;
+    --folio-flower-x: 42px;
+    --folio-flower-y: 28px;
+    --folio-flower-turn: 4.5deg;
     --folio-frame-inset: 25px;
     --folio-corner-size: 102px;
     --folio-frame-line: #fffaf0;
-    --folio-paper: #f4f1e9;
-    --folio-paper-grain-opacity: .75;
+    --folio-paper: #faf3e2;
+    --folio-paper-grain-opacity: .85;
     --folio-paper-grain-blend: multiply;
     --folio-paper-grain-filter: none;
     --folio-pattern-opacity: 1;
     --folio-flower-opacity: 1;
     --folio-surround-filter: none;
-    --folio-paper-highlight: #fffdf512;
-    --folio-paper-contact: #26233838;
-    --folio-paper-shadow: #29273930;
+    --folio-paper-highlight: #fffdf43d;
+    --folio-paper-edge-light: #fffdf2b0;
+    --folio-paper-edge-shade: #75604414;
+    --folio-paper-contact: #77665380;
+    --folio-paper-shadow: #29273938;
     --folio-masthead-ink: #30394e;
     --folio-ink: #3c465c;
-    --folio-muted: #5e6777;
-    --folio-accent: #65769b;
+    --folio-muted: #545d6e;
+    --folio-accent: #4b6084;
     --folio-gold: #a58a66;
     --folio-rule: #74809b36;
     --folio-wash: #dde2eb7a;
@@ -70,27 +73,29 @@
     --color-scrollbar-track: var(--folio-paper);
 }
 html[data-theme='dark'] {
-    --folio-paper: #333744;
-    --folio-paper-grain-opacity: .85;
-    --folio-paper-grain-blend: screen;
-    --folio-paper-grain-filter: invert(1);
+    --folio-paper: #ded0b7;
+    --folio-paper-grain-opacity: 1;
     --folio-surround-filter: brightness(.63) saturate(.92);
-    --folio-paper-highlight: #dfdbce08;
-    --folio-paper-contact: #0c101d66;
-    --folio-paper-shadow: #0c101d4d;
+    --folio-paper-highlight: #fff1d633;
+    --folio-paper-edge-light: #fff1dba6;
+    --folio-paper-edge-shade: #70533124;
+    --folio-paper-contact: #101e3e99;
+    --folio-paper-shadow: #08132c66;
     --folio-masthead-ink: #f4f0e7;
-    --folio-ink: #e6e7ec;
-    --folio-muted: #c1c5d2;
-    --folio-accent: #bdc9e3;
-    --folio-gold: #bfaf91;
-    --folio-rule: #c7d0e02a;
-    --folio-wash: #b1c0da12;
-    --color-code-bg: #211e27;
-    --color-code-gutter: #26222d;
-    --color-code-keyword: #c2a2d8;
-    --color-code-string: #bed1b0;
-    --color-code-number: #dbb796;
-    --color-code-attr: #dbb796;
+    --folio-ink: #27364d;
+    --folio-muted: #3c4250;
+    --folio-accent: #574127;
+    --folio-gold: #956b3c;
+    --folio-rule: #76624838;
+    --folio-wash: #77685418;
+    --color-code-bg: #c3b69f;
+    --color-code-gutter: #baad96;
+    --color-code-keyword: #684366;
+    --color-code-string: #425331;
+    --color-code-number: #80512e;
+    --color-code-attr: #80512e;
+    --color-scrollbar-track: #273950;
+    --color-scrollbar-thumb: #8797b1;
 }
 html { scroll-padding-top: 32px; }
 body.folio-body {
@@ -153,7 +158,7 @@ body.folio-body {
     transform: translate3d(
         calc(sin(var(--folio-flower-phase-x)) * var(--folio-flower-x)),
         calc(sin(var(--folio-flower-phase-y)) * var(--folio-flower-y)), 0)
-        rotate(calc(cos(var(--folio-flower-phase-y)) * 2deg));
+        rotate(calc(cos(var(--folio-flower-phase-y)) * var(--folio-flower-turn)));
     animation:
         folio-blossom-x var(--flower-period-x) linear var(--flower-delay-x) infinite,
         folio-blossom-y var(--flower-period-y) linear var(--flower-delay-y) infinite reverse;
@@ -162,6 +167,7 @@ body.folio-body {
 .folio-flowers-left { left: 1%; }
 .folio-flowers-right { right: 1%; margin-top: 85px; animation-direction: reverse, normal; }
 .folio-flowers:nth-child(4n) { width: clamp(170px, 18vw, 300px); }
+.folio-flowers:nth-child(3n) { --folio-flower-turn: -5deg; }
 .folio-blossom-1 { background-image: url('../images/blossom-1.webp'); }
 .folio-blossom-2 { background-image: url('../images/blossom-2.webp'); }
 .folio-blossom-3 { background-image: url('../images/blossom-3.webp'); }
@@ -199,7 +205,7 @@ body.folio-body {
     isolation: isolate;
     pointer-events: none;
     /* Filtering only this empty decoration preserves fixed TOC positioning. */
-    filter: drop-shadow(0 1px .7px var(--folio-paper-contact)) drop-shadow(0 6px 7px var(--folio-paper-shadow));
+    filter: drop-shadow(0 2px .7px var(--folio-paper-contact)) drop-shadow(3px 10px 14px var(--folio-paper-shadow));
 }
 .folio-paper-surface::before, .folio-paper-surface::after {
     content: '';
@@ -213,11 +219,15 @@ body.folio-body {
         url('../images/paper-edge-right.svg') right top / 4px 512px repeat-y;
 }
 .folio-paper-surface::before {
-    background: radial-gradient(ellipse at 25% 20%, var(--folio-paper-highlight), transparent 70%), var(--folio-paper);
+    background:
+        linear-gradient(90deg, var(--folio-paper-edge-shade), transparent 18px, transparent calc(100% - 22px), var(--folio-paper-edge-shade)),
+        radial-gradient(ellipse at 20% 0, var(--folio-paper-highlight), transparent 75%),
+        var(--folio-paper);
+    box-shadow: inset 0 1px 0 var(--folio-paper-edge-light), inset 0 -1px 0 var(--folio-paper-edge-shade);
 }
 .folio-paper-surface::after {
-    /* Paper Fibers by Heliodor Jalba, CC BY-SA 3.0. See images/PAPER-LICENSE.md. */
-    background: url('../images/paper-fibers.webp') 0 0 / 410px 410px repeat;
+    /* Handmade Paper by Le Marquis, CC BY-SA 3.0. See images/PAPER-LICENSE.md. */
+    background: url('../images/paper-handmade.webp') 0 0 / 150px 150px repeat;
     opacity: var(--folio-paper-grain-opacity);
     mix-blend-mode: var(--folio-paper-grain-blend);
     filter: var(--folio-paper-grain-filter);
@@ -236,6 +246,7 @@ body.folio-body {
 .folio-foreground .folio-petal:nth-child(2n) { left: 72%; --petal-x: -38px; --petal-turn: -85deg; --petal-period: 38s; }
 .folio-foreground .folio-petal:nth-child(3n) { left: 48%; width: 24px; height: 18px; --petal-period: 30s; }
 .folio-header, .folio-main, .folio-footer { position: relative; z-index: 1; }
+.folio-header :focus-visible, .folio-hero :focus-visible { outline-color: currentColor; }
 .folio-header { display: flex; align-items: center; min-height: 66px; margin: 0 var(--folio-gutter); gap: 28px; }
 .folio-brand { display: inline-flex; align-items: center; gap: 9px; font-family: var(--folio-brand-font); color: var(--folio-muted); font-size: 29px; font-weight: 400; white-space: nowrap; }
 .brand-flower { width: 24px; height: 30px; color: var(--folio-accent); transition: transform .6s ease; }
@@ -251,8 +262,10 @@ body.folio-body {
 .folio-header .folio-nav-link::after { background: currentColor; }
 .folio-actions { display: flex; gap: 6px; margin-left: 4px; }
 .folio-icon-button { display: grid; width: 40px; height: 40px; border-radius: 50%; place-items: center; cursor: pointer; color: var(--folio-muted); transition: background .2s, color .2s; }
-.folio-icon-button:hover { background: var(--folio-wash); color: var(--folio-ink); }
-.folio-icon-button svg { width: 17px; height: 17px; }
+/* Upstream ID styles must not darken the menu against the floral masthead. */
+.folio-header #menuBtn { background: transparent; border-color: transparent; color: var(--folio-masthead-ink); }
+.folio-header .folio-icon-button:hover, .folio-header #menuBtn:hover { background: color-mix(in srgb, currentColor 10%, transparent); color: var(--folio-masthead-ink); }
+.folio-icon-button svg { width: 17px; height: 17px; color: inherit; }
 .folio-menu-button, .folio-mobile-nav { display: none; }
 html:not(.js) .folio-actions { display: none; }
 .folio-hero { position: relative; z-index: 1; display: flex; align-items: baseline; justify-content: space-between; gap: 24px; margin: 0 var(--folio-gutter); padding: 36px 0 38px; }
@@ -314,6 +327,7 @@ html:not(.js) .folio-actions { display: none; }
 .folio-guestbook p { letter-spacing: .1em; color: var(--folio-muted); }
 html[data-theme='dark'] .folio-frame { opacity: .72; }
 html[data-theme='dark'] .folio-garden { opacity: .6; }
+html[data-theme='dark'] .folio-body .progress-bar { background: var(--folio-masthead-ink); }
 html[data-theme='dark'] .folio-foreground .folio-petal { filter: brightness(1.35); }
 html[data-folio-paused] :is(.folio-flowers, .folio-petal) { animation-play-state: paused; }
 @keyframes folio-arrive { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
@@ -339,7 +353,7 @@ html[data-folio-paused] :is(.folio-flowers, .folio-petal) { animation-play-state
 }
 @media (max-width: 767px) {
     /* Flowers remain separate in narrow margins; never scale the paper up. */
-    :root { --folio-gutter: 18px; --folio-frame-inset: 10px; --folio-corner-size: 42px; --folio-pattern-width: min(1932px, calc((100vw - 40px) * 2.9)); --folio-flower-x: 10px; --folio-flower-y: 8px; }
+    :root { --folio-gutter: 18px; --folio-frame-inset: 10px; --folio-corner-size: 42px; --folio-pattern-width: min(1932px, calc((100vw - 40px) * 2.9)); --folio-flower-x: 22px; --folio-flower-y: 18px; --folio-flower-turn: 3.5deg; }
     .folio-frame::after { inset: 4px; }
     .folio-frame-star { width: 10px; height: 15px; }
     .folio-frame-star-top { top: -6px; left: calc(50% - 5px); }
@@ -349,6 +363,7 @@ html[data-folio-paused] :is(.folio-flowers, .folio-petal) { animation-play-state
     .folio-petal { width: 23px; height: 17px; --petal-x: 6px; --petal-y: 80px; }
     .folio-flowers, .folio-flowers:nth-child(4n) { width: 170px; }
     .folio-flowers-left { left: -90px; }
+    .folio-flowers-left:nth-child(2) { top: 25svh; }
     .folio-flowers-right { right: -90px; }
     .folio-garden .folio-petal:nth-child(4n+3), .folio-garden .folio-petal:nth-child(4n+4) { display: none; }
     .folio-petal-left { left: 2%; }
