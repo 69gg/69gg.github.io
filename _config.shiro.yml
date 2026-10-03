@@ -76,6 +76,12 @@ comments:
     theme: css/giscus-folio.css
     lazy_loading: true
 
+# Noticeboard
+guestbook:
+  # Set this after the noticeboard API and GitHub App are configured.
+  api_url: ""
+  discussion_number: 6
+
 # Analytics
 analytics:
   google:

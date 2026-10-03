@@ -80,9 +80,13 @@ npm run preview
 
 ## 留言板与评论
 
-个人主页的“留言板”进入 `/blog/guestbook/`。`source/guestbook/index.md` 使用独立的 `guestbook.njk` 布局：延续花纹背景和阅读纸，只保留标题、一句邀请和留言区，不显示文章日期与目录；编辑器位于留言列表上方。
+个人主页的“留言板”进入 `/blog/guestbook/`。`source/guestbook/index.md` 使用独立的 `guestbook.njk` 布局：保留花纹背景，中间是木框布告栏，不使用 Giscus 的 UI。访客可以挑选五种淡色纸条；登录后能添加纸条、拖动图钉保存位置、编辑或删除自己的纸条。小屏幕横向滑动查看布告栏；图钉也支持方向键移动。
 
-留言板和文章评论继续使用 `_config.shiro.yml` 中的 Giscus 仓库、Q&A 分类和 `pathname` 映射。留言板沿用原路径对应的 [GitHub Discussion](https://github.com/69gg/69gg.github.io/discussions/6)，已有留言无需迁移。仓库已开启公开 Discussions，并已有 Giscus 创建的讨论；此配置不需要站长向前端提供 Token，访客通过 GitHub 登录后发言，留言存储在仓库的 Discussions 中。
+每张纸条下面显示最近两条回复，点击“回一句”／“回复”查看完整的楼层回复并发言。回复者可以修改、删除自己的回复；纸条主人也可以删除自己纸条下面的回复。删除纸条会同时删除它下面的回复。
+
+留言板沿用原路径对应的 [GitHub Discussion](https://github.com/69gg/69gg.github.io/discussions/6)。纸条对应顶层评论，回复对应 Discussion 回复，纸条位置与颜色随评论保存。自定义登录和读写通过轻量接口与 GitHub App 完成，接口地址配置在 `_config.shiro.yml` 的 `guestbook.api_url`。这需要单独配置 GitHub App，无法直接使用 Giscus 的登录会话。在未配置接口的 localhost 本地预览中，使用“预览访客”身份和浏览器本地存储审阅纸条、移动与回复交互；这些预览留言不会上传 GitHub。线上接口未配置时仅显示布告栏，暂不开放张贴。
+
+文章评论继续使用 `_config.shiro.yml` 中的 Giscus 仓库、Q&A 分类和 `pathname` 映射。
 
 评论主题为本站的 `css/giscus-folio.css`，复用 Shiro 完整的 Giscus 基础样式，覆盖为柔白纸／蓝灰纸对应的文字、输入区、边线与墨蓝按钮色。iframe 的 `color-scheme` 继续由 Shiro 随网站明暗模式同步，主题内的媒体查询随之切换。主题 URL 通过现有 `versioned_url` helper 和当前页面来源生成，不写死生产域名；本地预览允许 CORS，以便 Giscus iframe 读取本站样式。颜色维护时同步参考 `folio.css` 的纸面配色。Giscus 自定义主题方式见 [官方文档](https://github.com/giscus/giscus/blob/main/ADVANCED-USAGE.md#data-theme)。
 

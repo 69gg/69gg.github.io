@@ -20,3 +20,6 @@
 <link rel="stylesheet" href="{{ attr_url(versioned_url('css/toc.min.css')) }}">
 {% endif %}
 <link rel="stylesheet" href="{{ attr_url(versioned_url('css/folio.css')) }}">
+{% if page.layout == 'guestbook' %}
+<link rel="stylesheet" href="{{ attr_url(versioned_url('css/noticeboard.css')) }}">
+{% endif %}

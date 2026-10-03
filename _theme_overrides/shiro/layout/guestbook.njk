@@ -1,13 +1,68 @@
 {% extends "_layout.njk" %}
 
 {% block content %}
-<article class="folio-article folio-guestbook">
-    <header class="folio-article-header">
-        <h1 class="page-title" data-pagefind-body data-pagefind-meta="title">{{ escape_html(page.title) }}</h1>
-        <div class="folio-guestbook-intro prose-shiro" data-pagefind-body>{{ page.content | safe }}</div>
+<section class="noticeboard" aria-labelledby="noticeboard-title">
+    <script type="application/json" id="noticeboard-config">{{ js_value({ apiUrl: config.theme_config.guestbook.api_url, repository: config.theme_config.comments.giscus.repo, discussionNumber: config.theme_config.guestbook.discussion_number }) | safe }}</script>
+    <header class="noticeboard-heading">
+        <div>
+            <p class="noticeboard-kicker">来来往往，见字如面</p>
+            <h1 id="noticeboard-title" class="page-title" data-pagefind-body data-pagefind-meta="title">{{ escape_html(page.title) }}</h1>
+            <div class="noticeboard-intro" data-pagefind-body>{{ page.content | safe }}</div>
+        </div>
+        <button type="button" class="noticeboard-write" id="noticeboard-write"><span aria-hidden="true">＋</span> 贴一张纸条</button>
     </header>
-    {% if gates.needsComments %}
-    {% include "_partial/comments/index.njk" %}
-    {% endif %}
-</article>
+    <div class="noticeboard-toolbar" data-pagefind-ignore>
+        <span id="noticeboard-count">等候纸条到来</span>
+        <div class="noticeboard-account"><span id="noticeboard-user"></span><button type="button" id="noticeboard-login">登录 GitHub</button><button type="button" id="noticeboard-logout" hidden>退出</button></div>
+    </div>
+    <div class="noticeboard-frame" data-pagefind-ignore>
+        <div class="noticeboard-viewport" id="noticeboard-viewport" tabindex="0" aria-label="布告栏，小屏幕可左右滚动查看">
+            <div class="noticeboard-canvas" id="noticeboard-canvas">
+                <aside class="board-note board-note-welcome" data-color="cream" style="--note-x: .035; --note-y: 46px; --note-turn: -3deg;">
+                    <span class="board-note-pin" aria-hidden="true"></span>
+                    <p class="board-note-welcome-title">给路过这里的你</p>
+                    <p class="board-note-message">这儿没有固定话题。<br>一段近况，一个念头，<br>或是随手的一句问候。<br><br>挑张纸，把它留下吧。</p>
+                    <span class="board-note-signature">{{ escape_html(config.title) }}</span>
+                </aside>
+                <div id="noticeboard-notes"></div>
+            </div>
+        </div>
+    </div>
+    <div class="noticeboard-caption" data-pagefind-ignore><span>拖动自己的图钉挪位置，点“回一句”聊聊天。</span><span id="noticeboard-mode"></span></div>
+    <p id="noticeboard-status" class="noticeboard-status" role="status" aria-live="polite" data-pagefind-ignore></p>
+    <noscript><p class="noticeboard-status">启用 JavaScript 后，可以查看和张贴纸条。</p></noscript>
+</section>
+
+<dialog class="noticeboard-dialog" id="noticeboard-editor" aria-labelledby="noticeboard-editor-title" data-pagefind-ignore>
+    <form id="noticeboard-form">
+        <div class="noticeboard-dialog-heading"><h2 id="noticeboard-editor-title">写张纸条</h2><button type="button" class="noticeboard-close" data-close="noticeboard-editor" aria-label="关闭">×</button></div>
+        <label class="sr-only" for="noticeboard-body">纸条内容</label>
+        <textarea id="noticeboard-body" name="body" rows="7" placeholder="今天有什么想说的？" required></textarea>
+        <fieldset class="noticeboard-colors"><legend>挑一张纸</legend>
+            {% for color in [{ key: 'cream', name: '米白' }, { key: 'rose', name: '浅粉' }, { key: 'sage', name: '浅绿' }, { key: 'blue', name: '浅蓝' }, { key: 'lilac', name: '浅紫' }] %}
+            <label class="noticeboard-color" data-color="{{ color.key }}"><input type="radio" name="color" value="{{ color.key }}"{% if loop.first %} checked{% endif %}><span aria-hidden="true"></span><span class="sr-only">{{ color.name }}</span></label>
+            {% endfor %}
+        </fieldset>
+        <div class="noticeboard-dialog-actions"><button type="button" data-close="noticeboard-editor">先收起来</button><button class="noticeboard-submit" id="noticeboard-submit" type="submit">贴上去</button></div>
+        <p class="noticeboard-form-status" id="noticeboard-form-status" role="status"></p>
+    </form>
+</dialog>
+
+<dialog class="noticeboard-dialog noticeboard-delete-dialog" id="noticeboard-delete" aria-labelledby="noticeboard-delete-title" data-pagefind-ignore>
+    <form id="noticeboard-delete-form"><h2 id="noticeboard-delete-title">取下这张纸条？</h2><p id="noticeboard-delete-description">纸条及其下面的回复都会删除。</p><div class="noticeboard-dialog-actions"><button type="button" data-close="noticeboard-delete">留下它</button><button type="submit" class="noticeboard-submit">删除</button></div></form>
+</dialog>
+
+<dialog class="noticeboard-dialog noticeboard-thread" id="noticeboard-thread" aria-labelledby="noticeboard-thread-title" data-pagefind-ignore>
+    <div class="noticeboard-dialog-heading"><h2 id="noticeboard-thread-title">纸条下的闲聊</h2><button type="button" class="noticeboard-close" data-close="noticeboard-thread" aria-label="关闭">×</button></div>
+    <div class="noticeboard-thread-note"><span id="noticeboard-thread-author"></span><p id="noticeboard-thread-body"></p></div>
+    <ol class="noticeboard-replies" id="noticeboard-replies"></ol>
+    <p class="noticeboard-thread-empty" id="noticeboard-thread-empty">还没有回复，来打个招呼吧。</p>
+    <form id="noticeboard-reply-form">
+        <label class="sr-only" for="noticeboard-reply-body">回复内容</label>
+        <textarea id="noticeboard-reply-body" name="body" rows="3" placeholder="回一句，接着聊…" required></textarea>
+        <div class="noticeboard-dialog-actions"><button type="button" id="noticeboard-reply-cancel" hidden>取消修改</button><button type="submit" class="noticeboard-submit" id="noticeboard-reply-submit">回一句</button></div>
+    </form>
+    <button type="button" class="noticeboard-submit" id="noticeboard-reply-login">登录 GitHub 后回复</button>
+    <p class="noticeboard-form-status" id="noticeboard-reply-status" role="status" aria-live="polite"></p>
+</dialog>
 {% endblock %}

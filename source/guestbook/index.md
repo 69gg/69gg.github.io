@@ -2,10 +2,10 @@
 title: 留言板
 date: 2026-05-16 18:39:59
 layout: guestbook
-comments: true
+comments: false
 toc: false
 mathjax: false
-description: 留一句近况，分享一个想法，或者只是打个招呼。
+description: 路过这里，留张纸条。闲聊、近况、天马行空的想法，都可以贴在这面布告栏上。
 ---
 
-随意写点什么吧。近况、想法，或一个简单的问候。
+路过这里，留张纸条。

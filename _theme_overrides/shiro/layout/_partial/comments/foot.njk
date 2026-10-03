@@ -7,10 +7,6 @@
     {{ feature_var('commentsConfig', gates.commentsClientConfig) }}
     {% if state.giscusReady %}
     window.__shiro.commentsConfig.giscus.theme = new URL({{ js_value(versioned_url(gates.commentsClientConfig.giscus.theme)) | safe }}, window.location.href).href;
-    {% if page.layout == 'guestbook' %}
-    window.__shiro.commentsConfig.giscus.input_position = 'top';
-    window.__shiro.commentsConfig.giscus.lazy_loading = false;
-    {% endif %}
     {% endif %}
 </script>
 {% if state.disqusReady %}
