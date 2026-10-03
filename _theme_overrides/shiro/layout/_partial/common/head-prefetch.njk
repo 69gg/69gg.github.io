@@ -1,0 +1,10 @@
+{# Search already warms through Shiro's idle/intent loader. A second prefetch
+   wastes bandwidth on cold pages and on previews without an HTTP cache. #}
+{% if gates.needsLightgallery %}
+{% if gates.lightgalleryPreconnectUrl %}
+<link rel="preconnect" href="{{ attr_url(gates.lightgalleryPreconnectUrl) }}" />
+{% endif %}
+<link rel="prefetch" as="script" href="{{ attr_url(gates.lightgalleryJsUrl) }}" />
+<link rel="prefetch" as="style" href="{{ attr_url(gates.lightgalleryCssUrl) }}" />
+<link rel="prefetch" as="script" href="{{ attr_url(versioned_url('js/lightgallery.min.js')) }}" />
+{% endif %}

@@ -7,7 +7,7 @@ const path = require('node:path');
 const { test } = require('node:test');
 const yaml = require('js-yaml');
 const crypto = require('node:crypto');
-const { patchTheme } = require('../tools/patch-theme');
+const { patchTheme, coreFontCSS } = require('../tools/patch-theme');
 
 const rootDir = path.resolve(__dirname, '..');
 const config = yaml.load(fs.readFileSync(path.join(rootDir, '_config.yml'), 'utf8'));
@@ -28,6 +28,20 @@ test('self-hosted font subsets and their licenses are complete and copied unchan
         const license = fs.readFileSync(path.join(fontDir, path.dirname(filename), 'OFL.txt'), 'utf8');
         assert.match(license, /SIL OPEN FONT LICENSE/);
     }
+});
+
+test('critical font declarations keep Latin and symbols while preserving full CJK fallback', () => {
+    const css = fs.readFileSync(path.join(rootDir, '_theme_overrides/shiro/source/css/fonts.css'), 'utf8');
+    const core = coreFontCSS(css);
+    assert.equal(core, fs.readFileSync(path.join(publicDir, 'css/fonts-core.css'), 'utf8'));
+    assert.ok(core.length < css.length / 5);
+    assert.match(core, /Folio Great Vibes/);
+    assert.match(core, /Folio Cormorant Garamond/);
+    assert.match(core, /U\+0000-00FF/);
+    for (const rule of core.matchAll(/@font-face\s*\{[^}]+\}/g)) assert.ok(css.includes(rule[0]));
+    const coreURLs = new Set([...core.matchAll(/url\(([^)]+)\)/g)].map((match) => match[1]));
+    const remaining = [...css.matchAll(/url\(([^)]+)\)/g)].filter((match) => !coreURLs.has(match[1]));
+    assert.ok(remaining.length > 0, 'Full CJK faces remain available in fonts.css');
 });
 
 test('presentation overrides survive fresh installs and repeated builds without removing upstream assets', (t) => {

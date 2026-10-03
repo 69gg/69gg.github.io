@@ -2,7 +2,11 @@
     'use strict';
 
     const reveal = window.__shiro?.revealFolio;
-    if (!reveal) return;
+    if (!reveal || !document.documentElement.hasAttribute('data-folio-loading')) return;
+    document.body.inert = true;
+    // Select the installed fonts and consume the preloaded CSS images during
+    // layout. Leave image decoding to CSS's rendering pipeline.
+    document.body.getBoundingClientRect();
     const images = [window.__shiro.folioImagesReady];
     document.querySelectorAll('img').forEach((image) => {
         const rect = image.getBoundingClientRect();
@@ -11,22 +15,34 @@
         images.push(image.decode());
     });
 
-    // Load only the faces needed by actual first-viewport text, including
-    // Chinese subsets, instead of downloading every font in the bundle.
-    const textByFont = new Map();
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    while (walker.nextNode()) {
-        const node = walker.currentNode;
-        const element = node.parentElement;
-        if (!node.textContent.trim() || element.closest('script, style, [aria-hidden="true"]')) continue;
-        const rect = element.getBoundingClientRect();
-        if (!rect.width || !rect.height || rect.bottom <= 0 || rect.top >= innerHeight) continue;
-        const style = getComputedStyle(element);
-        const font = `${style.fontStyle} ${style.fontWeight} 16px ${style.fontFamily}`;
-        textByFont.set(font, (textByFont.get(font) || '') + node.textContent);
-    }
-    const fonts = document.fonts ? [...textByFont].map(([font, text]) => document.fonts.load(font, text)) : [];
-    Promise.allSettled([...images, ...fonts])
-        .then(() => document.fonts?.ready)
+    const fontsReady = async () => {
+        const style = getComputedStyle(document.documentElement);
+        const installed = await Promise.all(['--folio-serif', '--folio-ui'].map(async (variable) => {
+            const families = style.getPropertyValue(variable).split(',').map((family) => family.trim().replace(/^['"]|['"]$/g, ''));
+            const candidates = families.slice(0, families.findIndex((family) => family.startsWith('Folio ')));
+            try {
+                // An unattached local-only face proves availability without
+                // adding a face, downloading a file or changing weight matching.
+                const source = candidates.map((family) => `local(${JSON.stringify(family)})`).join(',');
+                await new FontFace(`Probe ${variable}`, source).load();
+                return true;
+            } catch { return false; }
+        }));
+        if (!installed.every(Boolean)) {
+            const sheet = document.createElement('link');
+            sheet.href = document.querySelector('meta[name="folio-fonts"]').content;
+            sheet.rel = 'stylesheet';
+            await new Promise((resolve) => {
+                sheet.addEventListener('load', resolve, { once: true });
+                sheet.addEventListener('error', resolve, { once: true });
+                document.head.appendChild(sheet);
+            });
+            document.body.getBoundingClientRect();
+        }
+        // Wait for faces actually selected by layout. fonts.load() would
+        // force unused web fallbacks despite the installed fonts in the stack.
+        await document.fonts?.ready;
+    };
+    Promise.allSettled([...images, fontsReady()])
         .finally(reveal);
 })();

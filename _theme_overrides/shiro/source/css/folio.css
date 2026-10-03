@@ -44,18 +44,18 @@
     --folio-motion-reveal: 760ms;
     --folio-motion-stagger: 65ms;
     --folio-motion-page: 480ms;
-    --folio-serif: 'Noto Serif SC', serif;
-    --folio-ui: 'Noto Sans SC', sans-serif;
-    --folio-brand-font: 'Great Vibes', var(--folio-serif);
+    --folio-serif: 'Noto Serif SC', 'Noto Serif CJK SC', 'Folio Noto Serif SC', serif;
+    --folio-ui: 'Noto Sans SC', 'Noto Sans CJK SC', 'Folio Noto Sans SC', sans-serif;
+    --folio-brand-font: 'Great Vibes', 'Folio Great Vibes', var(--folio-serif);
     --folio-display-font: var(--folio-brand-font);
     --folio-heading-font: var(--folio-serif);
     --folio-excerpt-font: var(--folio-serif);
     --folio-nav-font: var(--folio-ui);
-    --folio-date-font: 'Cormorant Garamond', var(--folio-serif);
+    --folio-date-font: 'Cormorant Garamond', 'Folio Cormorant Garamond', var(--folio-serif);
     --font-serif: var(--folio-serif);
     --font-title: var(--folio-heading-font);
     --font-eng: var(--folio-brand-font);
-    --font-code: 'Noto Sans Mono', 'Noto Sans SC', monospace;
+    --font-code: 'Noto Sans Mono', 'Noto Sans Mono CJK SC', 'Folio Noto Sans Mono', var(--folio-ui), monospace;
     --font-mono: var(--font-code);
     --font-sans: var(--folio-ui);
     --color-paper: var(--folio-paper);
@@ -121,9 +121,8 @@ body.folio-body {
 }
 /* Assemble one complete first scene rather than exposing late background
    images behind text that is already visible. No-JS pages stay readable. */
-html[data-folio-loading] .folio-body { opacity: 0; transition: none; }
-/* Upstream sets visible explicitly on direct children of the body. */
-html[data-folio-loading] .folio-body, html[data-folio-loading] .folio-body * { visibility: hidden !important; }
+/* Opacity hides the assembled scene without suppressing CSS image loads. */
+html[data-folio-loading] .folio-body { opacity: 0; transition: none; pointer-events: none; }
 html[data-folio-loading] :is(.folio-header, .folio-hero h1, .folio-hero .folio-text-link, .folio-paper-surface, .folio-inner .folio-main, .folio-flowers, .folio-petal, [data-folio-reveal]) { animation-play-state: paused; }
 html[data-folio-navigation] .folio-body { transition: none; }
 .folio-body ::selection { background: var(--folio-rule); color: var(--folio-ink); }
@@ -161,7 +160,7 @@ html[data-folio-navigation] .folio-body { transition: none; }
 .folio-pattern {
     position: absolute;
     inset: 0;
-    background: url('../images/floral-paper-still.webp') center top / var(--folio-pattern-width) auto repeat;
+    background: url('../images/floral-paper-display.webp') center top / var(--folio-pattern-width) auto repeat;
     opacity: var(--folio-pattern-opacity);
 }
 .folio-flowers {

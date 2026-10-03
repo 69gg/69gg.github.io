@@ -10,10 +10,11 @@ const rootDir = path.resolve(__dirname, '..');
 const config = yaml.load(fs.readFileSync(path.join(rootDir, '_config.yml'), 'utf8'));
 const theme = yaml.load(fs.readFileSync(path.join(rootDir, '_config.shiro.yml'), 'utf8'));
 const blog = config.root;
-const visualAssets = preloadAssets(
-    fs.readFileSync(path.join(rootDir, '_theme_overrides/shiro/source/css/folio.css'), 'utf8'),
-    fs.readFileSync(path.join(rootDir, '_theme_overrides/shiro/source/css/fonts.css'), 'utf8')
-);
+const visualAssets = preloadAssets(fs.readFileSync(path.join(rootDir, '_theme_overrides/shiro/source/css/folio.css'), 'utf8'));
+const fontCSS = fs.readFileSync(path.join(rootDir, '_theme_overrides/shiro/source/css/fonts.css'), 'utf8');
+const titleFontPath = [...fontCSS.matchAll(/@font-face\s*\{([^}]+)\}/g)]
+    .find((match) => match[1].includes("'Folio Great Vibes'") && /unicode-range:\s*U\+0000-00FF/i.test(match[1]))[1]
+    .match(/url\(\.\.\/([^\)]+)\)/)[1];
 const posts = fs.readdirSync(path.join(rootDir, 'source', '_posts')).filter((name) => name.endsWith('.md')).map((name) => {
     const source = fs.readFileSync(path.join(rootDir, 'source', '_posts', name), 'utf8');
     return { source, ...yaml.load(source.match(/^---\n([\s\S]*?)\n---/)[1]) };
@@ -89,10 +90,23 @@ test('Pagefind finds a Chinese article and closes with Escape', async ({ page })
     await expect(page.locator('#searchToggle')).toBeFocused();
 });
 
-test('all typography renders from bundled fonts with external requests blocked', async ({ page, baseURL }) => {
+for (const preferInstalled of [true, false]) test(`typography ${preferInstalled ? 'prefers installed fonts' : 'falls back to bundled fonts'} with external requests blocked`, async ({ page, baseURL }) => {
     const fontRequests = [];
+    const fullStyles = [];
+    const nativeCJK = [];
     page.on('request', (request) => { if (request.resourceType() === 'font') fontRequests.push(request.url()); });
+    page.on('request', (request) => { if (new URL(request.url()).pathname.endsWith('/css/fonts.css')) fullStyles.push(request.url()); });
+    if (!preferInstalled) {
+        // Simulate a device without these installed families. Keep the actual
+        // bundled faces and glyphs; their network loads and rendering are real.
+        await page.route('**/css/folio.css?*', async (route) => {
+            const response = await route.fetch();
+            const body = (await response.text()).replace(/'((?:Noto |Great Vibes|Cormorant Garamond)[^']*)'/g, "'Unavailable $1'");
+            await route.fulfill({ response, body });
+        });
+    }
     await page.goto(blog);
+    await expect(page.locator('html')).not.toHaveAttribute('data-folio-loading');
     await page.evaluate(() => document.fonts.ready);
     const session = await page.context().newCDPSession(page);
     await session.send('DOM.enable');
@@ -108,9 +122,16 @@ test('all typography renders from bundled fonts with external requests blocked',
         const { nodeId } = await session.send('DOM.querySelector', { nodeId: root.nodeId, selector });
         const { fonts } = await session.send('CSS.getPlatformFontsForNode', { nodeId });
         expect(fonts.length).toBeGreaterThan(0);
-        expect(fonts.every((font) => font.isCustomFont)).toBe(true);
-        expect(fonts.some((font) => font.familyName.startsWith(family)), `${selector}: ${JSON.stringify(fonts)}`).toBe(true);
+        if (!preferInstalled) expect(fonts.every((font) => font.isCustomFont)).toBe(true);
+        const matching = fonts.filter((font) => font.familyName.startsWith(family) || font.familyName.startsWith(family.replace(' SC', ' CJK SC')));
+        expect(matching.length, `${selector}: ${JSON.stringify(fonts)}`).toBeGreaterThan(0);
+        if (preferInstalled && matching.some((font) => font.familyName.includes('CJK'))) {
+            expect(matching.every((font) => !font.isCustomFont)).toBe(true);
+            nativeCJK.push(selector);
+        }
     }
+    if (!preferInstalled) expect(fullStyles).toHaveLength(1);
+    else if (nativeCJK.length === 3) expect(fullStyles).toHaveLength(0);
     await session.detach();
     const technical = posts.find((post) => post.source.includes('```'));
     await page.goto(postURL(technical));
@@ -122,7 +143,7 @@ test('all typography renders from bundled fonts with external requests blocked',
     const articleRoot = (await articleSession.send('DOM.getDocument')).root.nodeId;
     const code = await articleSession.send('DOM.querySelector', { nodeId: articleRoot, selector: 'figure.highlight .code .line' });
     const codeFonts = (await articleSession.send('CSS.getPlatformFontsForNode', { nodeId: code.nodeId })).fonts;
-    expect(codeFonts.every((font) => font.isCustomFont)).toBe(true);
+    if (!preferInstalled) expect(codeFonts.every((font) => font.isCustomFont)).toBe(true);
     expect(codeFonts.some((font) => font.familyName.startsWith('Noto Sans Mono')), JSON.stringify(codeFonts)).toBe(true);
     await articleSession.detach();
     expect(fontRequests.length).toBeGreaterThan(0);
@@ -363,9 +384,8 @@ test('reading hierarchy and contrast hold in both themes with local fonts', asyn
     }
 });
 
-test('cold scene preloads before CSS and waits for decoded images and visible fonts', async ({ page }) => {
+test('cold scene preloads before CSS and waits for visual resources and selected fonts', async ({ page }) => {
     const wallpaper = visualAssets.find((asset) => asset.priority === 'high');
-    const titleFont = visualAssets.find((asset) => asset.as === 'font' && asset.path.includes('greatvibes'));
     let releaseCSS, releaseImages, releaseFonts;
     const cssGate = new Promise((resolve) => { releaseCSS = resolve; });
     const imageGate = new Promise((resolve) => { releaseImages = resolve; });
@@ -376,41 +396,66 @@ test('cold scene preloads before CSS and waits for decoded images and visible fo
         requests.set(pathname, (requests.get(pathname) || 0) + 1);
     });
     await page.addInitScript(() => {
-        window.folioDecodedImages = [];
-        const decode = HTMLImageElement.prototype.decode;
-        HTMLImageElement.prototype.decode = function (...args) {
-            return decode.apply(this, args).then(() => { window.folioDecodedImages.push(this.src); });
-        };
+        window.folioLoadedVisuals = [];
+        document.addEventListener('load', (event) => {
+            if (event.target.matches?.('link[data-folio-preload]')) window.folioLoadedVisuals.push(event.target.href);
+        }, true);
     });
     await page.route('**/*', async (route) => {
         const pathname = new URL(route.request().url()).pathname;
         if (pathname.endsWith('/css/folio.css')) await cssGate;
         if (pathname === `${blog}${wallpaper.path}`) await imageGate;
-        if (pathname === `${blog}${titleFont.path}`) await fontGate;
+        if (pathname === `${blog}${titleFontPath}`) await fontGate;
         await route.fallback();
     });
     try {
         await page.goto(blog, { waitUntil: 'commit' });
-        await expect.poll(() => requests.has(`${blog}${wallpaper.path}`) && requests.has(`${blog}${titleFont.path}`)).toBe(true);
+        await expect.poll(() => requests.has(`${blog}${wallpaper.path}`)).toBe(true);
+        expect(requests.has(`${blog}${titleFontPath}`)).toBe(false);
         await expect(page.locator('html')).toHaveAttribute('data-folio-loading', '');
         releaseCSS();
         await page.waitForLoadState('domcontentloaded');
-        await expect(page.locator('body')).toHaveCSS('visibility', 'hidden');
+        await expect.poll(() => requests.has(`${blog}${titleFontPath}`)).toBe(true);
+        await expect(page.locator('body')).toHaveCSS('opacity', '0');
+        expect(await page.locator('body').evaluate((body) => body.inert)).toBe(true);
         releaseImages();
-        await expect.poll(() => page.evaluate(() => window.folioDecodedImages.length)).toBe(visualAssets.filter((asset) => asset.as === 'image').length);
-        // The background is already decoded; an unresolved title font must
+        await expect.poll(() => page.evaluate(() => window.folioLoadedVisuals.length)).toBe(visualAssets.length);
+        // The background is already loaded; an unresolved title font must
         // still prevent a flash of fallback typography before the reveal.
         await expect(page.locator('html')).toHaveAttribute('data-folio-loading', '');
-        await expect(page.locator('#folio-title')).not.toBeVisible();
+        await expect(page.locator('body')).toHaveCSS('opacity', '0');
         releaseFonts();
         await expect(page.locator('html')).not.toHaveAttribute('data-folio-loading');
         await expect(page.locator('#folio-title')).toBeVisible();
         await expect(page.locator('body')).toHaveCSS('opacity', '1');
-        expect(await page.evaluate((title) => document.fonts.check('400 16px "Great Vibes"', title), config.title)).toBe(true);
+        expect(await page.locator('body').evaluate((body) => body.inert)).toBe(false);
+        expect(await page.evaluate((title) => document.fonts.check('400 16px "Folio Great Vibes"', title), config.title)).toBe(true);
         for (const asset of visualAssets) expect(requests.get(`${blog}${asset.path}`), asset.path).toBe(1);
     } finally {
         releaseCSS(); releaseImages(); releaseFonts();
     }
+});
+
+test('fast cold loads consume each visual resource only once with the cache disabled', async ({ page }) => {
+    const session = await page.context().newCDPSession(page);
+    await session.send('Network.enable');
+    await session.send('Network.setCacheDisabled', { cacheDisabled: true });
+    const requests = new Map();
+    page.on('request', (request) => {
+        const pathname = new URL(request.url()).pathname;
+        requests.set(pathname, (requests.get(pathname) || 0) + 1);
+    });
+    await page.goto(blog);
+    await expect(page.locator('html')).not.toHaveAttribute('data-folio-loading');
+    await expect(page.locator('body')).toHaveCSS('opacity', '1');
+    for (const asset of visualAssets) expect(requests.get(`${blog}${asset.path}`), asset.path).toBe(1);
+    // The upstream idle warm owns Pagefind; the head must not prefetch a
+    // duplicate. Also ensure the component did actually become available.
+    await page.locator('#searchToggle').click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    const component = await page.locator('script[data-shiro-pagefind-js]').getAttribute('src');
+    expect(requests.get(new URL(component, page.url()).pathname)).toBe(1);
+    await session.detach();
 });
 
 test('incoming navigation retains the old view while its background is delayed', async ({ page }) => {
@@ -451,7 +496,7 @@ test('incoming navigation retains the old view while its background is delayed',
             expect(frames.every((frame) => frame.old === 1 && frame.incoming === 0 && frame.state === 'paused')).toBe(true);
             expect(await page.evaluate(() => window.folioLoadTransition.finished)).not.toBe(true);
         } else {
-            await expect(page.locator('body')).toHaveCSS('visibility', 'hidden');
+            await expect(page.locator('body')).toHaveCSS('opacity', '0');
         }
         release();
         await expect(page.locator('html')).not.toHaveAttribute('data-folio-loading');

@@ -42,7 +42,9 @@ def main() -> None:
         slug = FAMILIES[family[1]][0]
         filename = f'{slug}/{hashlib.sha256(remote[1].encode()).hexdigest()[:12]}.woff2'
         assets[filename] = {'family': family[1], 'source': remote[1]}
-        return rule.replace(remote[1], '../fonts/' + filename)
+        # A separate name lets CSS prefer the installed family with its own
+        # weight matching before considering the bundled variable web font.
+        return rule.replace(f"font-family: '{family[1]}'", f"font-family: 'Folio {family[1]}'").replace(remote[1], '../fonts/' + filename)
 
     local_css = re.sub(r'@font-face\s*\{[^}]+\}', localize, css)
     if not assets:

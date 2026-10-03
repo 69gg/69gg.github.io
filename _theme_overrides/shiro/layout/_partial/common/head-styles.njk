@@ -1,5 +1,7 @@
-{# All typography is served with the blog; unicode ranges load subsets on demand. #}
-<link rel="stylesheet" href="{{ attr_url(versioned_url('css/fonts.css')) }}">
+{# Start with Latin/symbol faces; only missing system CJK fonts need the full table. #}
+<link rel="stylesheet" href="{{ attr_url(versioned_url('css/fonts-core.css')) }}">
+<meta name="folio-fonts" content="{{ attr_url(versioned_url('css/fonts.css')) }}">
+<noscript><link rel="stylesheet" href="{{ attr_url(versioned_url('css/fonts.css')) }}"></noscript>
 <link rel="stylesheet" href="{{ attr_url(versioned_url('css/style.min.css')) }}">
 {% if gates.needsCode %}
 <link rel="stylesheet" href="{{ attr_url(versioned_url('css/code.min.css')) }}">
