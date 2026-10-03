@@ -75,7 +75,7 @@
 html[data-theme='dark'] {
     --folio-paper: #ded0b7;
     --folio-paper-grain-opacity: 1;
-    --folio-surround-filter: brightness(.63) saturate(.92);
+    --folio-surround-filter: brightness(.75) saturate(.92);
     --folio-paper-highlight: #fff1d633;
     --folio-paper-edge-light: #fff1dba6;
     --folio-paper-edge-shade: #70533124;

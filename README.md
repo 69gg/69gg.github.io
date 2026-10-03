@@ -58,7 +58,7 @@ npm run preview
 - 纸边使用四条轻微起伏的 `paper-edge-*.svg` 遮罩，以固定 4px 深度沿各自边缘平铺，不随正文长度放大，也不做明显锯齿或撕口。遮罩和投影只作用于装饰层，正文及焦点轮廓不裁切，文章固定目录的定位也不受影响。装饰设为 `aria-hidden`、`pointer-events: none`。旧的程序噪声 `grain.svg` 不再用作阅读纸纹。
 - 当前纸纹来源为 Le Marquis 的 [Handmade Paper](https://www.transparenttextures.com/handmade-paper.html)，透明版本由 Transparent Textures 提供，原始集合为 Subtle Patterns。转换成无损 WebP 随站点保存，页面无需向素材站发请求；来源、作者、CC BY-SA 3.0 许可及转换说明见 `_theme_overrides/shiro/source/images/PAPER-LICENSE.md`。上一版 `paper-fibers.webp` 保留为素材，不再绘制到阅读区。
 - `source/images/floral-paper.webp` 保留用户清晰参考图的原始裁片。实际静止背景为 `floral-paper-still.webp`：花枝原位用相邻纸纹补齐，中央镜像接缝也用非镜像纸纹替换，避免紧贴在一起的成对花簇。桌面按素材原尺寸平铺，手机等比缩小，避免拉伸放大造成粗糙；纸纹本身不飘动。
-- 背景沿用既有蓝紫花纹素材和配色：日间直接显示原图，夜间保留原有 `--folio-surround-filter: brightness(.63) saturate(.92)`；四角边框与花瓣沿用原有透明度。阅读纸面、字体或花枝动效的调整不应重新给背景染色或叠加光色。站名、导航通过独立的 `--folio-masthead-ink` 保持可读。
+- 背景沿用既有蓝紫花纹素材和配色：日间直接显示原图，夜间使用 `--folio-surround-filter: brightness(.75) saturate(.92)`，将亮度从原图的 63% 提高到 75%，保留原有饱和度；四角边框与花瓣沿用原有透明度。阅读纸面、字体或花枝动效的调整不应重新给背景染色或叠加光色。站名、导航通过独立的 `--folio-masthead-ink` 保持可读。
 - 手机首簇左侧花枝向下错开，给大站名留出空间；菜单、搜索和主题按钮始终使用题头文字色，悬停时只增加淡色底，避免上游菜单样式在夜间把箭头压暗。手机菜单回归检查覆盖两种主题下的常态与悬停颜色，以及键盘焦点和关闭操作。
 - `blossom-1.webp` 至 `blossom-5.webp` 从已有花枝透明图层中提取五种独立、不镜像的花簇。`surround.njk` 将 12 簇花分散放在两侧，前四簇在首屏附近，其余沿长文档分布，中央题头留白。每簇各有横向与纵向两条独立相位，分别注册为 CSS `@property`，用 `sin()` / `cos()` 计算漂移和摆动；周期、负延迟、方向与部分转角错开，避免整层花齐步转向。默认横纵摆幅为 42px / 28px，手机缩小为 22px / 18px，周期为 61–124 秒，转角约 3.5–5 度。扩大运动范围的同时延长周期，保持缓慢转向；桌面位移速度不超过 5px/s。调整 `--folio-flower-x`、`--folio-flower-y`、`--folio-flower-turn` 与模板中的周期参数即可。原来的 `flowers-1.webp` 至 `flowers-3.webp` 保留作为素材来源，不再绘制到页面上。
 - `corner.svg` 按参考图重绘扇形花饰，细双线避开四角，并在四边中点放置小菱形。花纹、外框和花瓣层覆盖整张页面，与正文一起原生滚动，形成长卷效果；上方花角位于页首，下方花角位于页尾。短页面也至少铺满一屏，无需滚动监听或视差脚本。
