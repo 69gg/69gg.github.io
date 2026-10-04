@@ -86,8 +86,10 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .board-note.is-saving button { pointer-events: none; }
 .noticeboard-status { position: absolute; z-index: 35; left: 50%; bottom: 140px; max-width: calc(100% - 40px); margin: 0; padding: 9px 16px; border-radius: 3px; background: var(--board-chrome); color: inherit; font-family: var(--folio-ui); font-size: 12px; transform: translateX(-50%); pointer-events: none; }
 .noticeboard-status:empty { display: none; }
-.noticeboard-loading { position: absolute; z-index: 35; top: 50%; left: 50%; max-width: calc(100% - 40px); margin: 0; padding: 14px 20px; border-radius: 3px; background: var(--board-chrome); color: inherit; font-family: var(--folio-ui); font-size: 14px; transform: translate(-50%, -50%); pointer-events: none; }
-.noticeboard-loading:not([hidden]) { display: flex; align-items: center; gap: 12px; }
+.noticeboard-loading { position: absolute; z-index: 35; top: 50%; left: 50%; box-sizing: border-box; width: max-content; max-width: calc(100% - 40px); margin: 0; padding: 14px 20px; border-radius: 3px; background: var(--board-chrome); color: inherit; font-family: var(--folio-ui); font-size: 14px; text-align: center; transform: translate(-50%, -50%); pointer-events: none; }
+.noticeboard-loading:not([hidden]) { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.noticeboard-loading-label { display: flex; align-items: center; gap: 12px; }
+.noticeboard-loading-hint { font-size: 12px; line-height: 1.7; opacity: .75; }
 .noticeboard-spinner { flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: board-loading-spin 1s linear infinite; }
 .noticeboard-dialog { position: fixed; inset: 0; margin: auto; box-sizing: border-box; width: min(560px, calc(100% - 32px)); height: fit-content; max-height: calc(100svh - 48px); overflow: auto; overscroll-behavior: contain; padding: 32px; border: 1px solid var(--note-rule); border-radius: 5px; background-color: var(--note-paper); background-image: linear-gradient(160deg, #fff2, transparent 55%, #30201508), url('../images/paper-handmade.webp'); background-size: 100% 100%, 120px 120px; background-blend-mode: normal, multiply; color: var(--note-ink); box-shadow: 0 2px 0 #fff4 inset, 0 3px 6px #1b1c3126, 0 24px 70px #1b1c314d; transition: background-color 180ms ease, color 180ms ease; }
 .noticeboard-dialog::backdrop { background: #20263666; backdrop-filter: blur(3px); }
