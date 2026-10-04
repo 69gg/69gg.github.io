@@ -79,7 +79,7 @@ comments:
 # Noticeboard
 guestbook:
   # Set this after the noticeboard API and GitHub App are configured.
-  api_url: ""
+  api_url: "https://ntcb.pylindex.top"
   discussion_number: 6
 
 # Analytics
