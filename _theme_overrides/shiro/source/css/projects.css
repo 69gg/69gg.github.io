@@ -1,0 +1,97 @@
+/* Project cards use the existing paper, type and day/night palette. */
+.folio-projects-intro {
+    margin: -14px 0 32px;
+    color: var(--folio-muted);
+    font-family: var(--folio-ui);
+    font-size: 14px;
+    line-height: 1.9;
+}
+.folio-project-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+.folio-project-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border: 1px solid var(--folio-rule);
+    border-radius: 4px;
+    background: var(--folio-wash);
+    transition: border-color var(--folio-motion-fast), transform var(--folio-motion-panel) var(--folio-ease);
+}
+.folio-project-card:hover, .folio-project-card:focus-within { border-color: var(--folio-accent); }
+.folio-project-cover {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 3px 3px 0 0;
+    border-bottom: 1px solid var(--folio-rule);
+}
+.folio-project-content { display: flex; flex: 1; flex-direction: column; padding: 24px; }
+.folio-project-title {
+    margin: 0;
+    color: var(--folio-ink);
+    font-family: var(--folio-heading-font);
+    font-size: 23px;
+    font-weight: 500;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+.folio-project-title a { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+/* Stretch the main link over the card; individual links remain above it. */
+.folio-project-title a::after { content: ''; position: absolute; inset: 0; border-radius: 4px; }
+.folio-project-title a:focus-visible::after { outline: 2px solid var(--folio-accent); outline-offset: 4px; }
+.folio-project-title span { flex-shrink: 0; color: var(--folio-accent); font-family: var(--folio-ui); font-size: 18px; }
+.folio-project-description {
+    margin: 14px 0 20px;
+    color: var(--folio-muted);
+    font-size: 14px;
+    line-height: 1.9;
+    overflow-wrap: anywhere;
+}
+.folio-project-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin: 0 0 20px;
+    padding: 0;
+    list-style: none;
+    color: var(--folio-muted);
+    font-family: var(--folio-ui);
+    font-size: 11px;
+    line-height: 1.8;
+}
+.folio-project-tags li::before { content: '#'; opacity: .6; }
+.folio-project-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--folio-rule); }
+.folio-project-links a {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    color: var(--folio-accent);
+    font-family: var(--folio-ui);
+    font-size: 12px;
+    line-height: 1.7;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: .3em;
+    transition: text-decoration-color var(--folio-motion-fast);
+}
+.folio-project-links a:hover { text-decoration-color: currentColor; }
+.folio-project-links span { font-size: 14px; }
+.folio-projects-empty { display: grid; place-items: center; min-height: 180px; margin: 0; color: var(--folio-muted); font-size: 15px; line-height: 1.9; text-align: center; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .folio-project-card:hover { transform: translateY(-3px); }
+}
+@media (max-width: 767px) {
+    .folio-project-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .folio-project-content { padding: 20px; }
+    .folio-project-title { font-size: 21px; }
+    .folio-projects-intro { margin-top: -8px; }
+}

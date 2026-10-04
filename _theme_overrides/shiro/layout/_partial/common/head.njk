@@ -58,8 +58,8 @@
     <script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} data-cfasync="false" src="{{ attr_url(versioned_url('js/folio-preload.js')) }}"></script>
     {% include "_partial/common/head-prefetch.njk" %}
     {% include "_partial/common/head-mathjax.njk" %}
-    {% if page.layout == 'guestbook' %}
-    {% include "_partial/noticeboard/head-meta.njk" %}
+    {% if page.root_path %}
+    {% include "_partial/common/head-root-page.njk" %}
     {% else %}
     {% include "_partial/common/head-seo.njk" %}
     {% endif %}

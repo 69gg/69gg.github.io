@@ -6,6 +6,7 @@
 
 - `homepage/`：站点根路径 `https://www.pylindex.top/` 的个人主页静态资源。
 - `source/`：Hexo 博客源码，生成后发布到 `https://www.pylindex.top/blog/`。
+- `source/projects/`：开源项目页面入口及每个项目的 `<name>.json` 配置，构建后生成站点根目录的 `/projects/`。
 - `source/CNAME`：GitHub Pages 自定义域名，目前使用 `www.pylindex.top`。
 - `_theme_overrides/shiro/layout/`：博客的本地 Nunjucks 模板，继承 Shiro 的内容渲染与功能。
 - `_theme_overrides/shiro/source/`：蓝紫花纹主题的 CSS、动效脚本、本地纸纹图片和 SVG 装饰。
@@ -14,8 +15,9 @@
 - `tools/patch-theme.js`：构建或启动 Hexo 前，将本地模板和资源覆盖到已安装的 Shiro 主题，并应用正文一级标题的目录兼容修正；重新安装依赖后也会自动应用。
 - `tools/preview.js`：复用 http-server 提供本地预览，HTML 和索引每次校验更新，静态素材可由浏览器缓存。
 - `scripts/build-info.js`：Hexo helper，给博客页脚输出构建时间和提交 hash。
+- `scripts/projects.js`：Hexo helper，每次渲染读取项目 JSON，生成卡片数据与跳转入口。
 - `scripts/clean-public.js`：构建前清理旧的 `public/` 产物。
-- `scripts/copy-root-assets.js`：构建后把个人主页、`img.json` 和 `CNAME` 复制到 `public/` 根目录。
+- `scripts/copy-root-assets.js`：构建后把个人主页、`img.json` 和 `CNAME` 复制到 `public/` 根目录，并将留言板与项目页面移到根目录。
 - `scripts/build-sitemap.js`：构建后把 Hexo sitemap 提升到站点根，并补上个人主页。
 - `tools/check-public.js`：校验 GitHub Pages artifact 必需的首页、博客首页、根 `CNAME` 和全站 sitemap。
 - `tests/`：构建产物、模板覆盖与浏览器功能回归测试。
@@ -37,6 +39,7 @@ npm test
 
 - `public/index.html`：个人主页。
 - `public/blog/`：Hexo 博客。
+- `public/projects/`：开源项目卡片页面。
 - `public/sitemap.xml`：全站 sitemap，对应 `https://www.pylindex.top/sitemap.xml`。
 - `public/CNAME`：GitHub Pages 自定义域名配置。
 
@@ -51,7 +54,7 @@ npm run preview
 
 `npm run server` 仍可用于 Hexo 开发，但完整站点审阅优先使用 `preview`：根目录个人主页由构建后的复制步骤生成，Pagefind 搜索索引也在完整构建时生成。
 
-博客视觉改版覆盖 `/blog/`。根目录 `homepage/` 保留原有布局与背景，标签页标题为 `Null's Homepage`，主导航依次为“部落格”和“留言板”；联系方式依次为 GitHub、Bilibili 和邮箱。博客 favicon 与个人主页使用同一张图。文章 Markdown、固定链接、归档、标签、分类、RSS、搜索、随机阅读、深色模式、目录、阅读进度、代码复制、图片灯箱、数学公式和 Giscus 评论继续使用原有实现。随机阅读使用包含站点根路径的相对地址，避免本地审阅跳到线上。
+博客视觉改版覆盖 `/blog/`。根目录 `homepage/` 保留原有布局与背景，标签页标题为 `Null's Homepage`，主导航依次为“部落格”、“留言板”和“项目”；联系方式依次为 GitHub、Bilibili 和邮箱。博客 favicon 与个人主页使用同一张图。文章 Markdown、固定链接、归档、标签、分类、RSS、搜索、随机阅读、深色模式、目录、阅读进度、代码复制、图片灯箱、数学公式和 Giscus 评论继续使用原有实现。随机阅读使用包含站点根路径的相对地址，避免本地审阅跳到线上。
 
 文章目录从正文的一级标题（`#` / `h1`）开始收录，直到 `_config.shiro.yml` 的 `toc.depth` 指定级别（默认三级），并按标题层级嵌套。正文标题总数达到 `toc.min_headings`（默认 3）时显示目录；文章页顶部的文章名称不计入目录。`tools/patch-theme.js` 同步修正 Shiro 的标题扫描、计数与级别范围，继续复用其锚点、缓存及目录跳转逻辑。
 
@@ -81,6 +84,49 @@ npm run preview
 - 标题、文章数量、日期、摘要和链接来自 Hexo 配置及文章集合，不另维护内容列表。桌面与手机导航共用 `_config.shiro.yml` 的 `menu`，当前为首页、归档、分类、标签与随机阅读。模板优先读取站点明确配置的完整菜单，避免 Hexo 按索引合并数组后，在缩短菜单时补回主题默认入口；未配置菜单时仍使用主题默认值。公共页脚紧接分页，保留小装饰线、浏览入口、版权与构建信息，不显示页尾短句或框架和主题署名；版权居中位于构建信息上方。
 - 随机入口与 `/random/` 回退页共用 `scripts/patch-random.js` 筛选出的文章集合。启用 JavaScript 时，导航链接直接选择文章地址并沿用浏览器原生跳转，避免先打开空白的随机中转页；新标签页和键盘激活仍可使用普通链接。禁用 JavaScript 时保留原随机入口地址。
 - 不要直接编辑 `node_modules`。升级 Shiro 后，检查被覆盖模板与上游兼容性，重新构建并执行测试。日常构建无需原始参考图片、Python 或字体服务。
+
+## 开源项目配置
+
+个人主页的“项目”进入独立的 `/projects/`，以卡片展示开源项目。`source/projects/index.md` 使用 `projects.njk` 并继承现有的 `_layout.njk`，复用花纹背景、字体与主题切换。页面初始没有项目；首次添加 `source/projects/<name>.json` 后，重新执行 `npm run build` 即会自动生成对应卡片，无需修改模板。每个 JSON 文件表示一个项目，修改或删除文件后重新构建即可更新展示。
+
+完整配置示例 `source/projects/my-project.json`：
+
+```json
+{
+  "name": "项目名称",
+  "description": "介绍项目的用途、特点或开发进展。",
+  "url": "https://example.com/my-project/",
+  "github": "https://example.com/github/my-project",
+  "bilibili": "https://example.com/bilibili/my-project",
+  "links": [
+    { "label": "在线演示", "url": "https://example.com/demo/" },
+    { "label": "使用文档", "url": "https://example.com/docs/" }
+  ],
+  "cover": "/blog/images/my-project.webp",
+  "tags": ["开源", "工具"],
+  "order": 0
+}
+```
+
+示例中的 `example.com` 地址均为占位链接，请替换成实际项目、GitHub 仓库、Bilibili 视频、演示与文档地址。
+
+| 字段 | 必填 | 用途 |
+| --- | --- | --- |
+| `name` | 是 | 卡片上的项目名称。 |
+| `description` | 是 | 项目介绍，按纯文本展示。 |
+| `url` | 否 | 点击卡片时打开的主要地址；优先于其他入口。 |
+| `github` | 否 | GitHub 仓库地址，显示为独立的 GitHub 入口。 |
+| `bilibili` | 否 | Bilibili 视频地址，显示为独立的视频入口。 |
+| `links` | 否 | 任意额外入口组成的数组；每项填写 `label` 和 `url`。 |
+| `cover` | 否 | 卡片封面，可使用完整图片地址或以 `/` 开头的站点根路径。 |
+| `tags` | 否 | 卡片标签组成的字符串数组。 |
+| `order` | 否 | 排序数字，默认为 `0`，数值越小越靠前。 |
+
+至少设置 `url`、`github`、`bilibili` 或非空 `links` 中的一项，给卡片提供跳转地址。独立入口依次排列为 GitHub、Bilibili，再追加 `links` 中的自定义入口；未设置 `url` 时，点击卡片打开第一个入口。相同 `order` 的项目按 JSON 文件名字母顺序排列。所有项目内容与地址均从 JSON 读取，不在页面中写死。
+
+`cover` 中以 `/` 开头的路径按整个站点根目录解释，不额外添加 `/blog/`。例如图片存放在 `source/images/my-project.webp` 时，会构建到 `public/blog/images/my-project.webp`，配置应填写 `/blog/images/my-project.webp`。未设置封面时，卡片仍展示项目名称、介绍和入口。
+
+构建时 `scripts/copy-root-assets.js` 将项目页面移到 `public/projects/`；共享主题资源继续从 `/blog/` 加载。页面的 `root_path` 为 `/projects/`，canonical、社交元信息、个人主页入口与站点地图使用根目录地址，项目页不纳入博客搜索或随机阅读。
 
 ## 留言板与评论
 

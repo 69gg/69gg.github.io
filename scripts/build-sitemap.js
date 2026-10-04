@@ -56,6 +56,16 @@ function collectLastmods() {
         }
     }
 
+    const projectsLastmod = formatShanghaiDate(latestCommitDate(rootDir, [
+        path.join('source', 'projects'),
+        path.join('scripts', 'projects.js'),
+        path.join('_theme_overrides', 'shiro', 'layout', 'projects.njk'),
+        path.join('_theme_overrides', 'shiro', 'source', 'css', 'projects.css')
+    ]));
+    if (projectsLastmod) {
+        lastmods.set(`${homeUrl}projects/index.html`, projectsLastmod);
+    }
+
     const blogLastmod = postDates.sort().at(-1);
     if (blogLastmod) {
         lastmods.set(blogUrl, blogLastmod);
@@ -101,7 +111,7 @@ const insertHomeUrl = (xml, lastmods) => {
         '  </url>'
     ].filter(Boolean).join('\n');
 
-    let next = xml.replaceAll(`${blogUrl}/guestbook/index.html`, `${homeUrl}guestbook/index.html`);
+    let next = rootPageUrls(xml);
     if (!next.includes(`<loc>${homeUrl}</loc>`)) {
         const urlsetMatch = next.match(/<urlset[^>]*>/);
         if (!urlsetMatch) {
@@ -116,12 +126,19 @@ const insertHomeUrl = (xml, lastmods) => {
 };
 
 const prependHomeUrl = (text) => {
-    const lines = text.replaceAll(`${blogUrl}/guestbook/index.html`, `${homeUrl}guestbook/index.html`).split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const lines = rootPageUrls(text).split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
     if (!lines.includes(homeUrl)) {
         lines.unshift(homeUrl);
     }
     return `${lines.join('\n')}\n`;
 };
+
+function rootPageUrls(text) {
+    for (const page of ['guestbook', 'projects']) {
+        text = text.replaceAll(`${blogUrl}/${page}/index.html`, `${homeUrl}${page}/index.html`);
+    }
+    return text;
+}
 
 const promoteFile = (fileName, transform, required) => {
     const source = path.join(blogDir, fileName);

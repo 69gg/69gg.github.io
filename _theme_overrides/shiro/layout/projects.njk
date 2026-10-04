@@ -1,0 +1,39 @@
+{% extends "_layout.njk" %}
+
+{% block content %}
+{% from "_macro/folio.njk" import directory_title with context %}
+{% set projects = project_cards() %}
+<section class="folio-projects" aria-label="{{ escape_attr(page.title) }}">
+    {{ directory_title(page.title) }}
+    <p class="folio-projects-intro">{{ escape_html(page.description) }}</p>
+    {% if projects.length %}
+    <div class="folio-project-grid">
+        {% for project in projects %}
+        <article class="folio-project-card">
+            {% if project.cover %}
+            <img class="folio-project-cover" src="{{ attr_url(project.cover) }}" alt="" loading="lazy" decoding="async" width="640" height="360">
+            {% endif %}
+            <div class="folio-project-content">
+                <h2 class="folio-project-title"><a href="{{ attr_url(project.url) }}" target="_blank" rel="noopener noreferrer">{{ escape_html(project.name) }}<span aria-hidden="true">↗</span></a></h2>
+                <p class="folio-project-description">{{ escape_html(project.description) }}</p>
+                {% if project.tags.length %}
+                <ul class="folio-project-tags" aria-label="项目标签">
+                    {% for tag in project.tags %}<li>{{ escape_html(tag) }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if project.links.length %}
+                <nav class="folio-project-links" aria-label="{{ escape_attr(project.name + ' 相关链接') }}">
+                    {% for link in project.links %}
+                    <a href="{{ attr_url(link.url) }}" target="_blank" rel="noopener noreferrer">{{ escape_html(link.label) }}<span aria-hidden="true">↗</span></a>
+                    {% endfor %}
+                </nav>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="folio-projects-empty">{{ escape_html(page.empty_message) }}</p>
+    {% endif %}
+</section>
+{% endblock %}

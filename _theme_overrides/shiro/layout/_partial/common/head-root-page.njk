@@ -1,3 +1,4 @@
+{# Standalone root pages share the site's theme assets and their own canonical URL. #}
 {% set page_url = origin_url(page.root_path) %}
 <title>{{ escape_html(page.title) }}</title>
 <meta name="description" content="{{ escape_attr(page.description) }}">

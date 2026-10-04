@@ -95,6 +95,7 @@ include:
 exclude:
 ignore:
   - '**/source/CNAME'
+  - '**/source/projects/*.json'
 
 # Extensions
 ## Plugins: https://hexo.io/plugins/
