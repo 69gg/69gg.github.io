@@ -54,7 +54,7 @@ npm run preview
 
 `npm run server` 仍可用于 Hexo 开发，但完整站点审阅优先使用 `preview`：根目录个人主页由构建后的复制步骤生成，Pagefind 搜索索引也在完整构建时生成。
 
-博客视觉改版覆盖 `/blog/`。根目录 `homepage/` 保留原有布局与背景，标签页标题为 `Null's Homepage`，主导航依次为“部落格”、“留言板”和“项目”；联系方式依次为 GitHub、Bilibili 和邮箱。博客 favicon 与个人主页使用同一张图。文章 Markdown、固定链接、归档、标签、分类、RSS、搜索、随机阅读、深色模式、目录、阅读进度、代码复制、图片灯箱、数学公式和 Giscus 评论继续使用原有实现。随机阅读使用包含站点根路径的相对地址，避免本地审阅跳到线上。
+博客视觉改版覆盖 `/blog/`。根目录 `homepage/` 保留原有布局与背景，标签页标题为 `Null's Homepage`，主导航依次为“部落格”、“留言板”和“项目栏”，不再显示右下角的 Powered By 文案；联系方式依次为 GitHub、Bilibili 和邮箱。博客 favicon 与个人主页使用同一张图。文章 Markdown、固定链接、归档、标签、分类、RSS、搜索、随机阅读、深色模式、目录、阅读进度、代码复制、图片灯箱、数学公式和 Giscus 评论继续使用原有实现。随机阅读使用包含站点根路径的相对地址，避免本地审阅跳到线上。
 
 文章目录从正文的一级标题（`#` / `h1`）开始收录，直到 `_config.shiro.yml` 的 `toc.depth` 指定级别（默认三级），并按标题层级嵌套。正文标题总数达到 `toc.min_headings`（默认 3）时显示目录；文章页顶部的文章名称不计入目录。`tools/patch-theme.js` 同步修正 Shiro 的标题扫描、计数与级别范围，继续复用其锚点、缓存及目录跳转逻辑。
 
@@ -87,7 +87,7 @@ npm run preview
 
 ## 开源项目配置
 
-个人主页的“项目”进入独立的 `/projects/`，以卡片展示开源项目。`source/projects/index.md` 使用 `projects.njk` 并继承现有的 `_layout.njk`，复用花纹背景、字体与主题切换。页面初始没有项目；首次添加 `source/projects/<name>.json` 后，重新执行 `npm run build` 即会自动生成对应卡片，无需修改模板。每个 JSON 文件表示一个项目，修改或删除文件后重新构建即可更新展示。
+个人主页的“项目栏”进入独立的 `/projects/`，以卡片展示开源项目。`source/projects/index.md` 使用 `projects.njk` 和独立的 `_projects_layout.njk`，不隶属于博客：只复用花纹背景、字体、主题切换和轻柔动效，不显示博客站名、导航、文章阅读纸面或博客页脚。顶部为返回主页、开源项目标题和主题切换，下方在花纹背景上直接排列各自带纸纹的项目卡片，桌面按空间排列多列，手机显示单列；标题下不显示介绍文案。页面初始没有项目；首次添加 `source/projects/<name>.json` 后，重新执行 `npm run build` 即会自动生成对应卡片，无需修改模板。每个 JSON 文件表示一个项目，修改或删除文件后重新构建即可更新展示。
 
 完整配置示例 `source/projects/my-project.json`：
 

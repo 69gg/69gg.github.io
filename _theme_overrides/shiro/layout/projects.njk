@@ -1,11 +1,8 @@
-{% extends "_layout.njk" %}
+{% extends "_projects_layout.njk" %}
 
 {% block content %}
-{% from "_macro/folio.njk" import directory_title with context %}
 {% set projects = project_cards() %}
-<section class="folio-projects" aria-label="{{ escape_attr(page.title) }}">
-    {{ directory_title(page.title) }}
-    <p class="folio-projects-intro">{{ escape_html(page.description) }}</p>
+<section class="folio-projects" aria-labelledby="projects-title">
     {% if projects.length %}
     <div class="folio-project-grid">
         {% for project in projects %}

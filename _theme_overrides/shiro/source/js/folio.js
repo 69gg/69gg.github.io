@@ -5,20 +5,22 @@
     const normalize = (pathname) => decodeURI(pathname).replace(/index\.html$/, '').replace(/\/$/, '');
     const current = normalize(window.location.pathname);
     const randomPool = document.getElementById('folio-random-posts');
-    const randomPath = normalize(new URL(randomPool.dataset.randomPath, window.location.href).pathname);
-    const randomUrls = JSON.parse(randomPool.textContent);
-    document.querySelectorAll('.folio-nav-link').forEach((link) => {
-        const pathname = normalize(new URL(link.href).pathname);
-        if (pathname === current) {
-            link.setAttribute('aria-current', 'page');
-        }
-        if (pathname === randomPath && randomUrls.length) {
-            const choosePost = () => { link.href = randomUrls[Math.floor(Math.random() * randomUrls.length)]; };
-            choosePost();
-            link.addEventListener('pointerdown', choosePost);
-            link.addEventListener('click', choosePost);
-        }
-    });
+    if (randomPool) {
+        const randomPath = normalize(new URL(randomPool.dataset.randomPath, window.location.href).pathname);
+        const randomUrls = JSON.parse(randomPool.textContent);
+        document.querySelectorAll('.folio-nav-link').forEach((link) => {
+            const pathname = normalize(new URL(link.href).pathname);
+            if (pathname === current) {
+                link.setAttribute('aria-current', 'page');
+            }
+            if (pathname === randomPath && randomUrls.length) {
+                const choosePost = () => { link.href = randomUrls[Math.floor(Math.random() * randomUrls.length)]; };
+                choosePost();
+                link.addEventListener('pointerdown', choosePost);
+                link.addEventListener('click', choosePost);
+            }
+        });
+    }
 
     // Stop the decorative layers when the tab is out of view.
     const syncVisibility = () => document.documentElement.toggleAttribute('data-folio-paused', document.hidden);

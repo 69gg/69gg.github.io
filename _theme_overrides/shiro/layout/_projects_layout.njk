@@ -1,0 +1,26 @@
+<!doctype html>
+{% from "_macro/ui.njk" import icon_theme_system, icon_theme_light, icon_theme_dark with context %}
+{% set gates = page_feature_gates() %}
+<html lang="{{ escape_attr(gates.pageLang) }}" class="h-full scroll-smooth shiro-preloader-done">
+{% include "_partial/common/head.njk" %}
+<body class="folio-body folio-project-page">
+    <a href="#main-content" class="shiro-skip-link">{{ escape_html(__('common.skip_to_content')) }}</a>
+    {% include "_partial/folio/surround.njk" %}
+    <div class="folio-project-shell">
+        <header class="folio-project-heading">
+            <a href="/" class="folio-project-home"><span aria-hidden="true">←</span> 回首页</a>
+            <h1 id="projects-title">{{ escape_html(page.title) }}</h1>
+            <div class="folio-project-controls">
+                {% if gates.darkModeToggle %}
+                <button id="themeToggle" type="button" class="folio-icon-button" aria-label="{{ escape_attr(__('theme.' + gates.darkModeDefault)) }}" data-label-system="{{ escape_attr(__('theme.system')) }}" data-label-light="{{ escape_attr(__('theme.light')) }}" data-label-dark="{{ escape_attr(__('theme.dark')) }}" disabled>{{ icon_theme_system() }}{{ icon_theme_light() }}{{ icon_theme_dark() }}</button>
+                {% endif %}
+            </div>
+        </header>
+        <main id="main-content" tabindex="-1">{% block content %}{% endblock %}</main>
+    </div>
+    {% if gates.darkModeToggle %}
+    <script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} src="{{ attr_url(versioned_url('js/theme-toggle.min.js')) }}"></script>
+    {% endif %}
+    <script defer{{ csp_nonce_attr(gates.shiroCspNonce) }} src="{{ attr_url(versioned_url('js/folio.js')) }}"></script>
+</body>
+</html>

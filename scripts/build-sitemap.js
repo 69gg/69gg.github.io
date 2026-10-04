@@ -60,6 +60,7 @@ function collectLastmods() {
         path.join('source', 'projects'),
         path.join('scripts', 'projects.js'),
         path.join('_theme_overrides', 'shiro', 'layout', 'projects.njk'),
+        path.join('_theme_overrides', 'shiro', 'layout', '_projects_layout.njk'),
         path.join('_theme_overrides', 'shiro', 'source', 'css', 'projects.css')
     ]));
     if (projectsLastmod) {

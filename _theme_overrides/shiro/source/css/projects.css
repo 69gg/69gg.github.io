@@ -1,25 +1,59 @@
-/* Project cards use the existing paper, type and day/night palette. */
-.folio-projects-intro {
-    margin: -14px 0 32px;
-    color: var(--folio-muted);
-    font-family: var(--folio-ui);
-    font-size: 14px;
-    line-height: 1.9;
+/* An independent project gallery, with individual paper cards on the floral canvas. */
+.folio-project-shell { position: relative; z-index: 2; width: min(1200px, calc(100% - 112px)); margin: 40px auto 64px; }
+.folio-project-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 48px;
+    color: var(--folio-masthead-ink);
+    animation: folio-arrive var(--folio-motion-reveal) var(--folio-ease) backwards;
 }
+.folio-project-heading h1 { margin: 0; font-family: var(--folio-heading-font); font-size: 32px; font-weight: 500; line-height: 1.5; letter-spacing: .12em; }
+.folio-project-home {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    color: inherit;
+    font-family: var(--folio-ui);
+    font-size: 13px;
+    transition: transform var(--folio-motion-panel) var(--folio-ease);
+}
+.folio-project-home:hover { transform: translateX(-3px); }
+.folio-project-controls { justify-self: end; }
+.folio-project-controls .folio-icon-button { color: inherit; }
+html[data-folio-loading] .folio-project-heading { animation-play-state: paused; }
+html[data-folio-navigation] .folio-project-heading { animation: none; }
 .folio-project-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
     gap: 24px;
 }
 .folio-project-card {
     position: relative;
+    isolation: isolate;
     display: flex;
     flex-direction: column;
     min-width: 0;
     border: 1px solid var(--folio-rule);
     border-radius: 4px;
-    background: var(--folio-wash);
+    background: var(--folio-paper);
+    box-shadow: 0 8px 24px var(--folio-paper-shadow);
     transition: border-color var(--folio-motion-fast), transform var(--folio-motion-panel) var(--folio-ease);
+}
+.folio-project-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: url('../images/paper-handmade.webp') 0 0 / 120px 120px repeat;
+    opacity: var(--folio-paper-grain-opacity);
+    mix-blend-mode: var(--folio-paper-grain-blend);
+    filter: var(--folio-paper-grain-filter);
+    pointer-events: none;
 }
 .folio-project-card:hover, .folio-project-card:focus-within { border-color: var(--folio-accent); }
 .folio-project-cover {
@@ -85,13 +119,16 @@
 }
 .folio-project-links a:hover { text-decoration-color: currentColor; }
 .folio-project-links span { font-size: 14px; }
-.folio-projects-empty { display: grid; place-items: center; min-height: 180px; margin: 0; color: var(--folio-muted); font-size: 15px; line-height: 1.9; text-align: center; }
+.folio-projects-empty { display: grid; place-items: center; min-height: 45svh; margin: 0; color: var(--folio-masthead-ink); font-size: 15px; line-height: 1.9; text-align: center; }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
     .folio-project-card:hover { transform: translateY(-3px); }
 }
 @media (max-width: 767px) {
+    .folio-project-shell { width: calc(100% - 32px); margin: 24px auto 40px; }
+    .folio-project-heading { gap: 12px; margin-bottom: 32px; }
+    .folio-project-heading h1 { font-size: 23px; }
+    .folio-project-home { font-size: 12px; gap: 5px; }
     .folio-project-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
     .folio-project-content { padding: 20px; }
     .folio-project-title { font-size: 21px; }
-    .folio-projects-intro { margin-top: -8px; }
 }
