@@ -5,11 +5,11 @@
   "links": [
     {
       "label": "宣传片1",
-      "url": "https://www.bilibili.com/video/BV1PPzbBDEin"
+      "url": "https://www.bilibili.com/video/BV1XjYe6KEGN"
     },
     {
       "label": "宣传片2",
-      "url": "https://www.bilibili.com/video/BV1XjYe6KEGN"
+      "url": "https://www.bilibili.com/video/BV1PPzbBDEin"
     }
   ],
   "tags": ["Python", "AI", "认知记忆", "多智能体"],
