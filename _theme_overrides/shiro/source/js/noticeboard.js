@@ -8,6 +8,17 @@
     const petalsRoot = document.getElementById('noticeboard-petals');
     const notesRoot = document.getElementById('noticeboard-notes');
     const loading = document.getElementById('noticeboard-loading');
+    const loadingMessage = document.getElementById('noticeboard-loading-message');
+    const refreshButton = document.getElementById('noticeboard-refresh');
+    const zoomOut = document.getElementById('noticeboard-zoom-out');
+    const zoomIn = document.getElementById('noticeboard-zoom-in');
+    const zoomReset = document.getElementById('noticeboard-zoom-reset');
+    const sidebar = document.getElementById('noticeboard-sidebar');
+    const sidebarEdge = document.getElementById('noticeboard-sidebar-edge');
+    const sidebarToggle = document.getElementById('noticeboard-sidebar-toggle');
+    const sidebarContent = document.getElementById('noticeboard-sidebar-content');
+    const paperList = document.getElementById('noticeboard-list');
+    const listEmpty = document.getElementById('noticeboard-list-empty');
     const editor = document.getElementById('noticeboard-editor');
     const form = document.getElementById('noticeboard-form');
     const colorChoice = form.elements.color;
@@ -35,8 +46,9 @@
     ];
     const storageKey = `noticeboard:${config.repository}:${config.discussionNumber}`;
     const cameraKey = `${storageKey}:camera`;
-    const cameraOrigin = { x: 0, y: 0 };
-    let camera = JSON.parse(sessionStorage.getItem(cameraKey) || JSON.stringify(cameraOrigin));
+    const cameraOrigin = { x: 0, y: 0, scale: 1 };
+    let camera = { ...cameraOrigin, ...JSON.parse(sessionStorage.getItem(cameraKey) || '{}') };
+    camera.scale = Math.max(config.zoom.min, Math.min(config.zoom.max, camera.scale));
     let paintFrame = 0;
     let motionFrame = 0;
     let statusTimer;
@@ -44,7 +56,7 @@
     const wallpaperStyle = getComputedStyle(wallpaper);
     const tile = wallpaperStyle.backgroundSize.split(' ').map(parseFloat);
     const wallpaperPad = parseFloat(wallpaperStyle.getPropertyValue('--wallpaper-pad'));
-    let wallpaperAnchor = { x: 0, y: 0 };
+    let wallpaperAnchor = { ...cameraOrigin };
     const flowerSpacing = parseFloat(getComputedStyle(flowersRoot).getPropertyValue('--flower-spacing'));
     const flowerCells = new Map();
     const petalSpacing = parseFloat(getComputedStyle(petalsRoot).getPropertyValue('--petal-spacing'));
@@ -58,6 +70,13 @@
     let activeNote = null;
     let replyingTo = null;
     let reactionTarget = null;
+    let selectedPaperId = null;
+    let sidebarPinned = false;
+    let sidebarHovered = false;
+    let boardReady = false;
+    let boardRevision = 0;
+    let refreshPromise = null;
+    let refreshFeedback = false;
     let topLayer = 2;
     let ticket = sessionStorage.getItem(`${storageKey}:session`) || '';
     const dateFormat = new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
@@ -104,10 +123,10 @@
 
     function scatterLayer(root, cells, spacing, create) {
         const bounds = [
-            Math.floor(-camera.x / spacing) - 1,
-            Math.floor(-camera.y / spacing) - 1,
-            Math.floor((viewport.clientWidth - camera.x) / spacing) + 1,
-            Math.floor((viewport.clientHeight - camera.y) / spacing) + 1
+            Math.floor(-camera.x / camera.scale / spacing) - 1,
+            Math.floor(-camera.y / camera.scale / spacing) - 1,
+            Math.floor((viewport.clientWidth - camera.x) / camera.scale / spacing) + 1,
+            Math.floor((viewport.clientHeight - camera.y) / camera.scale / spacing) + 1
         ];
         const nextWindow = bounds.join(':');
         if (nextWindow === root.dataset.window) return;
@@ -183,14 +202,20 @@
 
     function paintCamera() {
         paintFrame = 0;
-        if (Math.abs(camera.x - wallpaperAnchor.x) > wallpaperPad || Math.abs(camera.y - wallpaperAnchor.y) > wallpaperPad) {
+        const scaledTile = tile.map((size) => size * camera.scale);
+        wallpaper.style.backgroundSize = scaledTile.map((size) => `${size}px`).join(' ');
+        if (camera.scale !== wallpaperAnchor.scale || Math.abs(camera.x - wallpaperAnchor.x) > wallpaperPad || Math.abs(camera.y - wallpaperAnchor.y) > wallpaperPad) {
             wallpaperAnchor = { ...camera };
-            wallpaper.style.backgroundPosition = `calc(50% + ${camera.x % tile[0]}px) ${wallpaperPad + camera.y % tile[1]}px`;
+            wallpaper.style.backgroundPosition = `calc(50% + ${camera.x % scaledTile[0]}px) ${wallpaperPad + camera.y % scaledTile[1]}px`;
         }
         viewport.style.setProperty('--camera-x', `${camera.x}px`);
         viewport.style.setProperty('--camera-y', `${camera.y}px`);
+        viewport.style.setProperty('--camera-scale', camera.scale);
         viewport.style.setProperty('--wallpaper-x', `${camera.x - wallpaperAnchor.x}px`);
         viewport.style.setProperty('--wallpaper-y', `${camera.y - wallpaperAnchor.y}px`);
+        zoomReset.textContent = `${Math.round(camera.scale * 100)}% · 还原`;
+        zoomOut.disabled = camera.scale <= config.zoom.min;
+        zoomIn.disabled = camera.scale >= config.zoom.max;
         scatterFlowers();
         scatterPetals();
     }
@@ -200,6 +225,21 @@
     }
 
     function rememberCamera() { sessionStorage.setItem(cameraKey, JSON.stringify(camera)); }
+
+    function visibleWidth() {
+        return sidebar.classList.contains('is-open') ? sidebar.offsetLeft - 20 : viewport.clientWidth;
+    }
+
+    function zoomCamera(scale) {
+        if (viewport.classList.contains('is-panning') || notesRoot.querySelector('.is-dragging')) return;
+        cancelAnimationFrame(motionFrame);
+        const nextScale = Math.max(config.zoom.min, Math.min(config.zoom.max, Math.round(scale * 100) / 100));
+        const anchor = { x: visibleWidth() / 2, y: viewport.clientHeight / 2 };
+        const ratio = nextScale / camera.scale;
+        camera = { x: anchor.x - (anchor.x - camera.x) * ratio, y: anchor.y - (anchor.y - camera.y) * ratio, scale: nextScale };
+        paintCamera();
+        rememberCamera();
+    }
 
     function coast(vx, vy) {
         let previous = performance.now();
@@ -230,7 +270,7 @@
         });
         viewport.addEventListener('pointermove', (event) => {
             if (!drag || drag.id !== event.pointerId) return;
-            const next = { x: drag.start.x + event.clientX - drag.x, y: drag.start.y + event.clientY - drag.y };
+            const next = { ...drag.start, x: drag.start.x + event.clientX - drag.x, y: drag.start.y + event.clientY - drag.y };
             const elapsed = Math.max(8, event.timeStamp - drag.at);
             drag.vx = .5 * drag.vx + .5 * Math.max(-1.2, Math.min(1.2, (next.x - camera.x) / elapsed));
             drag.vy = .5 * drag.vy + .5 * Math.max(-1.2, Math.min(1.2, (next.y - camera.y) / elapsed));
@@ -284,7 +324,7 @@
         const step = (now) => {
             const progress = motion.matches ? 1 : Math.min(1, (now - at) / 320);
             const eased = 1 - (1 - progress) ** 3;
-            camera = { x: start.x + (target.x - start.x) * eased, y: start.y + (target.y - start.y) * eased };
+            camera = { ...start, x: start.x + (target.x - start.x) * eased, y: start.y + (target.y - start.y) * eased };
             paintCamera();
             if (progress < 1) motionFrame = requestAnimationFrame(step);
             else rememberCamera();
@@ -298,11 +338,13 @@
         }
     }
 
-    function revealPaper(paper) {
+    function revealPaper(paper, center = false) {
         bringPaperForward(paper.closest('.board-branch'));
+        paper.style.animation = 'none';
         const rect = paper.getBoundingClientRect();
-        if (rect.left >= 20 && rect.right <= innerWidth - 20 && rect.top >= 90 && rect.bottom <= innerHeight - 90) return;
-        moveCamera({ x: camera.x + (viewport.clientWidth - rect.width) / 2 - rect.left, y: camera.y + Math.max(100, (viewport.clientHeight - rect.height) / 2) - rect.top });
+        const width = visibleWidth();
+        if (!center && rect.left >= 20 && rect.right <= width - 20 && rect.top >= 90 && rect.bottom <= innerHeight - 90) return;
+        moveCamera({ x: camera.x + (width - rect.width) / 2 - rect.left, y: camera.y + Math.max(100, (viewport.clientHeight - rect.height) / 2) - rect.top });
     }
 
     function renderMetadata(container, comment) {
@@ -491,7 +533,84 @@
     }
 
     function updateCount() {
-        document.getElementById('noticeboard-count').textContent = `${notes.length} 张纸条`;
+        const replies = notes.reduce((total, note) => total + (note.replies?.length || 0), 0);
+        document.getElementById('noticeboard-count').textContent = `总数量：${notes.length + replies}`;
+        document.getElementById('noticeboard-count-detail').textContent = `主纸条 ${notes.length} · 回复 ${replies}`;
+        boardRevision++;
+        renderPaperList();
+    }
+
+    function syncSidebar() {
+        const open = sidebarPinned || sidebarHovered;
+        sidebar.classList.toggle('is-open', open);
+        sidebar.inert = !open;
+        sidebarToggle.setAttribute('aria-expanded', String(open));
+        sidebarToggle.setAttribute('aria-label', sidebarPinned ? '收起纸条列表' : open ? '固定纸条列表' : '展开纸条列表');
+    }
+
+    function closeSidebar() {
+        sidebarPinned = false;
+        sidebarHovered = false;
+        if (sidebar.contains(document.activeElement)) sidebarToggle.focus({ preventScroll: true });
+        syncSidebar();
+    }
+
+    function renderPaperList() {
+        const collapsed = new Set([...paperList.querySelectorAll('details:not([open])')].map((item) => item.dataset.id));
+        const focused = paperList.contains(document.activeElement) ? document.activeElement : null;
+        const focusedId = focused?.closest('li')?.dataset.id;
+        const scrollTop = sidebarContent.scrollTop;
+        const entries = new Map();
+        const createList = (branches) => {
+            const list = document.createElement('ul');
+            list.className = 'noticeboard-tree';
+            for (const branch of branches) {
+                const paper = branch.querySelector(':scope > .board-note');
+                const children = branch.querySelector(':scope > .board-note-replies')?.children;
+                const item = document.createElement('li');
+                item.dataset.id = branch.dataset.id;
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'noticeboard-tree-item';
+                button.dataset.id = branch.dataset.id;
+                button.setAttribute('aria-current', String(branch.dataset.id === selectedPaperId));
+                button.title = '定位这张纸条';
+                const author = document.createElement('span');
+                author.className = 'noticeboard-tree-author';
+                author.textContent = paper.querySelector('.board-note-author').textContent;
+                const excerpt = document.createElement('span');
+                excerpt.className = 'noticeboard-tree-excerpt';
+                excerpt.textContent = paper.querySelector('.board-note-message').textContent.replace(/\s+/g, ' ').trim() || '空白纸条';
+                button.append(author, excerpt);
+                button.addEventListener('click', () => {
+                    selectedPaperId = branch.dataset.id;
+                    paperList.querySelectorAll('.noticeboard-tree-item').forEach((row) => row.setAttribute('aria-current', String(row.dataset.id === selectedPaperId)));
+                    notesRoot.querySelectorAll('.board-note').forEach((note) => note.classList.toggle('is-located', note.dataset.id === selectedPaperId));
+                    if (sidebar.offsetWidth > viewport.clientWidth / 2) closeSidebar();
+                    revealPaper(paper, true);
+                });
+                let summary;
+                if (children?.length) {
+                    const details = document.createElement('details');
+                    details.dataset.id = branch.dataset.id;
+                    details.open = !collapsed.has(branch.dataset.id);
+                    summary = document.createElement('summary');
+                    summary.title = '展开或收起回复';
+                    summary.append(button);
+                    details.append(summary, createList(children));
+                    item.append(details);
+                } else item.append(button);
+                entries.set(branch.dataset.id, { button, summary });
+                list.append(item);
+            }
+            return list;
+        };
+        paperList.replaceChildren(createList(notesRoot.children));
+        listEmpty.hidden = notes.length > 0;
+        listEmpty.textContent = '还没有纸条';
+        sidebarContent.scrollTop = scrollTop;
+        const entry = entries.get(focusedId);
+        if (entry) (focused.tagName === 'SUMMARY' ? entry.summary || entry.button : entry.button).focus({ preventScroll: true });
     }
 
     function nextPosition(color = 'cream', size = newNoteSize) {
@@ -499,9 +618,9 @@
         let x, y;
         const occupied = [...notesRoot.querySelectorAll('.board-note')].map((paper) => {
             const rect = paper.getBoundingClientRect();
-            return { x: rect.left - camera.x, y: rect.top - camera.y, width: rect.width, height: rect.height };
+            return { x: (rect.left - camera.x) / camera.scale, y: (rect.top - camera.y) / camera.scale, width: rect.width / camera.scale, height: rect.height / camera.scale };
         });
-        const origin = { x: (viewport.clientWidth - size.width) / 2 - camera.x, y: Math.max(110, (viewport.clientHeight - size.height) / 2) - camera.y };
+        const origin = { x: (visibleWidth() / 2 - camera.x) / camera.scale - size.width / 2, y: (Math.max(110, (viewport.clientHeight - size.height * camera.scale) / 2) - camera.y) / camera.scale };
         do {
             x = origin.x + [0, size.width + 35, -size.width - 35][slot % 3];
             y = origin.y + Math.floor(slot / 3) * (size.height + 40);
@@ -537,6 +656,8 @@
         const article = document.createElement('article');
         article.className = 'board-note';
         article.dataset.id = comment.id;
+        article.tabIndex = -1;
+        article.classList.toggle('is-located', comment.id === selectedPaperId);
         article.innerHTML = '<span class="board-note-pin" aria-hidden="true"></span><div class="board-note-message noticeboard-markdown"></div><footer class="board-note-footer"></footer>';
         branch.append(article);
         article.addEventListener('pointerdown', () => bringPaperForward(branch));
@@ -594,8 +715,22 @@
         return branch;
     }
 
-    function renderNotes() {
-        notesRoot.replaceChildren(...notes.map(renderNote));
+    function renderNotes(immediate = false) {
+        const layers = new Map([...notesRoot.querySelectorAll('.board-branch')].map((branch) => [branch.dataset.id, branch.style.zIndex]));
+        const focused = notesRoot.contains(document.activeElement) ? document.activeElement : null;
+        const focusedPaper = focused?.closest('.board-note');
+        const controls = (paper) => [...paper.querySelectorAll('button, a')];
+        const focusIndex = focusedPaper ? controls(focusedPaper).indexOf(focused) : -1;
+        const branches = notes.map(renderNote);
+        for (const branch of branches) {
+            [branch, ...branch.querySelectorAll('.board-branch')].forEach((item) => { item.style.zIndex = layers.get(item.dataset.id) || ''; });
+            if (immediate) branch.querySelectorAll('.board-note').forEach((paper) => { paper.style.animation = 'none'; });
+        }
+        notesRoot.replaceChildren(...branches);
+        if (focusedPaper) {
+            const paper = [...notesRoot.querySelectorAll('.board-note')].find((item) => item.dataset.id === focusedPaper.dataset.id);
+            if (paper) (controls(paper)[focusIndex] || paper).focus({ preventScroll: true });
+        }
         updateCount();
     }
 
@@ -651,17 +786,21 @@
         const height = parseFloat(style.height);
         const bounds = paper.getBoundingClientRect();
         const matrix = new DOMMatrix(style.transform);
+        matrix.a *= camera.scale;
+        matrix.b *= camera.scale;
+        matrix.c *= camera.scale;
+        matrix.d *= camera.scale;
         // 用纸面四角还原坐标，避免把旋转后的外接矩形当成可移动范围。
         matrix.e = bounds.left - Math.min(0, matrix.a * width, matrix.c * height, matrix.a * width + matrix.c * height);
         matrix.f = bounds.top - Math.min(0, matrix.b * width, matrix.d * height, matrix.b * width + matrix.d * height);
         const pin = article.querySelector('.board-note-pin').getBoundingClientRect();
-        const proposed = new DOMPoint(pin.left + pin.width / 2 + left - position.x, pin.top + pin.height / 2 + top - position.y);
+        const proposed = new DOMPoint(pin.left + pin.width / 2 + (left - position.x) * camera.scale, pin.top + pin.height / 2 + (top - position.y) * camera.scale);
         const local = matrix.inverse().transformPoint(proposed);
-        const inset = Math.max(pin.width, pin.height) / 2;
+        const inset = Math.max(pin.width, pin.height) / camera.scale / 2;
         local.x = Math.max(inset, Math.min(width - inset, local.x));
         local.y = Math.max(inset, Math.min(height - inset, local.y));
         const constrained = matrix.transformPoint(local);
-        return { x: left + constrained.x - proposed.x, y: top + constrained.y - proposed.y };
+        return { x: left + (constrained.x - proposed.x) / camera.scale, y: top + (constrained.y - proposed.y) / camera.scale };
     }
 
     function bindMovement(handle, article, branch, note, comment) {
@@ -691,7 +830,7 @@
         });
         handle.addEventListener('pointermove', (event) => {
             if (!drag || event.pointerId !== drag.pointerId) return;
-            setPosition(drag.left + event.clientX - drag.x, drag.top + event.clientY - drag.y);
+            setPosition(drag.left + (event.clientX - drag.x) / camera.scale, drag.top + (event.clientY - drag.y) / camera.scale);
         });
         handle.addEventListener('pointerup', () => {
             if (!drag) return;
@@ -717,6 +856,7 @@
             event.preventDefault();
             const position = paperPosition(note, comment);
             keyOriginal ||= { ...position };
+            article.classList.add('is-dragging');
             const step = event.shiftKey ? 30 : 10;
             bringPaperForward(branch);
             article.style.animation = 'none';
@@ -725,6 +865,7 @@
             keyTimer = setTimeout(() => {
                 const original = keyOriginal;
                 keyOriginal = null;
+                article.classList.remove('is-dragging');
                 saveMovement(article, branch, note, comment, original);
             }, 350);
         });
@@ -843,23 +984,65 @@
     document.querySelectorAll('[data-close]').forEach((button) => button.addEventListener('click', () => document.getElementById(button.dataset.close).close()));
     writeButton.addEventListener('click', () => openEditor());
     document.getElementById('noticeboard-center').addEventListener('click', () => moveCamera(cameraOrigin));
+    zoomOut.addEventListener('click', () => zoomCamera(camera.scale - config.zoom.step));
+    zoomIn.addEventListener('click', () => zoomCamera(camera.scale + config.zoom.step));
+    zoomReset.addEventListener('click', () => zoomCamera(cameraOrigin.scale));
+    document.addEventListener('keydown', (event) => {
+        if (event.ctrlKey) {
+            const direction = ['-', '_'].includes(event.key) ? -1 : ['+', '='].includes(event.key) ? 1 : 0;
+            if (direction) {
+                event.preventDefault();
+                zoomCamera(camera.scale + config.zoom.step * direction);
+            }
+        }
+        if (event.key === 'Escape' && sidebar.classList.contains('is-open') && !editor.open && !removeDialog.open && !reactionPicker.matches(':popover-open')) {
+            event.preventDefault();
+            closeSidebar();
+        }
+    });
+    const hoverSidebar = (event) => {
+        if (event.pointerType !== 'mouse' || viewport.classList.contains('is-panning')) return;
+        sidebarHovered = true;
+        syncSidebar();
+    };
+    const leaveSidebar = (event) => {
+        if (sidebar.contains(event.relatedTarget) || sidebarToggle.contains(event.relatedTarget) || event.relatedTarget === sidebarEdge) return;
+        sidebarHovered = false;
+        syncSidebar();
+    };
+    sidebarEdge.addEventListener('pointerenter', hoverSidebar);
+    sidebar.addEventListener('pointerenter', hoverSidebar);
+    [sidebarEdge, sidebar, sidebarToggle].forEach((element) => element.addEventListener('pointerleave', leaveSidebar));
+    sidebar.addEventListener('focusin', () => { sidebarPinned = true; syncSidebar(); });
+    sidebarToggle.addEventListener('click', () => { sidebarPinned = !sidebarPinned; sidebarHovered = false; syncSidebar(); });
+    document.getElementById('noticeboard-sidebar-close').addEventListener('click', closeSidebar);
+    refreshButton.addEventListener('click', () => refreshBoard());
     loginButton.addEventListener('click', login);
     logoutButton.addEventListener('click', () => {
         ticket = '';
         user = null;
         sessionStorage.removeItem(`${storageKey}:session`);
         renderAccount();
-        renderNotes();
+        renderNotes(true);
         say('已退出，纸条会继续留在这里。');
     });
 
+    function hasActiveInteraction() {
+        return editor.open || removeDialog.open || submit.disabled || removeDialog.querySelector('button[type="submit"]').disabled
+            || viewport.classList.contains('is-panning') || reactionPicker.matches(':popover-open')
+            || Boolean(notesRoot.querySelector('.is-dragging, .is-saving, [aria-busy="true"]'));
+    }
+
     async function load() {
+        const revision = boardRevision;
         if (localPreview) {
             user = previewUser;
             notes = JSON.parse(localStorage.getItem(storageKey) || '[]');
             document.getElementById('noticeboard-mode').textContent = '本地预览 · 纸条只保存在这个浏览器';
         } else if (config.apiUrl) {
             const board = await request('/api/board');
+            // 读取期间发生的编辑或移动优先保留，下一次刷新再同步。
+            if (boardReady && (hasActiveInteraction() || revision !== boardRevision)) return false;
             notes = board.notes;
             user = board.user;
         } else {
@@ -867,14 +1050,57 @@
             writeButton.disabled = true;
             loginButton.hidden = true;
             updateCount();
-            return;
+            return true;
         }
         notes.forEach((note) => { note.position = worldPosition(note.position); });
         renderAccount();
-        renderNotes();
+        renderNotes(boardReady);
         writeButton.disabled = false;
         loginButton.disabled = false;
+        return true;
     }
+
+    function showRefreshLoading() {
+        refreshFeedback = true;
+        loadingMessage.textContent = '加载留言中…';
+        loading.classList.remove('has-error');
+        loading.hidden = false;
+        refreshButton.disabled = true;
+        viewport.setAttribute('aria-busy', 'true');
+    }
+
+    function reportRefreshError(error) {
+        if (!refreshFeedback) return;
+        if (!boardReady) {
+            loadingMessage.textContent = '留言加载失败，请刷新重试。';
+            loading.classList.add('has-error');
+            document.getElementById('noticeboard-count').textContent = '加载失败';
+            listEmpty.textContent = '纸条列表加载失败，请刷新重试。';
+        }
+        say(error.message);
+    }
+
+    function refreshBoard(silent = false) {
+        if (!silent) showRefreshLoading();
+        if (refreshPromise) return refreshPromise;
+        refreshPromise = load().then((refreshed) => {
+            if (!refreshed) return;
+            boardReady = true;
+            notesRoot.hidden = false;
+            loading.hidden = true;
+            loading.classList.remove('has-error');
+        }).catch(reportRefreshError).finally(() => {
+            if (refreshFeedback) {
+                if (!loading.classList.contains('has-error')) loading.hidden = true;
+                viewport.setAttribute('aria-busy', 'false');
+            }
+            refreshButton.disabled = !config.apiUrl && !localPreview;
+            refreshFeedback = false;
+            refreshPromise = null;
+        });
+        return refreshPromise;
+    }
+
     bindCamera();
     window.addEventListener('resize', queuePaint);
     const syncVisibility = () => {
@@ -883,15 +1109,16 @@
     };
     document.addEventListener('visibilitychange', syncVisibility);
     syncVisibility();
-    loading.hidden = false;
-    Promise.resolve(window.__shiro.folioReady).then(load).then(() => {
-        notesRoot.hidden = false;
-        loading.hidden = true;
-        viewport.setAttribute('aria-busy', 'false');
+    showRefreshLoading();
+    Promise.resolve(window.__shiro.folioReady).then(() => {
+        if (config.apiUrl || localPreview) {
+            setInterval(() => {
+                if (!document.hidden && !hasActiveInteraction()) refreshBoard(true);
+            }, config.refreshInterval * 1000);
+        }
+        return refreshBoard();
     }).catch((error) => {
-        loading.textContent = '留言加载失败，请刷新重试。';
-        document.getElementById('noticeboard-count').textContent = '加载失败';
+        reportRefreshError(error);
         viewport.setAttribute('aria-busy', 'false');
-        say(error.message);
     });
 })();

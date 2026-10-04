@@ -1,7 +1,7 @@
 /* Paper notes on an open floral canvas; all chrome stays outside its camera. */
 html:has(.folio-board) { overflow: hidden; }
 body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: #a9b3c8; }
-.noticeboard { --board-note-width: 320px; --board-note-height: 440px; --board-new-note-width: 420px; --board-new-note-height: 560px; --board-reply-scale: .88; --board-chrome: #f9f7f0e0; position: fixed; inset: 0; overflow: hidden; color: var(--folio-masthead-ink); }
+.noticeboard { --board-note-width: 320px; --board-note-height: 440px; --board-new-note-width: 420px; --board-new-note-height: 560px; --board-reply-scale: .88; --board-chrome: #f9f7f0e0; --board-sidebar-width: min(340px, calc(100vw - 84px)); position: fixed; inset: 0; overflow: hidden; color: var(--folio-masthead-ink); }
 .noticeboard-heading { position: absolute; z-index: 30; top: max(18px, env(safe-area-inset-top)); right: 28px; left: 28px; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px; pointer-events: none; }
 .noticeboard-heading > :is(a, .noticeboard-controls) { pointer-events: auto; }
 #noticeboard-title { margin: 0; font-family: var(--folio-serif); font-size: 24px; font-weight: 500; letter-spacing: .18em; text-shadow: 0 1px 12px #ffffff60; }
@@ -17,11 +17,16 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .noticeboard-toolbar { position: absolute; z-index: 30; right: 28px; bottom: max(20px, env(safe-area-inset-bottom)); left: 28px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; color: inherit; font-family: var(--folio-ui); font-size: 12px; pointer-events: none; }
 .noticeboard-toolbar > .comment-network-hint { flex: 0 0 100%; color: inherit; font-size: 11px; line-height: 1.7; }
 .noticeboard-toolbar > .comment-network-hint span { display: inline-block; padding: 6px 10px; border-radius: 3px; background: var(--board-chrome); }
-.noticeboard-toolbar-actions { display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+.noticeboard-toolbar-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 10px; pointer-events: auto; }
 .noticeboard-center { flex: 0 0 auto; background: var(--board-chrome); color: inherit; }
 .noticeboard-count { display: flex; flex-direction: column; gap: 4px; padding: 9px 13px; border-radius: 3px; background: var(--board-chrome); }
-#noticeboard-mode { font-size: 10px; opacity: .75; }
+#noticeboard-mode, #noticeboard-count-detail { font-size: 10px; opacity: .75; }
 #noticeboard-mode:empty { display: none; }
+.noticeboard-zoom { display: flex; align-items: center; border-radius: 3px; background: var(--board-chrome); }
+.noticeboard-zoom button { min-width: 36px; height: 40px; padding: 0 8px; font-size: 20px; }
+.noticeboard-zoom #noticeboard-zoom-reset { min-width: 84px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.noticeboard-zoom button:disabled { cursor: default; }
+.noticeboard-zoom button:not(:disabled):hover { background: color-mix(in srgb, currentColor 9%, transparent); }
 .noticeboard-account { display: flex; align-items: center; gap: 12px; padding: 4px 12px; border-radius: 3px; background: var(--board-chrome); pointer-events: auto; }
 .noticeboard-account button { padding-block: 7px; text-underline-offset: 4px; }
 .noticeboard-account button:hover { text-decoration: underline; }
@@ -31,7 +36,7 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 /* Keep the translated surface near viewport size; periodically rebase its
    repeat phase instead of allocating a canvas several wallpaper tiles wide. */
 .noticeboard-wallpaper { --wallpaper-pad: 128px; position: absolute; inset: calc(-1 * var(--wallpaper-pad)); background: url('../images/noticeboard-weave.webp') center var(--wallpaper-pad) / 256px 256px repeat; filter: var(--folio-surround-filter); transform: translate3d(var(--wallpaper-x, 0px), var(--wallpaper-y, 0px), 0); pointer-events: none; }
-.noticeboard-canvas { position: absolute; inset: 0; transform: translate3d(var(--camera-x, 0px), var(--camera-y, 0px), 0); pointer-events: none; }
+.noticeboard-canvas { position: absolute; inset: 0; transform: translate3d(var(--camera-x, 0px), var(--camera-y, 0px), 0) scale(var(--camera-scale, 1)); transform-origin: 0 0; pointer-events: none; }
 .noticeboard-decoration { position: absolute; inset: 0; pointer-events: none; }
 .noticeboard-decoration :is(.folio-garden, .folio-foreground) { overflow: visible; }
 .noticeboard-flowers { --flower-spacing: 760px; position: absolute; inset: 0; pointer-events: none; }
@@ -51,6 +56,7 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .board-note-replies > .board-branch { grid-area: 1 / 1; justify-self: start; margin-left: calc(var(--reply-anchor, 50%) - var(--note-width) / 2 + var(--note-x)); margin-top: var(--note-y); }
 .board-note { position: relative; display: flex; flex-direction: column; box-sizing: border-box; width: 100%; min-height: var(--note-height, var(--board-note-height)); padding: 38px 24px 20px; background: linear-gradient(175deg, #fff5, transparent 40%, #816a4320), var(--note-paper); color: var(--note-ink); box-shadow: 1px 4px 4px #3b281e30, 3px 12px 18px #3b281e1f, inset 0 1px 0 #fff8; transform: rotate(var(--note-turn)); transform-origin: 50% 18px; transition: transform var(--folio-motion-panel) var(--folio-ease), box-shadow var(--folio-motion-panel); animation: board-note-arrive 540ms var(--folio-ease) backwards; pointer-events: auto; cursor: default; }
 .board-note::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: url('../images/paper-handmade.webp') 0 0 / 120px repeat; mix-blend-mode: multiply; opacity: .58; }
+.board-note.is-located { outline: 2px solid var(--note-pin); outline-offset: 4px; }
 .board-note::after { content: ''; position: absolute; right: 3px; bottom: -2px; left: 8px; height: 8px; z-index: -1; background: #35272124; filter: blur(4px); transform: rotate(-2deg); }
 .board-note > * { position: relative; }
 .board-note-message { flex: 1 1 auto; min-height: 44px; margin: 0 0 18px; font-family: var(--folio-serif); font-size: 16px; line-height: 1.9; }
@@ -91,6 +97,32 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .noticeboard-loading-label { display: flex; align-items: center; gap: 12px; }
 .noticeboard-loading-hint { font-size: 12px; line-height: 1.7; opacity: .75; }
 .noticeboard-spinner { flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: board-loading-spin 1s linear infinite; }
+.noticeboard-loading.has-error .noticeboard-spinner { display: none; }
+.noticeboard-sidebar-edge { position: absolute; z-index: 36; inset: 0 0 0 auto; width: 18px; }
+.noticeboard-sidebar-toggle { position: absolute; z-index: 42; top: 50%; right: 18px; background: var(--board-chrome); color: inherit; transform: translateY(-50%); transition: right var(--folio-motion-panel) var(--folio-ease); }
+.noticeboard .noticeboard-sidebar-toggle:hover { transform: translateY(-50%); }
+.noticeboard .noticeboard-sidebar-toggle:active { transform: translateY(-50%) scale(.94); }
+.noticeboard:has(.noticeboard-sidebar.is-open) .noticeboard-sidebar-toggle { right: calc(var(--board-sidebar-width) + 30px); }
+.noticeboard-sidebar { position: absolute; z-index: 41; top: max(80px, env(safe-area-inset-top)); right: 18px; bottom: max(160px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; width: var(--board-sidebar-width); border: 1px solid color-mix(in srgb, currentColor 16%, transparent); border-radius: 4px; background: var(--board-chrome); box-shadow: 0 8px 32px #20263624; color: inherit; font-family: var(--folio-ui); transform: translateX(calc(100% + 20px)); visibility: hidden; transition: transform var(--folio-motion-panel) var(--folio-ease), visibility var(--folio-motion-panel); }
+.noticeboard-sidebar.is-open { transform: none; visibility: visible; }
+.noticeboard-sidebar-heading { display: flex; flex: 0 0 auto; justify-content: space-between; align-items: center; padding: 13px 16px; border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent); }
+.noticeboard-sidebar-heading h2 { margin: 0; font-family: var(--folio-serif); font-size: 18px; font-weight: 500; letter-spacing: .12em; }
+.noticeboard-sidebar-heading button { width: 28px; height: 28px; font-size: 24px; }
+.noticeboard-sidebar-content { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 12px; scrollbar-width: thin; }
+#noticeboard-list-empty { margin: 12px 4px; font-size: 12px; opacity: .7; }
+.noticeboard-tree { margin: 0; padding: 0; list-style: none; }
+.noticeboard-tree .noticeboard-tree { margin-left: 7px; padding-left: 12px; border-left: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
+.noticeboard-tree li { margin: 4px 0; }
+.noticeboard-tree summary { display: flex; align-items: flex-start; gap: 4px; list-style: none; cursor: pointer; }
+.noticeboard-tree summary::-webkit-details-marker { display: none; }
+.noticeboard-tree summary::before { content: '›'; flex: 0 0 14px; margin-top: 9px; font-size: 18px; line-height: 1; text-align: center; }
+.noticeboard-tree details[open] > summary::before { transform: rotate(90deg); }
+.noticeboard-tree li > .noticeboard-tree-item { margin-left: 18px; width: calc(100% - 18px); }
+.noticeboard-tree-item { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; padding: 8px; border-radius: 3px; text-align: left; }
+.noticeboard-tree-item:hover, .noticeboard-tree-item[aria-current='true'] { background: color-mix(in srgb, currentColor 9%, transparent); }
+.noticeboard-tree-author { font-size: 11px; opacity: .7; overflow-wrap: anywhere; }
+.noticeboard-tree-excerpt { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.noticeboard :is(.noticeboard-zoom button, .noticeboard-tree-item, .noticeboard-tree summary, .noticeboard-sidebar-heading button):focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .noticeboard-dialog { position: fixed; inset: 0; margin: auto; box-sizing: border-box; width: min(560px, calc(100% - 32px)); height: fit-content; max-height: calc(100svh - 48px); overflow: auto; overscroll-behavior: contain; padding: 32px; border: 1px solid var(--note-rule); border-radius: 5px; background-color: var(--note-paper); background-image: linear-gradient(160deg, #fff2, transparent 55%, #30201508), url('../images/paper-handmade.webp'); background-size: 100% 100%, 120px 120px; background-blend-mode: normal, multiply; color: var(--note-ink); box-shadow: 0 2px 0 #fff4 inset, 0 3px 6px #1b1c3126, 0 24px 70px #1b1c314d; transition: background-color 180ms ease, color 180ms ease; }
 .noticeboard-dialog::backdrop { background: #20263666; backdrop-filter: blur(3px); }
 .noticeboard-dialog[open] { animation: board-dialog-arrive 300ms var(--folio-ease) both; }
@@ -176,13 +208,15 @@ html[data-theme='dark'] .noticeboard { --board-chrome: #28374cdd; }
     .noticeboard-write { gap: 3px; padding: 5px 9px; min-height: 34px; font-size: 11px; white-space: nowrap; }
     .noticeboard-write span { font-size: 19px; }
     .noticeboard-toolbar { left: 12px; right: 12px; font-size: 11px; gap: 8px; }
-    .noticeboard-count { max-width: 54%; padding: 7px 10px; }
+    .noticeboard-count { padding: 7px 10px; }
     .noticeboard-account { gap: 8px; }
-    .noticeboard-toolbar-actions { gap: 8px; }
+    .noticeboard-toolbar-actions { gap: 8px; margin-left: auto; }
+    .noticeboard-zoom button { min-width: 32px; height: 34px; }
+    .noticeboard-sidebar-toggle { width: 34px; height: 34px; }
     .noticeboard-center { width: 34px; height: 34px; }
     .noticeboard-dialog { padding: 24px; }
     .noticeboard-color { padding-inline: 8px; }
     .noticeboard-geometry { grid-template-columns: minmax(0, 1fr) 88px; gap: 12px; }
     .noticeboard-geometry-controls label { gap: 6px; }
 }
-@media (prefers-reduced-motion: reduce) { .board-note, .noticeboard-dialog[open], .noticeboard-reaction-picker:popover-open, .noticeboard-spinner { animation: none; } .board-note, .noticeboard-write, .noticeboard-reaction { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .board-note, .noticeboard-dialog[open], .noticeboard-reaction-picker:popover-open, .noticeboard-spinner { animation: none; } .board-note, .noticeboard-write, .noticeboard-reaction, .noticeboard-sidebar, .noticeboard-sidebar-toggle { transition: none; } }

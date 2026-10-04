@@ -3,7 +3,7 @@
 
 {% block content %}
 <section class="noticeboard" aria-labelledby="noticeboard-title">
-    <script type="application/json" id="noticeboard-config">{{ js_value({ apiUrl: config.theme_config.guestbook.api_url, repository: config.theme_config.comments.giscus.repo, discussionNumber: config.theme_config.guestbook.discussion_number }) | safe }}</script>
+    <script type="application/json" id="noticeboard-config">{{ js_value({ apiUrl: config.theme_config.guestbook.api_url, repository: config.theme_config.comments.giscus.repo, discussionNumber: config.theme_config.guestbook.discussion_number, refreshInterval: config.theme_config.guestbook.refresh_interval, zoom: config.theme_config.guestbook.zoom }) | safe }}</script>
     <header class="noticeboard-heading">
         <a href="/" class="noticeboard-home"><span aria-hidden="true">←</span> 回首页</a>
         <h1 id="noticeboard-title">{{ escape_html(page.title) }}</h1>
@@ -16,13 +16,19 @@
     </header>
     <div class="noticeboard-toolbar" data-pagefind-ignore>
         {% include "_partial/comments/network-hint.njk" %}
-        <div class="noticeboard-count"><span id="noticeboard-count">加载中…</span><span id="noticeboard-mode"></span></div>
+        <div class="noticeboard-count"><span id="noticeboard-count">加载中…</span><span id="noticeboard-count-detail"></span><span id="noticeboard-mode"></span></div>
         <div class="noticeboard-toolbar-actions">
+            <div class="noticeboard-zoom" role="group" aria-label="画布缩放">
+                <button type="button" id="noticeboard-zoom-out" aria-label="缩小画布" title="缩小（Ctrl + −）">−</button>
+                <button type="button" id="noticeboard-zoom-reset" aria-label="还原为原始大小" title="还原为 100%">100% · 还原</button>
+                <button type="button" id="noticeboard-zoom-in" aria-label="放大画布" title="放大（Ctrl + ＋）">＋</button>
+            </div>
             <div class="noticeboard-account"><span id="noticeboard-user"></span><button type="button" id="noticeboard-login" disabled>登录 GitHub</button><button type="button" id="noticeboard-logout" hidden>退出</button></div>
+            <button type="button" id="noticeboard-refresh" class="noticeboard-center folio-icon-button" aria-label="刷新留言" title="刷新留言" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.8-1L20 9M4 15l2.1 3A7 7 0 0 0 17.9 17"/></svg></button>
             <button type="button" id="noticeboard-center" class="noticeboard-center folio-icon-button" aria-label="回到画布中心" title="回到画布中心"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><circle cx="12" cy="12" r="3"/></svg></button>
         </div>
     </div>
-    <div class="noticeboard-viewport" id="noticeboard-viewport" tabindex="0" aria-label="留言画布，拖动空白处或使用方向键移动视角" aria-busy="true" data-pagefind-ignore>
+    <div class="noticeboard-viewport" id="noticeboard-viewport" tabindex="0" aria-label="留言画布，拖动空白处或使用方向键移动视角，Ctrl 加减号缩放" aria-busy="true" data-pagefind-ignore>
         <div class="noticeboard-wallpaper" id="noticeboard-wallpaper" aria-hidden="true"></div>
         <div class="noticeboard-canvas" id="noticeboard-canvas">
             <div class="noticeboard-decoration" aria-hidden="true">
@@ -32,8 +38,14 @@
             <div class="noticeboard-petals" id="noticeboard-petals" aria-hidden="true"></div>
         </div>
     </div>
+    <div class="noticeboard-sidebar-edge" id="noticeboard-sidebar-edge" aria-hidden="true"></div>
+    <button type="button" class="noticeboard-sidebar-toggle folio-icon-button" id="noticeboard-sidebar-toggle" aria-label="展开纸条列表" title="纸条列表" aria-expanded="false" aria-controls="noticeboard-sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h12M9 12h12M9 19h12M3 5h1M3 12h1M3 19h1"/></svg></button>
+    <aside class="noticeboard-sidebar" id="noticeboard-sidebar" aria-labelledby="noticeboard-sidebar-title" inert data-pagefind-ignore>
+        <div class="noticeboard-sidebar-heading"><h2 id="noticeboard-sidebar-title">纸条列表</h2><button type="button" id="noticeboard-sidebar-close" aria-label="收起纸条列表">×</button></div>
+        <div class="noticeboard-sidebar-content" id="noticeboard-sidebar-content"><p id="noticeboard-list-empty">加载纸条列表中…</p><div id="noticeboard-list"></div></div>
+    </aside>
     <p id="noticeboard-loading" class="noticeboard-loading" role="status" hidden data-pagefind-ignore>
-        <span class="noticeboard-loading-label"><span class="noticeboard-spinner" aria-hidden="true"></span>加载留言中…</span>
+        <span class="noticeboard-loading-label"><span class="noticeboard-spinner" aria-hidden="true"></span><span id="noticeboard-loading-message">加载留言中…</span></span>
         <span class="noticeboard-loading-hint">如果长时间加载，请开启代理（梯子）后刷新重试。</span>
     </p>
     <p id="noticeboard-status" class="noticeboard-status" role="status" aria-live="polite" data-pagefind-ignore></p>

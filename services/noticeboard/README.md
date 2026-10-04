@@ -70,7 +70,14 @@ npm run deploy
 guestbook:
   api_url: "https://实际的Worker地址"
   discussion_number: 6
+  refresh_interval: 60 # 前端自动刷新间隔，单位：秒
+  zoom:
+    min: 0.5
+    max: 2
+    step: 0.1
 ```
+
+`refresh_interval` 与 `zoom` 仅控制前端画布。页面通过现有 `GET /api/board` 每分钟静默同步纸条及全部层级回复，手动刷新显示加载提示；不需要修改 Worker 或 Discussion 数据格式。画布缩放、总数统计和右侧嵌套纸条列表的使用方式见[站点 README](../../README.md) 的留言板说明。
 
 之后按本站原有流程构建、发布静态页面。GitHub Pages 负责页面和资源；Worker 负责 GitHub 登录与 Discussions 读写。改用自定义接口域名时，同步修改 GitHub App 的 Callback URL 与 `guestbook.api_url`，回调地址必须完全对应。部署命令会发布接口，配置工具本身只准备本地文件和注册链接。
 
