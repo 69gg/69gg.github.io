@@ -86,6 +86,9 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .board-note.is-saving button { pointer-events: none; }
 .noticeboard-status { position: absolute; z-index: 35; left: 50%; bottom: 140px; max-width: calc(100% - 40px); margin: 0; padding: 9px 16px; border-radius: 3px; background: var(--board-chrome); color: inherit; font-family: var(--folio-ui); font-size: 12px; transform: translateX(-50%); pointer-events: none; }
 .noticeboard-status:empty { display: none; }
+.noticeboard-loading { position: absolute; z-index: 35; top: 50%; left: 50%; max-width: calc(100% - 40px); margin: 0; padding: 14px 20px; border-radius: 3px; background: var(--board-chrome); color: inherit; font-family: var(--folio-ui); font-size: 14px; transform: translate(-50%, -50%); pointer-events: none; }
+.noticeboard-loading:not([hidden]) { display: flex; align-items: center; gap: 12px; }
+.noticeboard-spinner { flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: board-loading-spin 1s linear infinite; }
 .noticeboard-dialog { position: fixed; inset: 0; margin: auto; box-sizing: border-box; width: min(560px, calc(100% - 32px)); height: fit-content; max-height: calc(100svh - 48px); overflow: auto; overscroll-behavior: contain; padding: 32px; border: 1px solid var(--note-rule); border-radius: 5px; background-color: var(--note-paper); background-image: linear-gradient(160deg, #fff2, transparent 55%, #30201508), url('../images/paper-handmade.webp'); background-size: 100% 100%, 120px 120px; background-blend-mode: normal, multiply; color: var(--note-ink); box-shadow: 0 2px 0 #fff4 inset, 0 3px 6px #1b1c3126, 0 24px 70px #1b1c314d; transition: background-color 180ms ease, color 180ms ease; }
 .noticeboard-dialog::backdrop { background: #20263666; backdrop-filter: blur(3px); }
 .noticeboard-dialog[open] { animation: board-dialog-arrive 300ms var(--folio-ease) both; }
@@ -151,6 +154,7 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .noticeboard-markdown :is(th, td) { padding: .4em .7em; border: 1px solid var(--note-rule); }
 .noticeboard-markdown hr { margin-block: 1em; border: 0; border-top: 1px solid var(--note-rule); }
 html[data-theme='dark'] .noticeboard { --board-chrome: #28374cdd; }
+@keyframes board-loading-spin { to { transform: rotate(1turn); } }
 @keyframes board-note-arrive { from { opacity: 0; transform: rotate(calc(var(--note-turn) - 3deg)) translateY(-12px); } to { opacity: 1; transform: rotate(var(--note-turn)); } }
 @keyframes board-dialog-arrive { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
 @keyframes board-petal {
@@ -179,4 +183,4 @@ html[data-theme='dark'] .noticeboard { --board-chrome: #28374cdd; }
     .noticeboard-geometry { grid-template-columns: minmax(0, 1fr) 88px; gap: 12px; }
     .noticeboard-geometry-controls label { gap: 6px; }
 }
-@media (prefers-reduced-motion: reduce) { .board-note, .noticeboard-dialog[open], .noticeboard-reaction-picker:popover-open { animation: none; } .board-note, .noticeboard-write, .noticeboard-reaction { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .board-note, .noticeboard-dialog[open], .noticeboard-reaction-picker:popover-open, .noticeboard-spinner { animation: none; } .board-note, .noticeboard-write, .noticeboard-reaction { transition: none; } }

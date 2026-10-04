@@ -7,6 +7,7 @@
     const flowersRoot = document.getElementById('noticeboard-flowers');
     const petalsRoot = document.getElementById('noticeboard-petals');
     const notesRoot = document.getElementById('noticeboard-notes');
+    const loading = document.getElementById('noticeboard-loading');
     const editor = document.getElementById('noticeboard-editor');
     const form = document.getElementById('noticeboard-form');
     const colorChoice = form.elements.color;
@@ -871,6 +872,8 @@
         notes.forEach((note) => { note.position = worldPosition(note.position); });
         renderAccount();
         renderNotes();
+        writeButton.disabled = false;
+        loginButton.disabled = false;
     }
     bindCamera();
     window.addEventListener('resize', queuePaint);
@@ -880,5 +883,15 @@
     };
     document.addEventListener('visibilitychange', syncVisibility);
     syncVisibility();
-    Promise.resolve(window.__shiro.folioReady).then(load).catch((error) => say(error.message));
+    loading.hidden = false;
+    Promise.resolve(window.__shiro.folioReady).then(load).then(() => {
+        notesRoot.hidden = false;
+        loading.hidden = true;
+        viewport.setAttribute('aria-busy', 'false');
+    }).catch((error) => {
+        loading.textContent = '留言加载失败，请刷新重试。';
+        document.getElementById('noticeboard-count').textContent = '加载失败';
+        viewport.setAttribute('aria-busy', 'false');
+        say(error.message);
+    });
 })();
