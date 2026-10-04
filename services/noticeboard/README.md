@@ -72,8 +72,8 @@ guestbook:
   discussion_number: 6
   refresh_interval: 60 # 前端自动刷新间隔，单位：秒
   zoom:
-    min: 0.5
-    max: 2
+    min: 0.05
+    max: 10
     step: 0.1
 ```
 
