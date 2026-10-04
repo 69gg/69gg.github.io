@@ -20,7 +20,7 @@ function coreFontCSS(css) {
         .map((match) => match[0]).join('\n');
 }
 
-/** Apply version-controlled presentation overrides after npm installs the theme. */
+/** Apply version-controlled theme overrides after npm installs the theme. */
 function patchTheme(rootDir = path.resolve(__dirname, '..')) {
     const source = path.join(rootDir, '_theme_overrides', 'shiro');
     const target = path.join(rootDir, 'node_modules', 'hexo-theme-shiro');
@@ -35,6 +35,17 @@ function patchTheme(rootDir = path.resolve(__dirname, '..')) {
             throw new Error(`Missing theme overrides: ${overrides}`);
         }
         fs.cpSync(overrides, path.join(target, directory), { recursive: true });
+    }
+    // Shiro excludes h1 in both TOC scanning and heading analysis. Keep its
+    // existing tree, anchor and cache logic, and include all body heading levels.
+    for (const name of ['toc', 'html-analysis']) {
+        const file = path.join(target, 'scripts', 'lib', `${name}.js`);
+        if (!fs.existsSync(file)) continue;
+        const script = fs.readFileSync(file, 'utf8')
+            .replaceAll('h[2-6]', 'h[1-6]')
+            .replaceAll('Math.max(2, Number(tocConfig', 'Math.max(1, Number(tocConfig')
+            .replace('let i = 2; i <= maxDepth;', 'let i = 1; i <= maxDepth;');
+        fs.writeFileSync(file, script);
     }
     const vendor = path.join(target, 'source', 'js', 'vendor');
     fs.mkdirSync(vendor, { recursive: true });

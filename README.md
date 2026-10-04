@@ -11,7 +11,7 @@
 - `_theme_overrides/shiro/source/`：蓝紫花纹主题的 CSS、动效脚本、本地纸纹图片和 SVG 装饰。
 - `_config.shiro.yml`：博客导航菜单及原有功能开关。
 - `scripts/ensure-abbrlinks.js`：构建前补齐历史文章的固定 `abbrlink`。
-- `tools/patch-theme.js`：构建或启动 Hexo 前，将本地模板和资源覆盖到已安装的 Shiro 主题；重新安装依赖后也会自动应用。
+- `tools/patch-theme.js`：构建或启动 Hexo 前，将本地模板和资源覆盖到已安装的 Shiro 主题，并应用正文一级标题的目录兼容修正；重新安装依赖后也会自动应用。
 - `tools/preview.js`：复用 http-server 提供本地预览，HTML 和索引每次校验更新，静态素材可由浏览器缓存。
 - `scripts/build-info.js`：Hexo helper，给博客页脚输出构建时间和提交 hash。
 - `scripts/clean-public.js`：构建前清理旧的 `public/` 产物。
@@ -52,6 +52,8 @@ npm run preview
 `npm run server` 仍可用于 Hexo 开发，但完整站点审阅优先使用 `preview`：根目录个人主页由构建后的复制步骤生成，Pagefind 搜索索引也在完整构建时生成。
 
 博客视觉改版覆盖 `/blog/`。根目录 `homepage/` 保留原有布局与背景，标签页标题为 `Null's Homepage`，主导航依次为“部落格”和“留言板”；联系方式依次为 GitHub、Bilibili 和邮箱。博客 favicon 与个人主页使用同一张图。文章 Markdown、固定链接、归档、标签、分类、RSS、搜索、随机阅读、深色模式、目录、阅读进度、代码复制、图片灯箱、数学公式和 Giscus 评论继续使用原有实现。随机阅读使用包含站点根路径的相对地址，避免本地审阅跳到线上。
+
+文章目录从正文的一级标题（`#` / `h1`）开始收录，直到 `_config.shiro.yml` 的 `toc.depth` 指定级别（默认三级），并按标题层级嵌套。正文标题总数达到 `toc.min_headings`（默认 3）时显示目录；文章页顶部的文章名称不计入目录。`tools/patch-theme.js` 同步修正 Shiro 的标题扫描、计数与级别范围，继续复用其锚点、缓存及目录跳转逻辑。
 
 ## 视觉配置与维护
 
