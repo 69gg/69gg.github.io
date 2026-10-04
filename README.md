@@ -112,6 +112,8 @@ Worker 使用 `services/noticeboard/` 中独立的 `package.json` 与锁文件�
 
 文章评论继续使用 `_config.shiro.yml` 中的 Giscus 仓库、Q&A 分类和 `pathname` 映射。
 
+留言板底部工具栏与文章详情页的评论区上方共用 `_partial/comments/network-hint.njk`，常驻显示“加载不畅或无法显示时，可尝试开启代理（梯子）后刷新。”提示随静态页面直接显示，不等待留言或评论服务加载；样式沿用当前主题的辅助文字与工具栏配色，窄屏自然换行。
+
 评论主题为本站的 `css/giscus-folio.css`，复用 Shiro 完整的 Giscus 基础样式，覆盖为柔白纸／蓝灰纸对应的文字、输入区、边线与墨蓝按钮色。iframe 的 `color-scheme` 继续由 Shiro 随网站明暗模式同步，主题内的媒体查询随之切换。主题 URL 通过现有 `versioned_url` helper 和当前页面来源生成，不写死生产域名；本地预览允许 CORS，以便 Giscus iframe 读取本站样式。颜色维护时同步参考 `folio.css` 的纸面配色。Giscus 自定义主题方式见 [官方文档](https://github.com/giscus/giscus/blob/main/ADVANCED-USAGE.md#data-theme)。
 
 ## 本地字体

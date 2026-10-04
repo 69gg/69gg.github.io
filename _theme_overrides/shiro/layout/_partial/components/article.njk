@@ -42,6 +42,9 @@
 
     {# Containers only; scripts load from layout foot via comments/foot.njk. #}
     {% if gates.needsComments %}
+    {% if page.layout == 'post' %}
+    {% include "_partial/comments/network-hint.njk" %}
+    {% endif %}
     {% include "_partial/comments/index.njk" %}
     {% endif %}
 </article>

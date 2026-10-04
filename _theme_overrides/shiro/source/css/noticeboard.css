@@ -14,7 +14,9 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .noticeboard-write:hover { transform: translateY(-3px) rotate(-1deg); box-shadow: 2px 7px 15px #2b1b2333; }
 .noticeboard button { cursor: pointer; }
 .noticeboard button:disabled { cursor: wait; opacity: .55; }
-.noticeboard-toolbar { position: absolute; z-index: 30; right: 28px; bottom: max(20px, env(safe-area-inset-bottom)); left: 28px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; color: inherit; font-family: var(--folio-ui); font-size: 12px; pointer-events: none; }
+.noticeboard-toolbar { position: absolute; z-index: 30; right: 28px; bottom: max(20px, env(safe-area-inset-bottom)); left: 28px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; color: inherit; font-family: var(--folio-ui); font-size: 12px; pointer-events: none; }
+.noticeboard-toolbar > .comment-network-hint { flex: 0 0 100%; color: inherit; font-size: 11px; line-height: 1.7; }
+.noticeboard-toolbar > .comment-network-hint span { display: inline-block; padding: 6px 10px; border-radius: 3px; background: var(--board-chrome); }
 .noticeboard-toolbar-actions { display: flex; align-items: center; gap: 10px; pointer-events: auto; }
 .noticeboard-center { flex: 0 0 auto; background: var(--board-chrome); color: inherit; }
 .noticeboard-count { display: flex; flex-direction: column; gap: 4px; padding: 9px 13px; border-radius: 3px; background: var(--board-chrome); }
@@ -82,7 +84,7 @@ body.folio-board { height: 100svh; min-height: 0; overflow: hidden; background: 
 .board-note-replies > .board-branch > .board-note.is-dragging { transform: rotate(var(--note-turn)); }
 .board-note.is-saving { opacity: .75; }
 .board-note.is-saving button { pointer-events: none; }
-.noticeboard-status { position: absolute; z-index: 35; left: 50%; bottom: 100px; max-width: calc(100% - 40px); margin: 0; padding: 9px 16px; border-radius: 3px; background: var(--board-chrome); color: inherit; font-family: var(--folio-ui); font-size: 12px; transform: translateX(-50%); pointer-events: none; }
+.noticeboard-status { position: absolute; z-index: 35; left: 50%; bottom: 140px; max-width: calc(100% - 40px); margin: 0; padding: 9px 16px; border-radius: 3px; background: var(--board-chrome); color: inherit; font-family: var(--folio-ui); font-size: 12px; transform: translateX(-50%); pointer-events: none; }
 .noticeboard-status:empty { display: none; }
 .noticeboard-dialog { position: fixed; inset: 0; margin: auto; box-sizing: border-box; width: min(560px, calc(100% - 32px)); height: fit-content; max-height: calc(100svh - 48px); overflow: auto; overscroll-behavior: contain; padding: 32px; border: 1px solid var(--note-rule); border-radius: 5px; background-color: var(--note-paper); background-image: linear-gradient(160deg, #fff2, transparent 55%, #30201508), url('../images/paper-handmade.webp'); background-size: 100% 100%, 120px 120px; background-blend-mode: normal, multiply; color: var(--note-ink); box-shadow: 0 2px 0 #fff4 inset, 0 3px 6px #1b1c3126, 0 24px 70px #1b1c314d; transition: background-color 180ms ease, color 180ms ease; }
 .noticeboard-dialog::backdrop { background: #20263666; backdrop-filter: blur(3px); }

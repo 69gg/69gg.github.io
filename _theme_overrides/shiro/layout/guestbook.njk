@@ -15,6 +15,7 @@
         </div>
     </header>
     <div class="noticeboard-toolbar" data-pagefind-ignore>
+        {% include "_partial/comments/network-hint.njk" %}
         <div class="noticeboard-count"><span id="noticeboard-count">0 张纸条</span><span id="noticeboard-mode"></span></div>
         <div class="noticeboard-toolbar-actions">
             <div class="noticeboard-account"><span id="noticeboard-user"></span><button type="button" id="noticeboard-login">登录 GitHub</button><button type="button" id="noticeboard-logout" hidden>退出</button></div>

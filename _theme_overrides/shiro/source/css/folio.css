@@ -362,6 +362,9 @@ html:not(.js) .folio-actions { display: none; }
 .folio-post-navigation .post-nav-title { -webkit-line-clamp: 2; text-decoration-color: var(--folio-rule); text-underline-offset: .25em; }
 .folio-post-navigation .post-nav-link > span[aria-hidden] { flex-shrink: 0; font-family: var(--folio-ui); font-size: 20px; }
 .folio-post-navigation + .giscus { margin-top: 0; padding-top: 32px; border-top: 0; }
+.comment-network-hint { margin: 0; color: var(--folio-muted); font-family: var(--folio-ui); font-size: 12px; line-height: 1.8; }
+.folio-article > .comment-network-hint { margin-top: 24px; }
+.comment-network-hint + .giscus { margin-top: 0; padding-top: 12px; border-top: 0; }
 .folio-directory { max-width: 42rem; margin-inline: auto; }
 .folio-directory-header { margin-bottom: 36px; padding-bottom: 26px; border-bottom: 1px solid var(--folio-rule); }
 .folio-directory-header .section-title { margin: 0; line-height: 1.55; }
