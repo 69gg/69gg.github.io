@@ -1,5 +1,4 @@
 {% extends "_layout.njk" %}
-{% from "_macro/ui.njk" import render_tag with context %}
 {% from "_macro/folio.njk" import directory_title with context %}
 {% from "_macro/archive.njk" import render_list with context %}
 
@@ -11,15 +10,10 @@
         {# Use Hexo paginated page.posts (honours per_page), not the full tag collection. #}
         {% include "_partial/common/paginated-posts.njk" %}
     {% else %}
-        <!-- Topic index, sorted by the existing article counts. -->
         {% if site.tags.length > 0 %}
-        <div class="folio-tag-index">
-                {# Sort by post count descending; equal count keeps alphabetical order (stable sort) #}
-                {% set tags = site.tags.sort('name', 1).sort('length', -1) %}
-                {% for tag in tags.toArray() %}
-                {{ render_tag(tag, true) }}
-                {% endfor %}
-        </div>
+        <nav class="folio-tag-cloud" aria-label="{{ escape_attr(__('nav.tags')) }}">
+            {{ tagcloud(site.tags, { min_font: 1, max_font: 2.7, unit: 'em', orderby: 'name', show_count: true, count_class: 'folio-tag-count', transform: escape_html }) | safe }}
+        </nav>
         {% else %}
             {% include "_partial/common/empty.njk" %}
         {% endif %}

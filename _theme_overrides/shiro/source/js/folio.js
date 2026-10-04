@@ -29,7 +29,7 @@
 
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     // Content stays readable even if JavaScript or IntersectionObserver fails.
-    const targets = document.querySelectorAll('.folio-entry, .folio-footer, .folio-project-card, .folio-inner article.group, .folio-inner .section-heading, .folio-inner .prose-shiro > :is(h2, h3, blockquote, figure, img)');
+    const targets = document.querySelectorAll('.folio-entry, .folio-footer, .folio-project-card, .folio-tag-cloud, .folio-inner article.group, .folio-inner .section-heading, .folio-inner .prose-shiro > :is(h2, h3, blockquote, figure, img)');
     targets.forEach((target) => target.setAttribute('data-folio-reveal', ''));
     let observer;
     const syncMotion = () => {
