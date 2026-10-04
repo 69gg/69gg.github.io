@@ -1,0 +1,13 @@
+{
+  "name": "Undefined",
+  "description": "基于 Python 的 QQ 与微信机器人平台，结合认知记忆和多智能体 Skills，支持多模态交互，并提供 WebUI 与跨平台客户端。",
+  "github": "https://github.com/69gg/Undefined",
+  "links": [
+    {
+      "label": "使用文档",
+      "url": "https://github.com/69gg/Undefined/tree/main/docs"
+    }
+  ],
+  "tags": ["Python", "AI", "认知记忆", "多智能体"],
+  "order": 0
+}

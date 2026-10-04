@@ -87,7 +87,7 @@ npm run preview
 
 ## 开源项目配置
 
-个人主页的“项目栏”进入独立的 `/projects/`，以卡片展示开源项目。`source/projects/index.md` 使用 `projects.njk` 和独立的 `_projects_layout.njk`，不隶属于博客：复用花纹背景、字体、主题切换、两侧花枝漂动与花瓣缓落，以及覆盖整个项目页的中央前景花瓣；前景位于卡片上方，继续使用 `pointer-events: none`，不拦截任何操作。不显示博客站名、导航、文章阅读纸面或博客页脚。顶部为返回主页、开源项目标题和主题切换，下方在花纹背景上直接排列各自带纸纹的项目卡片，桌面按空间排列多列，手机显示单列；标题下不显示介绍文案。页面初始没有项目；首次添加 `source/projects/<name>.json` 后，重新执行 `npm run build` 即会自动生成对应卡片，无需修改模板。每个 JSON 文件表示一个项目，修改或删除文件后重新构建即可更新展示。
+个人主页的“项目栏”进入独立的 `/projects/`，以卡片展示开源项目。`source/projects/index.md` 使用 `projects.njk` 和独立的 `_projects_layout.njk`，不隶属于博客：复用花纹背景、字体、主题切换、两侧花枝漂动与花瓣缓落，以及覆盖整个项目页的中央前景花瓣；前景位于卡片上方，继续使用 `pointer-events: none`，不拦截任何操作。不显示博客站名、导航、文章阅读纸面或博客页脚。顶部为返回主页、开源项目标题和主题切换，下方在花纹背景上直接排列各自带纸纹的项目卡片，桌面按空间排列多列，手机显示单列；标题下不显示介绍文案。当前已通过 `source/projects/undefined.json` 收录 Undefined，卡片跳转到 GitHub 仓库，并提供独立的使用文档入口。添加其他 `source/projects/<name>.json` 后，重新执行 `npm run build` 即会自动生成对应卡片，无需修改模板。每个 JSON 文件表示一个项目，修改或删除文件后重新构建即可更新展示。
 
 完整配置示例 `source/projects/my-project.json`：
 
