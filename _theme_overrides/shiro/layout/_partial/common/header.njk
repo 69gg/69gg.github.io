@@ -12,7 +12,7 @@
     </a>
 
     <nav class="folio-desktop-nav" aria-label="{{ escape_attr(__('nav.menu')) }}">
-        <a class="folio-nav-link" href="/">回首页</a>
+        <a class="folio-nav-link" href="/">返回主页</a>
         {% for item in menuItems %}
         {{ menu_link(item, "folio-nav-link") }}
         {% endfor %}
@@ -39,7 +39,7 @@
     {% if menuItems.length %}
     <nav id="mobileMenu" class="folio-mobile-nav" data-open="false" aria-label="移动导航">
         <div class="folio-mobile-nav-content">
-            <a class="folio-nav-link" href="/">回首页</a>
+            <a class="folio-nav-link" href="/">返回主页</a>
             {% for item in menuItems %}{{ menu_link(item, "folio-nav-link") }}{% endfor %}
         </div>
     </nav>
