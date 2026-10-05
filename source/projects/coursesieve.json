@@ -1,5 +1,5 @@
 {
-  "name": "CourseSieve（课筛）",
+  "name": "CourseSieve",
   "description": "融合网课视频的语音转录与画面文字，生成带时间锚点、可跳转回看的复习笔记与考点。",
   "github": "https://github.com/69gg/CourseSieve",
   "tags": ["Python", "ASR/OCR", "学习工具"],
