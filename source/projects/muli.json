@@ -2,6 +2,12 @@
   "name": "MuLi",
   "description": "支持 MCP 与自定义 Python 工具的异步 AI 助手，提供会话持久化、上下文压缩与容器交互。",
   "github": "https://github.com/69gg/MuLi",
+  "links": [
+    {
+      "label": "宣传片",
+      "url": "https://www.bilibili.com/video/BV1oC2RBeEqY"
+    }
+  ],
   "tags": ["Python", "MCP", "AI 助手"],
   "order": 15
 }
