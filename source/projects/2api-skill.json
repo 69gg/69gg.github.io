@@ -1,0 +1,7 @@
+{
+  "name": "2api-skill",
+  "description": "将网页聊天转为 OpenAI、Anthropic 兼容 API 的 Agent 技能，提供逆向工作流与可复用服务骨架。",
+  "github": "https://github.com/69gg/2api-skill",
+  "tags": ["Agent Skill", "API", "Python"],
+  "order": 1
+}

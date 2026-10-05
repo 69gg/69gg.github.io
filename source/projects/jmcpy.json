@@ -1,0 +1,7 @@
+{
+  "name": "jmcpy",
+  "description": "面向 JMComic 的 Python SDK，支持同步与异步调用、搜索、图片还原、PDF 导出和多端点切换。",
+  "github": "https://github.com/69gg/jmcpy",
+  "tags": ["Python", "SDK", "异步"],
+  "order": 6
+}

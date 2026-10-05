@@ -1,0 +1,7 @@
+{
+  "name": "RotatorProxy",
+  "description": "单端口代理轮换器，支持 HTTP 与 SOCKS5 入站、订阅源加载、节点测活与故障冷却。",
+  "github": "https://github.com/69gg/RotatorProxy",
+  "tags": ["Rust", "代理轮换", "HTTP/SOCKS5"],
+  "order": 11
+}

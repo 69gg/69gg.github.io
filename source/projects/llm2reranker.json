@@ -1,0 +1,7 @@
+{
+  "name": "llm2reranker",
+  "description": "使用大语言模型评估文档相关性并重新排序，提供兼容 Cohere Rerank 格式的服务接口。",
+  "github": "https://github.com/69gg/llm2reranker",
+  "tags": ["LLM", "重排序", "API"],
+  "order": 3
+}

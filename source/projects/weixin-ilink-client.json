@@ -1,0 +1,7 @@
+{
+  "name": "weixin-ilink-client",
+  "description": "非官方微信 iLink 异步 Python 客户端，支持扫码登录、消息轮询、文本与媒体收发及状态持久化。",
+  "github": "https://github.com/69gg/weixin-ilink-client",
+  "tags": ["Python", "微信", "异步"],
+  "order": 10
+}

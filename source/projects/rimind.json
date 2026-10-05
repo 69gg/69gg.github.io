@@ -1,0 +1,7 @@
+{
+  "name": "rimind",
+  "description": "为 Linux Rime 输入法添加大模型拼音预测与自由联想，通过独立后台进程处理请求。",
+  "github": "https://github.com/69gg/rimind",
+  "tags": ["Rime", "LLM", "Linux"],
+  "order": 12
+}

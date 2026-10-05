@@ -1,0 +1,7 @@
+{
+  "name": "lxmusic2api",
+  "description": "将 LX Music 的搜索、歌单、歌词和自定义源解析能力封装为 HTTP API，支持音频代理与下载任务。",
+  "github": "https://github.com/69gg/lxmusic2api",
+  "tags": ["TypeScript", "音乐", "HTTP API"],
+  "order": 9
+}

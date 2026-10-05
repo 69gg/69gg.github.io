@@ -1,0 +1,7 @@
+{
+  "name": "oh-my-bilibili",
+  "description": "Bilibili 视频信息获取与下载库，支持 BV、AV、视频链接和短链，并通过 FFmpeg 合并音视频。",
+  "github": "https://github.com/69gg/oh-my-bilibili",
+  "tags": ["Python", "Bilibili", "视频下载"],
+  "order": 14
+}

@@ -1,0 +1,7 @@
+{
+  "name": "gpt2api",
+  "description": "将 ChatGPT 网页聊天接入 OpenAI、Anthropic 兼容 API，支持对话、图片生成与 Token 池管理。",
+  "github": "https://github.com/69gg/gpt2api",
+  "tags": ["ChatGPT", "API", "Python"],
+  "order": 4
+}

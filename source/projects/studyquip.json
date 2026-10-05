@@ -1,0 +1,7 @@
+{
+  "name": "StudyQuip",
+  "description": "个人错题与教材学习工作台，支持 AI 教材整理、资料检索、有来源的错题讲解和练习、复习 PDF 导出。",
+  "github": "https://github.com/69gg/StudyQuip",
+  "tags": ["AI", "学习工具", "错题整理"],
+  "order": 7
+}

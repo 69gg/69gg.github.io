@@ -1,0 +1,7 @@
+{
+  "name": "MCSeed Finder",
+  "description": "Minecraft Java 版命令行种子筛选器，支持生物群系、结构及内部部件条件，多核搜索与可选 GPU 加速。",
+  "github": "https://github.com/69gg/MCseedFinder",
+  "tags": ["Minecraft", "Rust", "种子筛选"],
+  "order": 8
+}

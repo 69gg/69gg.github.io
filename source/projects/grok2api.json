@@ -1,0 +1,7 @@
+{
+  "name": "Grok2API",
+  "description": "聚合 Grok 网页、Console 与 CLI 通道，提供 OpenAI、Anthropic 兼容接口及多模态能力。",
+  "github": "https://github.com/69gg/grok2api",
+  "tags": ["Grok", "API", "多模态"],
+  "order": 5
+}

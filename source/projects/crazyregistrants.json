@@ -1,0 +1,7 @@
+{
+  "name": "CrazyRegistrants",
+  "description": "多平台账号与 API Key 自动注册工具合集，复用邮箱和浏览器模块，支持协议与浏览器两种流程。",
+  "github": "https://github.com/69gg/CrazyRegistrants",
+  "tags": ["自动化", "Python", "Playwright"],
+  "order": 2
+}
